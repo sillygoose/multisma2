@@ -3,7 +3,6 @@
 # todo
 #   - clean up futures
 #   - fix get_state
-#   - read_values
 #
 
 import asyncio
@@ -32,7 +31,6 @@ class Inverter():
         self._metadata = None
         self._tags = None
         self._instantaneous = None
-        self._values = None
         self._history = {}
         self._lock = asyncio.Lock()
 
@@ -53,8 +51,6 @@ class Inverter():
             + str(self._sma)
             + ", tags = "
             + str(type(self._tags))
-            + ", values = "
-            + str(type(self._values))
             + ", instantaneous = "
             + str(type(self._instantaneous))
         )
@@ -96,10 +92,42 @@ class Inverter():
         async with self._lock:
             self._instantaneous = await self._sma.read_instantaneous()
 
-    async def read_values(self, keys):
+    def clean(self, raw_results):
+        cleaned = {}
+        for key, value in raw_results.items():
+            type = self.get_type(key)
+            scale = self.get_scale(key)
+            states = value.pop('1', None)
+            results = {}
+            if type == 0:
+                sensors = {}
+                subkeys = ['a', 'b', 'c']
+                for index, state in enumerate(states):
+                    val = state.get('val', None)
+                    if val is None:
+                        val = 0
+                    if scale != 1:
+                        val *= scale
+                    sensors[subkeys[index]] = val
+                if len(sensors) > 1:
+                    cleaned[key] = sensors
+                else:
+                    cleaned[key] = sensors.get(subkeys[0])
+            elif type == 1:
+                for index, state in enumerate(states):
+                    tag_list = state.get('val')
+                    tag = self.tag(tag_list[0].get('tag'))
+                cleaned[key] = tag
+            else:
+                logger.warning(f"unexpected sma type: {type}")
+        return cleaned
+
+    async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
-        async with self._lock:
-            self._values = await self._sma.read_values(keys)
+        raw = await self._sma.read_values(keys)
+        cleaned = self.clean(raw)
+        cleaned['name'] = self._name
+        return cleaned
 
     async def read_history_period(self, period):
         """###."""
@@ -111,7 +139,8 @@ class Inverter():
 
         today_production = await self.get_state('6400_0046C300')
         value_list = today_production.pop(self._name)
-        history.append({'t': end, 'v': value_list[0].get('val')})
+        history.append({'t': int(end.timestamp()), 'v': value_list[0].get('val')})
+        history.insert(0, {'name': self._name})
         return history
 
     async def read_history(self):
@@ -127,11 +156,11 @@ class Inverter():
         self._history['today'] = today[0]
         self._history['month'] = month[0]
         self._history['year'] = year[0]
-        self._history['lifetime'] = dict(t = 0, v = 0)
+        self._history['lifetime'] = {'t': 0, 'v': 0}
 
-    async def display_metadata(self, keys='all'):
+    def display_metadata(self, key=None):
         """###."""
-        if keys == 'all':
+        if key is None:
             for key, value in self._instantaneous.items():
                 meta = self._metadata.get(key)
                 type = meta.get('Typ')
@@ -150,30 +179,22 @@ class Inverter():
                 print(f'{type} {prio} {format} {scale}  {key}   {name}')
                 print(f'                    {value}')
         else:
-            for index, key in enumerate(keys):
-                metadata = self._metadata.get(key, None)
-                pprint(f"{self._name}/{key}/{metadata}")
-
-    async def display_values(self):
-        """###."""
-        pprint(f"{self._name}/{self._values}")
+            metadata = self._metadata.get(key, None)
+            pprint(f"{self._name}/{key}/{metadata}")
 
     async def display_history(self):
         """###."""
-        print(f"{self._name} today baseline {datetime.datetime.fromtimestamp(self._history['today'].get('t'))}   {self._history['today'].get('v')}")
-        print(f"{self._name} month baseline {datetime.datetime.fromtimestamp(self._history['month'].get('t'))}   {self._history['month'].get('v')}")
-        print(f"{self._name}  year baseline {datetime.datetime.fromtimestamp(self._history['year'].get('t'))}   {self._history['year'].get('v')}")
+        print(f"{self._name}    today baseline {datetime.datetime.fromtimestamp(self._history['today'].get('t'))}   {self._history['today'].get('v')}")
+        print(f"{self._name}    month baseline {datetime.datetime.fromtimestamp(self._history['month'].get('t'))}   {self._history['month'].get('v')}")
+        print(f"{self._name}     year baseline {datetime.datetime.fromtimestamp(self._history['year'].get('t'))}   {self._history['year'].get('v')}")
+        print(f"{self._name} lifetime baseline {datetime.datetime.fromtimestamp(self._history['lifetime'].get('t'))}   {self._history['lifetime'].get('v')}")
 
-    async def _get_state_lock(self, key):
+    async def get_state(self, key):
         """###."""
         async with self._lock:
             state_dict = self._instantaneous.get(key, None).copy()
         state_dict[self._name] = state_dict.pop('1', None)
         return state_dict
-
-    async def get_state(self, key):
-        """###."""
-        return await self._get_state_lock(key)
 
     def get_unit(self, key):
         """###."""

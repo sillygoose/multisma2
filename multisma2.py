@@ -1,11 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-# todo
-#   - clean up futures
-#   - fix get_state
-#   - read_values
-#
-
 import asyncio
 import aiohttp
 import datetime

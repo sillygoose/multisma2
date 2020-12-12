@@ -1,11 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-# todo
-#   - clean up futures
-#   - fix get_state
-#   - read_values
-#
-
 import asyncio
 import datetime
 from dateutil import tz
@@ -81,9 +75,11 @@ DC_MEASUREMENTS = [
     ]
 
 STATES = [
+        '6380_40251E00',        # DC Power (current power)
         '6180_08416500',        # Reason for derating
         '6100_0046C200',        # PV generation power (current power)
         '6400_0046C300',        # Meter count and PV gen. meter (total power)
+        '6380_40451F00',        # DC Voltage
     ]
 
 
@@ -143,9 +139,10 @@ class Site():
         """###."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
 
-    async def read_values(self, keys):
+    async def read_keys(self, keys):
         """###."""
-        await asyncio.gather(*(inverter.read_values(keys) for inverter in self._inverters))
+        key_list = await asyncio.gather(*(inverter.read_keys(keys) for inverter in self._inverters))
+        return key_list
 
     async def read_history_period(self, period):
         """###."""
@@ -353,7 +350,8 @@ class Site():
                 queue.task_done()
 
             # Broadcast
-            mqtt.publish(await self.snapshot())
+            pprint(await self.read_keys(STATES))
+            #mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
             #mqtt.publish(await self.current_state())
