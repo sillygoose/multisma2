@@ -7,8 +7,6 @@
 #
 
 import asyncio
-import aiohttp
-import json
 import datetime
 from dateutil import tz
 from pprint import pprint
@@ -16,21 +14,20 @@ import time
 import logging
 import os
 
-from inverter import Inverter
-import mqtt
-import sma
-#import version
-import logfiles
-
 import astral
 from astral import sun
+
+from inverter import Inverter
+import mqtt
+import logfiles
 
 from configuration import SITE_LATITUDE, SITE_LONGITUDE, TIMEZONE
 from configuration import INVERTERS
 from configuration import CO2_AVOIDANCE
-from configuration import APPLICATION_LOG_LOGGER_NAME
 
+from configuration import APPLICATION_LOG_LOGGER_NAME
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+
 
 class Timer:
     def __enter__(self):
@@ -65,12 +62,6 @@ AGGREGATE_KEYS = [
         '6380_40251E00',        # DC power (1 per string)
     ]
 
-STATES = [
-        '6180_08416500',        # Reason for derating
-        '6100_0046C200',        # PV generation power (current power)
-        '6400_0046C300',        # Meter count and PV gen. meter (total power)
-    ]
-
 AC_MEASUREMENTS = [
         '6100_40263F00',        # AC grid power (current power)
         '6100_00465700',        # Grid frequency
@@ -85,8 +76,14 @@ SITE_SNAPSHOT = [
 
 DC_MEASUREMENTS = [
         '6380_40251E00',        # DC Power (current power)
-#        '6380_40451F00',        # DC Voltage
-#        '6380_40452100'         # DC Current
+        #'6380_40451F00',        # DC Voltage
+        #'6380_40452100'         # DC Current
+    ]
+
+STATES = [
+        '6180_08416500',        # Reason for derating
+        '6100_0046C200',        # PV generation power (current power)
+        '6400_0046C300',        # Meter count and PV gen. meter (total power)
     ]
 
 
@@ -116,10 +113,10 @@ class Site():
         sunset = astral.sun.sunset(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
         self._dusk = dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
 
-        Site.SOLAR_EVENTS.append(dict(dawn = dict(time = dawn, seen = astral_now > dawn, msg = "Daylight begins, time to wake up and start monitoring")))
-        Site.SOLAR_EVENTS.append(dict(sunrise = dict(time = sunrise, seen = astral_now > sunrise, msg = "Sunrise is happening, time to collect some photons")))
-        Site.SOLAR_EVENTS.append(dict(sunset = dict(time = sunset, seen = astral_now > sunset, msg = "Sunset is here, things are slowing down")))
-        Site.SOLAR_EVENTS.append(dict(dusk = dict(time = dusk, seen = astral_now > dusk, msg = "End of daylight, start of lazy night monitoring")))
+        Site.SOLAR_EVENTS.append(dict(dawn=dict(time=dawn, seen=astral_now > dawn, msg="Daylight begins, time to wake up and start monitoring")))
+        Site.SOLAR_EVENTS.append(dict(sunrise=dict(time=sunrise, seen=astral_now > sunrise, msg="Sunrise is happening, time to collect some photons")))
+        Site.SOLAR_EVENTS.append(dict(sunset=dict(time=sunset, seen=astral_now > sunset, msg="Sunset is here, things are slowing down")))
+        Site.SOLAR_EVENTS.append(dict(dusk=dict(time=dusk, seen=astral_now > dusk, msg="End of daylight, start of lazy night monitoring")))
 
     async def initialize(self):
         """###."""
@@ -235,7 +232,7 @@ class Site():
 
     async def snapshot(self):
         """Get the values of interest fromf each inverter."""
-        return await self.get_composite(SITE_SNAPSHOT )
+        return await self.get_composite(SITE_SNAPSHOT)
 
     async def current_state(self):
         """Get the current status of each inverter."""
@@ -266,7 +263,7 @@ class Site():
                         if type == 0:
                             for index, value in enumerate(values_list):
                                 result = value.get('val', None)
-                                if result == None:
+                                if result is None:
                                     result = 0
                             if scale != 1:
                                 result = result * scale
@@ -286,7 +283,7 @@ class Site():
                             subkeys = ['a', 'b', 'c']
                             for index, value in enumerate(values_list):
                                 val = value.get('val', None)
-                                if val == None:
+                                if val is None:
                                     val = 0
                                 if scale != 1:
                                     val *= scale
@@ -315,7 +312,7 @@ class Site():
         """###."""
         SLEEP = 0.5
         last_tick = int(time.time())
-        info = dict(time = last_tick, daylight = self.daylight(), dawn = self._dawn, delta = self._solar_time_diff, dusk = self._dusk)
+        info = dict(time=last_tick, daylight=self.daylight(), dawn=self._dawn, delta=self._solar_time_diff, dusk=self._dusk)
 
         while True:
             tick = int(time.time())

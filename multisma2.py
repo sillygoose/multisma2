@@ -8,27 +8,14 @@
 
 import asyncio
 import aiohttp
-#import json
 import datetime
-#from dateutil import tz
-#from pprint import pprint
-#import time
 import logging
-import os
 
 from pvsite import Site
-from inverter import Inverter
 import mqtt
-import sma
 import version
 import logfiles
 
-import astral
-from astral import sun
-
-from configuration import SITE_LATITUDE, SITE_LONGITUDE, TIMEZONE
-from configuration import INVERTERS
-from configuration import CO2_AVOIDANCE
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
@@ -52,7 +39,7 @@ if __name__ == "__main__":
                 # Initialize the inverters
                 await site.initialize()
 
-                end_time =  datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
+                end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
 
                 while True:
                     await asyncio.sleep(5)
@@ -66,11 +53,9 @@ if __name__ == "__main__":
                 await site.close()
                 logfiles.close()
 
-
 #try:
     # Start collecting
     asyncio.run(main())
 
 #except KeyboardInterrupt:
 #    pass
-

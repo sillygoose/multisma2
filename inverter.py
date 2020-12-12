@@ -7,21 +7,17 @@
 #
 
 import asyncio
-#import aiohttp
 import datetime
-from dateutil import tz
 from pprint import pprint
-import time
 import logging
-import os
 import json
 
-import logfiles
 import sma
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+
 
 class Inverter():
     """Class to encapsulate a single inverter."""
@@ -133,14 +129,9 @@ class Inverter():
         self._history['year'] = year[0]
         self._history['lifetime'] = dict(t = 0, v = 0)
 
-    async def display_state(self):
+    async def display_metadata(self, keys='all'):
         """###."""
-        for index, key in enumerate(STATES):
-            print(f"{self._name}/{self.get_state(key)}")
-
-    async def display_metadata(self, all=False):
-        """###."""
-        if all:
+        if keys == 'all':
             for key, value in self._instantaneous.items():
                 meta = self._metadata.get(key)
                 type = meta.get('Typ')
@@ -159,7 +150,7 @@ class Inverter():
                 print(f'{type} {prio} {format} {scale}  {key}   {name}')
                 print(f'                    {value}')
         else:
-            for index, key in enumerate(STATES):
+            for index, key in enumerate(keys):
                 metadata = self._metadata.get(key, None)
                 pprint(f"{self._name}/{key}/{metadata}")
 
