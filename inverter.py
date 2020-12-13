@@ -139,8 +139,8 @@ class Inverter():
         history = await self._sma.read_history(int(start.timestamp()), int(end.timestamp()))
 
         TOTAL_PRODUCTION = '6400_0046C300'
-        today_production = self.clean(await self.get_state1(TOTAL_PRODUCTION))
-        history.append({'t': int(end.timestamp()), 'v': today_production.get(TOTAL_PRODUCTION)})
+        latest_production = await self.get_state(TOTAL_PRODUCTION)
+        history.append({'t': int(end.timestamp()), 'v': latest_production.get(TOTAL_PRODUCTION)})
         history.insert(0, {'name': self._name})
         return history
 
@@ -190,19 +190,13 @@ class Inverter():
         print(f"{self._name}     year baseline {datetime.datetime.fromtimestamp(self._history['year'].get('t'))}   {self._history['year'].get('v')}")
         print(f"{self._name} lifetime baseline {datetime.datetime.fromtimestamp(self._history['lifetime'].get('t'))}   {self._history['lifetime'].get('v')}")
 
-    async def get_state1(self, key):
-        """###."""
-        async with self._lock:
-            state = self._instantaneous.get(key, None).copy()
-        state_dict = {key: state}
-        return state_dict
-
     async def get_state(self, key):
         """###."""
         async with self._lock:
-            state_dict = self._instantaneous.get(key, None).copy()
-        state_dict[self._name] = state_dict.pop('1', None)
-        return state_dict
+            state = self._instantaneous.get(key, None).copy()
+        cleaned = self.clean({ key: state })
+        cleaned['name'] = self._name
+        return cleaned
 
     def get_unit(self, key):
         """###."""

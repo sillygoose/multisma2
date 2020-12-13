@@ -2,7 +2,6 @@
 
 #
 # todo
-#   - cleanup composite
 #
 
 import asyncio
@@ -50,7 +49,7 @@ MQTT_TOPICS = {
         '6380_40251E00': 'dc_measurements/power',
         '6380_40451F00': 'dc_measurements/voltage',
         '6380_40452100': 'dc_measurements/current',
-        '6180_08416500': 'reason_for_derating',
+        '6180_08416500': 'status/reason_for_derating',
     }
 
 # These are keys that we calculate a total across all inverters
@@ -69,22 +68,22 @@ AC_MEASUREMENTS = [
 
 SITE_SNAPSHOT = [
         '6100_40263F00',        # AC grid power (current power)
-        '6380_40251E00',        # DC power (current power)
         '6180_08416500',        # Reason for derating
+        '6380_40251E00',        # DC power (current power)
     ]
 
 DC_MEASUREMENTS = [
         '6380_40251E00',        # DC Power (current power)
-        #'6380_40451F00',        # DC Voltage
-        #'6380_40452100'         # DC Current
+        '6380_40451F00',        # DC Voltage
+        '6380_40452100'         # DC Current
     ]
 
 STATES = [
-#        '6380_40251E00',        # DC Power (current power)
-#        '6180_08416500',        # Reason for derating
-#        '6100_0046C200',        # PV generation power (current power)
+        '6380_40251E00',        # DC Power (current power)
+        '6180_08416500',        # Reason for derating
+        '6100_0046C200',        # PV generation power (current power)
         '6400_0046C300',        # Meter count and PV gen. meter (total power)
-#        '6380_40451F00',        # DC Voltage
+        '6380_40451F00',        # DC Voltage
     ]
 
 
@@ -200,7 +199,8 @@ class Site():
                 total += diff
 
             period_stats['total'] = total / 1000
-            period_stats['topic'] = 'production_' + period
+            period_stats['unit'] = 'kWh'
+            period_stats['topic'] = 'production/' + period
             stats.append(period_stats)
         return stats
 
@@ -221,7 +221,7 @@ class Site():
                         unit = 'tons'
                         factor = CO2_AVOIDANCE_TON
                     co2avoided_period['total'] = total['total'] * factor
-                    co2avoided_period['topic'] = 'co2avoided_' + period
+                    co2avoided_period['topic'] = 'co2avoided/' + period
                     co2avoided_period['unit'] = unit
                     co2avoided_period['precision'] = 2
                     co2avoided_period['factor'] = factor
@@ -258,57 +258,29 @@ class Site():
             for inverter in self._inverters:
                 calculate_total = AGGREGATE_KEYS.count(key)
                 type = inverter.get_type(key)
-                scale = inverter.get_scale(key)
                 unit = inverter.get_unit(key)
                 state = await inverter.get_state(key)
-                for inv, values_list in state.items():
-                    if len(values_list) == 1:
-                        if type == 0:
-                            for index, value in enumerate(values_list):
-                                result = value.get('val', None)
-                                if result is None:
-                                    result = 0
-                            if scale != 1:
-                                result = result * scale
-                            if calculate_total:
-                                total += result
-                        elif type == 1:
-                            for index, value in enumerate(values_list):
-                                tag_list = value.get('val')
-                                result = inverter.tag(tag_list[0].get('tag'))
-                        else:
-                            logger.warning(f"unexpected sma type: {type}")
-                    else:
-                        # sensors that have multiple values (limited)
-                        if type == 0:
-                            subtotal = 0
-                            result = {}
-                            subkeys = ['a', 'b', 'c']
-                            for index, value in enumerate(values_list):
-                                val = value.get('val', None)
-                                if val is None:
-                                    val = 0
-                                if scale != 1:
-                                    val *= scale
-                                if calculate_total:
-                                    subtotal += val
-                                result[subkeys[index]] = val
+                result = state.get(key)
+                if isinstance(result, dict):
+                    if calculate_total:
+                        subtotal = 0
+                        for k, v in result.items():
+                            subtotal += v
+                        result['total'] = subtotal
+                else:
+                    if calculate_total:
+                        total += result
 
-                            if calculate_total:
-                                result['total'] = subtotal
-                                total += subtotal
-                        else:
-                            logger.warning(f"unexpected sma type: {type}")
-
-                    composite[inv] = result
-                    if unit:
-                        composite['unit'] = unit
+                composite[state.get('name')] = result
+                if unit:
+                    composite['unit'] = unit
 
             if calculate_total:
                 composite['total'] = total
 
             composite['topic'] = MQTT_TOPICS.get(key, '???')
             sensors.append(composite)
+
         return sensors
 
     async def task_manager(self, queue5, queue30, queue60):
@@ -356,13 +328,10 @@ class Site():
                 queue.task_done()
 
             # Broadcast
-            hist = await self.read_history_period('day')
-            pprint(hist)
-            #await self.read_keys(STATES)
-            #mqtt.publish(await self.snapshot())
-            #mqtt.publish(await self.current_production())
-            #mqtt.publish(await self.current_dc_values())
-            #mqtt.publish(await self.current_state())
+            mqtt.publish(await self.snapshot())
+            mqtt.publish(await self.current_production())
+            mqtt.publish(await self.current_dc_values())
+            mqtt.publish(await self.current_state())
 
     async def task_30s(self, queue):
         """###."""
@@ -370,7 +339,7 @@ class Site():
             info = await queue.get()
             queue.task_done()
             mqtt.publish(await self.production_stats())
-            #mqtt.publish(await self.total_production())
+            mqtt.publish(await self.total_production())
 
     async def task_60s(self, queue):
         """###."""
@@ -380,11 +349,11 @@ class Site():
             mqtt.publish(await self.co2_avoided())
             mqtt.publish(await self.read_history_period('day'))
             mqtt.publish(await self.read_history_period('month'))
-            if info.get('daylight'):
-                local_time = datetime.datetime.fromtimestamp(info.get('time'))
-                solar_time = local_time + info.get('delta')
-                logdata = await self.snapshot()
-                logfiles.append(logdata, local_time, solar_time)
+            #if info.get('daylight'):
+            #    local_time = datetime.datetime.fromtimestamp(info.get('time'))
+            #    solar_time = local_time + info.get('delta')
+            #    logdata = await self.snapshot()
+            #    logfiles.append(logdata, local_time, solar_time)
 
     DAYLIGHT_VAR = {
         'force_daylight_tested': False,
