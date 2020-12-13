@@ -193,7 +193,7 @@ class Site():
             period_stats = {}
             total = 0
             for inverter in self._inverters:
-                name = inverter._name
+                name = inverter.name()
                 diff = tprod[name] - inverter._history[period].get('v')
                 period_stats[name] = diff / 1000
                 total += diff
@@ -234,7 +234,7 @@ class Site():
         return await self.get_composite(DC_MEASUREMENTS)
 
     async def snapshot(self):
-        """Get the values of interest fromf each inverter."""
+        """Get the values of interest from each inverter."""
         return await self.get_composite(SITE_SNAPSHOT)
 
     async def current_state(self):
@@ -242,7 +242,7 @@ class Site():
         return await self.get_composite(['6180_08416500'])
 
     async def current_production(self):
-        """Get the current production of each inverter and the total of all inverters."""
+        """Get the current production of the inverters."""
         return await self.get_composite(['6100_40263F00'])
 
     async def total_production(self):
@@ -255,25 +255,28 @@ class Site():
         for key in keys:
             composite = {}
             total = 0
-            for inverter in self._inverters:
-                calculate_total = AGGREGATE_KEYS.count(key)
-                type = inverter.get_type(key)
-                unit = inverter.get_unit(key)
-                state = await inverter.get_state(key)
-                result = state.get(key)
+            results = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
+            calculate_total = AGGREGATE_KEYS.count(key)
+            for index, inverter in enumerate(results):
+                result = inverter.get(key)
+                unit = inverter.get('unit', None)
+                precision = inverter.get('precision', None)
                 if isinstance(result, dict):
                     if calculate_total:
                         subtotal = 0
                         for k, v in result.items():
                             subtotal += v
+                            total += v
                         result['total'] = subtotal
                 else:
                     if calculate_total:
                         total += result
 
-                composite[state.get('name')] = result
+                composite[inverter.get('name')] = result
                 if unit:
                     composite['unit'] = unit
+                if precision is not None:
+                    composite['precision'] = precision
 
             if calculate_total:
                 composite['total'] = total
@@ -283,32 +286,37 @@ class Site():
 
         return sensors
 
+    SAMPLE_PERIOD = [
+        { 'scale': 3, 'daylight_test': 30 },
+        { 'scale': 1, 'daylight_test': 30 },
+    ]
+
     async def task_manager(self, queue5, queue30, queue60):
         """###."""
         SLEEP = 0.5
         last_tick = int(time.time())
         info = dict(time=last_tick, daylight=self.daylight(), dawn=self._dawn, delta=self._solar_time_diff, dusk=self._dusk)
+        scaling = Site.SAMPLE_PERIOD[info['daylight']].get('scale')
 
         while True:
             tick = int(time.time())
-            if tick != last_tick:
-                last_tick = tick
+            scaled_tick = tick / scaling
+            if scaled_tick != last_tick:
+                last_tick = scaled_tick
                 info['time'] = tick
-                if info['daylight']:
-                    if tick % 5 == 0:
-                        queue5.put_nowait(info)
-                    if tick % 30 == 0:
-                        queue30.put_nowait(info)
-                    if tick % 60 == 0:
-                        queue60.put_nowait(info)
-                elif tick % 120 == 0:
+
+                if scaled_tick % 5 == 0:
                     queue5.put_nowait(info)
+                if scaled_tick % 30 == 0:
                     queue30.put_nowait(info)
+                if scaled_tick % 60 == 0:
                     queue60.put_nowait(info)
 
                 if tick % 300 == 0:
-                    info['daylight'] = self.daylight()
-                    self.sun_events(info['daylight'])
+                    daylight = self.daylight()
+                    info['daylight'] = daylight
+                    scaling = Site.SAMPLE_PERIOD[daylight].get('scale')
+                    self.sun_events(daylight)
 
             await asyncio.sleep(SLEEP)
 
@@ -349,11 +357,11 @@ class Site():
             mqtt.publish(await self.co2_avoided())
             mqtt.publish(await self.read_history_period('day'))
             mqtt.publish(await self.read_history_period('month'))
-            #if info.get('daylight'):
-            #    local_time = datetime.datetime.fromtimestamp(info.get('time'))
-            #    solar_time = local_time + info.get('delta')
-            #    logdata = await self.snapshot()
-            #    logfiles.append(logdata, local_time, solar_time)
+            if info.get('daylight'):
+                local_time = datetime.datetime.fromtimestamp(info.get('time'))
+                solar_time = local_time + info.get('delta')
+                logdata = await self.snapshot()
+                logfiles.append(logdata, local_time, solar_time)
 
     DAYLIGHT_VAR = {
         'force_daylight_tested': False,
@@ -387,7 +395,6 @@ class Site():
     def sun_events(self, daylight):
         if not daylight:
             return
-
         astral_now = astral.sun.now(tzinfo=self._tzinfo)
         for index, event_dict in enumerate(Site.SOLAR_EVENTS):
             for type, event in event_dict.items():

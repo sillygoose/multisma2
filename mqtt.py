@@ -7,6 +7,7 @@ import random
 import string
 import time
 import logging
+from pprint import pprint
 
 import json
 import paho.mqtt.client as mqtt
@@ -38,7 +39,6 @@ def error_msg(code):
     }
     return error_messages.get(str(code), "unknown error code: " + str(code))
 
-
 def on_disconnect(client, userdata, result_code):
     """Process the on_disconnect callback."""
     # pylint: disable=unused-argument
@@ -52,7 +52,6 @@ def on_disconnect(client, userdata, result_code):
             "MQTT client unexpectedly disconnected: %s, trying reconnect()",
             error_msg(result_code),
         )
-
 
 def on_connect(client, userdata, flags, result_code):
     """Process the on_connect callback."""
@@ -69,7 +68,6 @@ def on_connect(client, userdata, flags, result_code):
         client.connection_failed = True
         logger.info("MQTT client connection failed: %s", error_msg(result_code))
 
-
 def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
     # Disconnect the MQTT client from the broker
@@ -81,7 +79,6 @@ def mqtt_exit():
 #
 # Public
 #
-
 
 def publish(sensors):
     """Publish a dictionary of sensor keys amd values using MQTT."""
@@ -105,6 +102,13 @@ def publish(sensors):
 
         # Limit floats to the requested precision
         for key, value in sensor.items():
+            if isinstance(value, dict):
+                for k, v in value.items():
+                    if precision:
+                        value[k] = round(v, precision)
+                    else:
+                        value[k] = int(v)
+
             if isinstance(value, float):
                 if precision:
                     sensor[key] = round(value, precision)
@@ -121,7 +125,6 @@ def publish(sensors):
                     topic,
                     error_msg(message_info.rc),
                 )
-
 
 def test_connection():
     """Tests and caches the client MQTT broker connectioon."""
