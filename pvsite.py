@@ -1,5 +1,10 @@
 """Code to interface with the SMA inverters and return the results."""
 
+#
+# todo
+#   - cleanup composite
+#
+
 import asyncio
 import datetime
 from dateutil import tz
@@ -34,8 +39,8 @@ class Timer:
 
 
 MQTT_TOPICS = {
-        '6100_0046C200': 'production_current',
-        '6400_0046C300': 'production_total',
+        '6100_0046C200': 'production/current',
+        '6400_0046C300': 'production/total',
         '6100_40263F00': 'ac_measurements/power',
         '6100_00465700': 'ac_measurements/frequency',
         '6180_08465A00': 'ac_measurements/excitation_type',
@@ -75,11 +80,11 @@ DC_MEASUREMENTS = [
     ]
 
 STATES = [
-        '6380_40251E00',        # DC Power (current power)
-        '6180_08416500',        # Reason for derating
-        '6100_0046C200',        # PV generation power (current power)
+#        '6380_40251E00',        # DC Power (current power)
+#        '6180_08416500',        # Reason for derating
+#        '6100_0046C200',        # PV generation power (current power)
         '6400_0046C300',        # Meter count and PV gen. meter (total power)
-        '6380_40451F00',        # DC Voltage
+#        '6380_40451F00',        # DC Voltage
     ]
 
 
@@ -152,6 +157,7 @@ class Site():
         while history_list:
             inverter = history_list.pop()
             last_seen = 0
+            inverter_name = inverter.pop(0)
             for index, item in enumerate(inverter, 1):
                 if index == len(inverter):
                     break
@@ -350,7 +356,9 @@ class Site():
                 queue.task_done()
 
             # Broadcast
-            pprint(await self.read_keys(STATES))
+            hist = await self.read_history_period('day')
+            pprint(hist)
+            #await self.read_keys(STATES)
             #mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())

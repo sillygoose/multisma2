@@ -2,7 +2,6 @@
 
 # todo
 #   - clean up futures
-#   - fix get_state
 #
 
 import asyncio
@@ -125,7 +124,9 @@ class Inverter():
     async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
         raw = await self._sma.read_values(keys)
+        print(f"read_keys(): {raw}")
         cleaned = self.clean(raw)
+        print(f"read_keys(): {cleaned}")
         cleaned['name'] = self._name
         return cleaned
 
@@ -137,9 +138,9 @@ class Inverter():
         end = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)) + datetime.timedelta(days=1)
         history = await self._sma.read_history(int(start.timestamp()), int(end.timestamp()))
 
-        today_production = await self.get_state('6400_0046C300')
-        value_list = today_production.pop(self._name)
-        history.append({'t': int(end.timestamp()), 'v': value_list[0].get('val')})
+        TOTAL_PRODUCTION = '6400_0046C300'
+        today_production = self.clean(await self.get_state1(TOTAL_PRODUCTION))
+        history.append({'t': int(end.timestamp()), 'v': today_production.get(TOTAL_PRODUCTION)})
         history.insert(0, {'name': self._name})
         return history
 
@@ -188,6 +189,13 @@ class Inverter():
         print(f"{self._name}    month baseline {datetime.datetime.fromtimestamp(self._history['month'].get('t'))}   {self._history['month'].get('v')}")
         print(f"{self._name}     year baseline {datetime.datetime.fromtimestamp(self._history['year'].get('t'))}   {self._history['year'].get('v')}")
         print(f"{self._name} lifetime baseline {datetime.datetime.fromtimestamp(self._history['lifetime'].get('t'))}   {self._history['lifetime'].get('v')}")
+
+    async def get_state1(self, key):
+        """###."""
+        async with self._lock:
+            state = self._instantaneous.get(key, None).copy()
+        state_dict = {key: state}
+        return state_dict
 
     async def get_state(self, key):
         """###."""
