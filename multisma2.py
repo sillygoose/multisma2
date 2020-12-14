@@ -4,6 +4,7 @@ import asyncio
 import aiohttp
 import datetime
 import logging
+import sys
 
 from pvsite import Site
 import mqtt
@@ -47,9 +48,7 @@ if __name__ == "__main__":
                 await site.close()
                 logfiles.close()
 
-#try:
-    # Start collecting
-    asyncio.run(main())
 
-#except KeyboardInterrupt:
-#    pass
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
+        asyncio.run(main())
+    print("python 3.7 or better required")

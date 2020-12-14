@@ -6,9 +6,9 @@
 
 import asyncio
 import datetime
-from pprint import pprint
 import logging
 import json
+from pprint import pprint
 
 import sma
 
@@ -137,9 +137,10 @@ class Inverter():
 
     async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
-        ### return a list of results
-        raw = await self._sma.read_values(keys)
-        return self.clean(raw)
+        results = []
+        for index, key in enumerate(keys):
+            results.append(self.read_key(key))
+        return results
 
     async def read_key(self, key):
         """Read a specified inverter key."""
@@ -227,7 +228,7 @@ class Inverter():
         return None
 
     def get_precision(self, key):
-        """Get the precision for a given key."""
+        """Return the precision for a given key."""
         precision = None
         metadata = self._metadata.get(key, None)
         if metadata:
@@ -237,14 +238,14 @@ class Inverter():
         return precision
 
     def get_scale(self, key):
-        """Get the scale number for a given key."""
+        """Return the scale value for a given key."""
         metadata = self._metadata.get(key, None)
         if metadata:
             return metadata.get('Scale', None)
         return None
 
     def get_type(self, key):
-        """Get the type of a given key."""
+        """Return the type of a given key."""
         metadata = self._metadata.get(key, '???')
         return metadata.get('Typ', None)
 

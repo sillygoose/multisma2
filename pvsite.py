@@ -1,9 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-#
-# todo
-#
-
 import asyncio
 import datetime
 from dateutil import tz
@@ -79,9 +75,10 @@ DC_MEASUREMENTS = [
     ]
 
 STATES = [
-        '6380_40251E00',        # DC Power (current power)
+        '6100_40263F00',        # AC grid power (current power)
         '6180_08416500',        # Reason for derating
-        '6100_0046C200',        # PV generation power (current power)
+        '6380_40251E00',        # DC power (current power)
+#        '6100_0046C200',        # PV generation power (current power)
 #        '6400_0046C300',        # Meter count and PV gen. meter (total power)
 #        '6380_40451F00',        # DC Voltage
     ]
@@ -215,10 +212,9 @@ class Site():
                     if period in ['year', 'lifetime']:
                         unit = 'tons'
                         factor = CO2_AVOIDANCE_TON
-                    co2avoided_period['total'] = total['total'] * factor
+                    co2avoided_period['total'] = round(total['total'] * factor, 2)
                     co2avoided_period['topic'] = 'co2avoided/' + period
                     co2avoided_period['unit'] = unit
-                    co2avoided_period['precision'] = 2
                     co2avoided_period['factor'] = factor
                     co2avoided.append(co2avoided_period)
                     break
@@ -232,7 +228,7 @@ class Site():
         """Get the values of interest from each inverter."""
         return await self.get_composite(SITE_SNAPSHOT)
 
-    async def current_state(self):
+    async def current_status(self):
         """Get the current status of each inverter."""
         return await self.get_composite(['6180_08416500'])
 
@@ -289,6 +285,7 @@ class Site():
 
         return sensors
 
+    # testing values
     SAMPLE_PERIOD = [
         { 'scale': 3, 'daylight_test': 30 },
         { 'scale': 1, 'daylight_test': 30 },
@@ -334,15 +331,11 @@ class Site():
                 queue.task_done()
 
             # Broadcast
-            #snap = await self.snapshot()
-            #pprint(snap)
-            #results = await self.read_keys(STATES)
-            #pprint(results)
             mqtt.publish(await self.snapshot())
             mqtt.publish(await self.read_keys(STATES))
-            #mqtt.publish(await self.current_production())
-            #mqtt.publish(await self.current_dc_values())
-            #mqtt.publish(await self.current_state())
+            mqtt.publish(await self.current_production())
+            mqtt.publish(await self.current_dc_values())
+            mqtt.publish(await self.current_status())
 
     async def task_30s(self, queue):
         """###."""

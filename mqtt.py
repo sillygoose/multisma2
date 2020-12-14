@@ -88,17 +88,13 @@ def publish(sensors):
 
     # Separate out the sensor dictionaries
     for sensor in sensors:
-        # Extract the topic from the dictionary
         if "topic" not in sensor:
             logger.warning("'topic' not in sensor dictionary: %s", str(sensor))
-        else:
-            topic = sensor.pop("topic")
+            return
 
-        # Extract the precision field
-        if "precision" in sensor:
-            precision = sensor.pop("precision")
-        else:
-            precision = 3
+        # Extract the topic and precision from the dictionary
+        topic = sensor.pop("topic")
+        precision = sensor.pop("precision", None)
 
         # Limit floats to the requested precision
         for key, value in sensor.items():
@@ -107,13 +103,13 @@ def publish(sensors):
                     if precision:
                         value[k] = round(v, precision)
                     else:
-                        value[k] = int(v)
+                        value[k] = v
 
             if isinstance(value, float):
                 if precision:
                     sensor[key] = round(value, precision)
                 else:
-                    sensor[key] = int(value)
+                    sensor[key] = value
 
         # Encode each sensor in JSON and publish
         if sensor:
