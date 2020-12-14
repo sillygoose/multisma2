@@ -60,7 +60,7 @@ class Inverter():
         await self._sma.new_session()
         if self._sma.sma_sid is None:
             logger.info(f"{self._name} - no session ID")
-            return False
+            return None
 
         # Grab the metadata dictionary
         metadata_url = self._url + '/data/ObjectMetadata_Istl.json'
@@ -77,7 +77,9 @@ class Inverter():
         # Read the initial set of history state data
         await self.read_history()
         await self.read_instantaneous()
-        return True
+
+        # Return a list of cached keys
+        return self._instantaneous.keys()
 
     async def close(self):
         """Log out of the interter."""
@@ -157,7 +159,8 @@ class Inverter():
 
         TOTAL_PRODUCTION = '6400_0046C300'
         latest_production = await self.get_state(TOTAL_PRODUCTION)
-        history.append({'t': int(end.timestamp()), 'v': latest_production.get(TOTAL_PRODUCTION)})
+        results = latest_production.pop(TOTAL_PRODUCTION)
+        history.append({'t': int(end.timestamp()), 'v': results.get('val')})
         history.insert(0, {'name': self._name})
         return history
 

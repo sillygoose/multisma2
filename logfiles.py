@@ -28,9 +28,9 @@ LOGGING_VAR = {}
 
 def close():
     """Closes open log files."""
+
     # Call from main thread to make sure all logging threads are completed
     if "datalogging" in LOGGING_VAR:
-        #handle = LOGGING_VAR["datalogging"]
         handle = LOGGING_VAR.pop("datalogging")
         logger.info("Closing production data log %s", LOGGING_VAR["filename"])
         handle.close()
@@ -38,6 +38,7 @@ def close():
 
 def create_application_log(app_logger):
     """Create the application log."""
+
     # Create the application log
     now = datetime.now()
     filename = os.path.expanduser(
@@ -69,6 +70,7 @@ def create_application_log(app_logger):
 
 def create_production_log():
     """Create the production log file and fill in the header record."""
+
     # Build the production log file name and force line buffering
     now = datetime.now()
     filename = os.path.expanduser(
@@ -99,6 +101,7 @@ def create_production_log():
         LOGGING_VAR["datalogging"].write(", %10s" % ("Site"))
         for inv in INVERTERS:
             LOGGING_VAR["datalogging"].write(", %10s" % (inv[INVERTER_LOG_NAME_KEY]))
+        LOGGING_VAR["datalogging"].write(", %10s" % ("Site"))
         for inv in INVERTERS:
             LOGGING_VAR["datalogging"].write(", %10s" % (inv[INVERTER_LOG_NAME_KEY]))
         LOGGING_VAR["datalogging"].write("\n")
@@ -111,6 +114,7 @@ def create_production_log():
         LOGGING_VAR["datalogging"].write(", %10s" % ("AC Power"))
         for inv in INVERTERS:
             LOGGING_VAR["datalogging"].write(", %10s" % ("DC Power"))
+        LOGGING_VAR["datalogging"].write(", %10s" % ("DC Power"))
         for inv in INVERTERS:
             LOGGING_VAR["datalogging"].write(", %10s" % ("Status"))
         LOGGING_VAR["datalogging"].write("\n")
@@ -119,28 +123,28 @@ def create_production_log():
         logger.info("Creating production log %s", LOGGING_VAR["filename"])
 
 
-def append(ac_production, local_time, solar_time):
-    """Log each sensor, substitute 0 if not present."""
+def append(log_data, local_time, solar_time):
+    """Log the sensors in the data set to a .csv file."""
+
     # Exit if not actively logging
-    #if not ENABLE_PRODUCTION_LOGGING or not daylight.is_daylight():
     if not ENABLE_PRODUCTION_LOGGING:
         return
+
+    # Check if the first time through and the logs must be created
+    if "datalogging" not in LOGGING_VAR:
+        create_production_log()
 
     # Extract the data sets for output
     ac_power = {}
     dc_power = {}
     inv_state = {}
-    for index, sensor in enumerate(ac_production):
+    for index, sensor in enumerate(log_data):
         if sensor['topic'] == 'ac_measurements/power':
             ac_power = sensor
         if sensor['topic'] == 'dc_measurements/power':
             dc_power = sensor
-        if sensor['topic'] == 'reason_for_derating':
+        if sensor['topic'] == 'status/reason_for_derating':
             inv_state = sensor
-
-    # Check if the first time through and the logs must be created
-    if "datalogging" not in LOGGING_VAR:
-        create_production_log()
 
     # Log the local and solar times
     LOGGING_VAR["datalogging"].write(local_time.strftime("%H:%M"))
@@ -153,6 +157,7 @@ def append(ac_production, local_time, solar_time):
     for inverter in INVERTERS:
         strings = dc_power.get(inverter[INVERTER_NAME_KEY], None)
         LOGGING_VAR["datalogging"].write(", %10.0f" % (strings.get('total', '$$$')))
+    LOGGING_VAR["datalogging"].write(", %10.0f" % (dc_power.get('total', '$$$')))
     for inverter in INVERTERS:
         LOGGING_VAR["datalogging"].write(", %10s" % (inv_state.get(inverter[INVERTER_NAME_KEY], '###')))
     LOGGING_VAR["datalogging"].write("\n")

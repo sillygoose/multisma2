@@ -23,16 +23,6 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
-class Timer:
-    def __enter__(self):
-        self.start = time.time()
-        return self
-
-    def __exit__(self, *args):
-        self.end = time.time()
-        self.interval = self.end - self.start
-
-
 MQTT_TOPICS = {
         '6100_0046C200': 'production/current',
         '6400_0046C300': 'production/total',
@@ -50,35 +40,36 @@ MQTT_TOPICS = {
 
 # These are keys that we calculate a total across all inverters
 AGGREGATE_KEYS = [
-        '6100_40263F00',        # AC grid power (current power)
-        '6100_0046C200',        # PV generation power (current power)
+        '6100_40263F00',        # AC grid power (current)
+        '6100_0046C200',        # PV generation power (current)
         '6400_0046C300',        # Meter count and PV gen. meter (total power)
         '6380_40251E00',        # DC power (1 per string)
     ]
 
 AC_MEASUREMENTS = [
-        '6100_40263F00',        # AC grid power (current power)
+        '6100_40263F00',        # AC grid power (current)
         '6100_00465700',        # Grid frequency
         '6100_00464B00'         # Phase L1 against L2 voltage
     ]
 
 SITE_SNAPSHOT = [
-        '6100_40263F00',        # AC grid power (current power)
+        '6100_40263F00',        # AC grid power (current)
         '6180_08416500',        # Reason for derating
-        '6380_40251E00',        # DC power (current power)
+        '6380_40251E00',        # DC power (current)
     ]
 
 DC_MEASUREMENTS = [
-        '6380_40251E00',        # DC Power (current power)
+        '6380_40251E00',        # DC Power (current)
         '6380_40451F00',        # DC Voltage
         '6380_40452100'         # DC Current
     ]
 
 STATES = [
-        '6100_40263F00',        # AC grid power (current power)
+        '6100_40263F00',        # AC grid power (current)
         '6180_08416500',        # Reason for derating
-        '6380_40251E00',        # DC power (current power)
-#        '6100_0046C200',        # PV generation power (current power)
+        '6380_40251E00',        # DC power (current)
+        '6800_08855C00',        # SMA Shadefix Activated
+#        '6100_0046C200',        # PV generation power (current)
 #        '6400_0046C300',        # Meter count and PV gen. meter (total power)
 #        '6380_40451F00',        # DC Voltage
     ]
@@ -90,7 +81,7 @@ class Site():
     SOLAR_EVENTS = []
 
     def __init__(self, session):
-        """###."""
+        """Create a new Site object."""
         self._tasks = None
         self._inverters = []
         for inv, inverter in enumerate(INVERTERS, 1):
@@ -116,9 +107,10 @@ class Site():
         Site.SOLAR_EVENTS.append(dict(dusk=dict(time=dusk, seen=astral_now > dusk, msg="End of daylight, start of lazy night monitoring")))
 
     async def initialize(self):
-        """###."""
-        await asyncio.gather(*(inverter.initialize() for inverter in self._inverters))
-        #worker_tasks = [attribute for attribute in dir(Site) if callable(getattr(Site, attribute)) and attribute.startswith('task_') is True]
+        """Initialize the Site object to begin collection."""
+        cached_keys = await asyncio.gather(*(inverter.initialize() for inverter in self._inverters))
+        self._cached_keys = cached_keys[0]
+
         queue5 = asyncio.Queue()
         queue30 = asyncio.Queue()
         queue60 = asyncio.Queue()
@@ -126,22 +118,22 @@ class Site():
             asyncio.create_task(self.task_5s(queue5)),
             asyncio.create_task(self.task_30s(queue30)),
             asyncio.create_task(self.task_60s(queue60)),
-            asyncio.create_task(self.task_manager(queue5, queue30, queue60)),
+            asyncio.create_task(self.task_scheduler(queue5, queue30, queue60)),
         ]
 
     async def close(self):
-        """###."""
+        """Shutdown the Site."""
         for task in self._tasks:
             task.cancel()
         await asyncio.gather(*self._tasks, return_exceptions=True)
         await asyncio.gather(*(inverter.close() for inverter in self._inverters))
 
     async def read_instantaneous(self):
-        """###."""
+        """Update the instantaneous cache from the inverter."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
 
     async def read_history_period(self, period):
-        """###."""
+        """Collect the production history for a specified period."""
         history_list = await asyncio.gather(*(inverter.read_history_period(period) for inverter in self._inverters))
 
         aggregate = {}
@@ -241,16 +233,14 @@ class Site():
         return await self.get_composite(['6400_0046C300'])
 
     async def read_keys(self, keys):
-        """###."""
-        return await self.get_composite(keys, source=True)
+        """Read a list of keys from the cache or the inverter(s)."""
+        return await self.get_composite(keys)
 
-    async def get_composite(self, keys, source=False):
-        """Get the key values of each inverter and optionally the total."""
+    async def get_composite(self, keys):
+        """Get the key values of each inverter and optionally create a site total."""
         sensors = []
         for key in keys:
-            # use read_key if not in cache
-            results = []
-            if not source:
+            if self.cached_key(key):
                 results = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
             else:
                 results = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
@@ -280,19 +270,19 @@ class Site():
             if calculate_total:
                 composite['total'] = total
 
-            composite['topic'] = MQTT_TOPICS.get(key, '???')
+            composite['topic'] = MQTT_TOPICS.get(key, key)
             sensors.append(composite)
 
         return sensors
 
     # testing values
     SAMPLE_PERIOD = [
-        { 'scale': 3, 'daylight_test': 30 },
-        { 'scale': 1, 'daylight_test': 30 },
+        { 'scale': 3, },
+        { 'scale': 1, },
     ]
 
-    async def task_manager(self, queue5, queue30, queue60):
-        """###."""
+    async def task_scheduler(self, queue5, queue30, queue60):
+        """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
         last_tick = int(time.time())
         info = dict(time=last_tick, daylight=self.daylight(), dawn=self._dawn, delta=self._solar_time_diff, dusk=self._dusk)
@@ -321,7 +311,7 @@ class Site():
             await asyncio.sleep(SLEEP)
 
     async def task_5s(self, queue):
-        """###."""
+        """Work done every 5 seconds."""
         longest = 0.0
         while True:
             try:
@@ -330,29 +320,36 @@ class Site():
             finally:
                 queue.task_done()
 
-            # Broadcast
             mqtt.publish(await self.snapshot())
-            mqtt.publish(await self.read_keys(STATES))
-            mqtt.publish(await self.current_production())
-            mqtt.publish(await self.current_dc_values())
-            mqtt.publish(await self.current_status())
+            #mqtt.publish(await self.read_keys(STATES))
+            #mqtt.publish(await self.current_production())
+            #mqtt.publish(await self.current_dc_values())
+            #mqtt.publish(await self.current_status())
 
     async def task_30s(self, queue):
-        """###."""
+        """Work done every 30 seconds."""
         while True:
-            info = await queue.get()
-            queue.task_done()
+            try:
+                info = await queue.get()
+            finally:
+                queue.task_done()
+
             mqtt.publish(await self.production_stats())
-            mqtt.publish(await self.total_production())
+            #mqtt.publish(await self.total_production())
 
     async def task_60s(self, queue):
-        """###."""
+        """Work done every 60 seconds."""
         while True:
-            info = await queue.get()
-            queue.task_done()
+            try:
+                info = await queue.get()
+            finally:
+                queue.task_done()
+
             mqtt.publish(await self.co2_avoided())
             mqtt.publish(await self.read_history_period('day'))
             mqtt.publish(await self.read_history_period('month'))
+
+            # Log production and status to the production log
             if info.get('daylight'):
                 local_time = datetime.datetime.fromtimestamp(info.get('time'))
                 solar_time = local_time + info.get('delta')
@@ -399,3 +396,8 @@ class Site():
                 if astral_now > event['time']:
                     event['seen'] = True
                     logger.info(event['msg'])
+
+    def cached_key(self, key):
+        """Determines if a key in the inverter cache."""
+        cached = key in self._cached_keys
+        return cached
