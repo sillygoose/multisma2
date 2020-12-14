@@ -274,8 +274,8 @@ class Site():
 
     # testing values
     SAMPLE_PERIOD = [
-        { 'scale': 3, },
-        { 'scale': 1, },
+        { 'scale': 3 },
+        { 'scale': 1 },
     ]
 
     async def task_scheduler(self, queue5, queue30, queue60):
@@ -383,6 +383,7 @@ class Site():
         return daylight
 
     def sun_events(self, daylight):
+        """Determines if a solar event has occured."""
         if not daylight:
             return
         astral_now = astral.sun.now(tzinfo=self._tzinfo)

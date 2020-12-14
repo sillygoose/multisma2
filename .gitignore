@@ -1,3 +1,6 @@
+# ignore the configuration file
+configuration.py
+
 # Ignore local dirs
 backup/
 data/
