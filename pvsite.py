@@ -15,7 +15,7 @@ from inverter import Inverter
 import mqtt
 import logfiles
 
-from configuration import SITE_LATITUDE, SITE_LONGITUDE, TIMEZONE
+from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
 from configuration import INVERTERS
 from configuration import CO2_AVOIDANCE
 
@@ -68,10 +68,7 @@ STATES = [
         '6100_40263F00',        # AC grid power (current)
         '6180_08416500',        # Reason for derating
         '6380_40251E00',        # DC power (current)
-        '6800_08855C00',        # SMA Shadefix Activated
-#        '6100_0046C200',        # PV generation power (current)
-#        '6400_0046C300',        # Meter count and PV gen. meter (total power)
-#        '6380_40451F00',        # DC Voltage
+        '6800_08855C00',        # SMA Shadefix Activated (not cached)
     ]
 
 
@@ -85,10 +82,10 @@ class Site():
         self._tasks = None
         self._inverters = []
         for inv, inverter in enumerate(INVERTERS, 1):
-            object = Inverter(inverter['Name'], inverter['IP_Addr'], inverter['User'], inverter['Password'], session)
+            object = Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], session)
             self._inverters.append(object)
 
-        self._siteinfo = astral.LocationInfo("Parker Lane", "New York", TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
+        self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
 
         local_noon = datetime.datetime.combine(datetime.date.today(), datetime.time(12, 0), tzinfo=self._tzinfo)

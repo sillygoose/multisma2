@@ -11,8 +11,6 @@ from configuration import (
     ENABLE_PRODUCTION_LOGGING,
     PRODUCTION_LOG_FILE_PREFIX,
     APPLICATION_LOG_LOGGER_NAME,
-    INVERTER_NAME_KEY,
-    INVERTER_LOG_NAME_KEY,
     APPLICATION_LOG_FILE,
     APPLICATION_LOG_FORMAT,
 )
@@ -97,13 +95,13 @@ def create_production_log():
         LOGGING_VAR["datalogging"].write("%5s" % ("Local"))
         LOGGING_VAR["datalogging"].write(", %5s" % ("Solar"))
         for inv in INVERTERS:
-            LOGGING_VAR["datalogging"].write(", %10s" % (inv[INVERTER_LOG_NAME_KEY]))
+            LOGGING_VAR["datalogging"].write(", %10s" % (inv['name']))
         LOGGING_VAR["datalogging"].write(", %10s" % ("Site"))
         for inv in INVERTERS:
-            LOGGING_VAR["datalogging"].write(", %10s" % (inv[INVERTER_LOG_NAME_KEY]))
+            LOGGING_VAR["datalogging"].write(", %10s" % (inv['name']))
         LOGGING_VAR["datalogging"].write(", %10s" % ("Site"))
         for inv in INVERTERS:
-            LOGGING_VAR["datalogging"].write(", %10s" % (inv[INVERTER_LOG_NAME_KEY]))
+            LOGGING_VAR["datalogging"].write(", %10s" % (inv['name']))
         LOGGING_VAR["datalogging"].write("\n")
 
         # 2nd row of AC Power (and total), DC Power, and inverter status
@@ -152,12 +150,12 @@ def append(log_data, local_time, solar_time):
 
     # AC power, DC power, and inverter status
     for inverter in INVERTERS:
-        LOGGING_VAR["datalogging"].write(", %10.0f" % (ac_power.get(inverter[INVERTER_NAME_KEY], '###')))
+        LOGGING_VAR["datalogging"].write(", %10.0f" % (ac_power.get(inverter['name'], '$$$')))
     LOGGING_VAR["datalogging"].write(", %10.0f" % (ac_power.get('total', '$$$')))
     for inverter in INVERTERS:
-        strings = dc_power.get(inverter[INVERTER_NAME_KEY], None)
+        strings = dc_power.get(inverter['name'], None)
         LOGGING_VAR["datalogging"].write(", %10.0f" % (strings.get('total', '$$$')))
     LOGGING_VAR["datalogging"].write(", %10.0f" % (dc_power.get('total', '$$$')))
     for inverter in INVERTERS:
-        LOGGING_VAR["datalogging"].write(", %10s" % (inv_state.get(inverter[INVERTER_NAME_KEY], '###')))
+        LOGGING_VAR["datalogging"].write(", %10s" % (inv_state.get(inverter['name'], '$$$')))
     LOGGING_VAR["datalogging"].write("\n")
