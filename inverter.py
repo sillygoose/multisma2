@@ -13,7 +13,6 @@ import json
 import sma
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
-
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
@@ -91,43 +90,61 @@ class Inverter():
         async with self._lock:
             self._instantaneous = await self._sma.read_instantaneous()
 
+    AGGREGATE_KEYS = [
+        '6380_40251E00',        # DC Power (current power)
+    ]
+
     def clean(self, raw_results):
         """Clean the raw inverter data and return a dict with the key and result."""
         cleaned = {}
         for key, value in raw_results.items():
+            aggregate = Inverter.AGGREGATE_KEYS.count(key)
             type = self.get_type(key)
             scale = self.get_scale(key)
+            unit = self.get_unit(key)
+            precision = self.get_precision(key)
             states = value.pop('1', None)
             results = {}
             if type == 0:
                 sensors = {}
+                total = 0
                 subkeys = ['a', 'b', 'c']
+                val = 0
                 for index, state in enumerate(states):
                     val = state.get('val', None)
                     if val is None:
                         val = 0
                     if scale != 1:
                         val *= scale
+                    total += val
                     sensors[subkeys[index]] = val
-                if len(sensors) > 1:
-                    cleaned[key] = sensors
-                else:
-                    cleaned[key] = sensors.get(subkeys[0])
+
+                if len(states) > 1:
+                    if aggregate:
+                        sensors['total'] = total
+                    val = sensors
+                cleaned[key] = { 'val': val, 'unit': unit, 'precision': precision }
             elif type == 1:
                 for index, state in enumerate(states):
                     tag_list = state.get('val')
                     tag = self.lookup_tag(tag_list[0].get('tag'))
-                cleaned[key] = tag
+                cleaned[key] = { 'val': tag }
             else:
                 logger.warning(f"unexpected sma type: {type}")
+
+        cleaned['name'] = self._name
         return cleaned
 
     async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
+        ### return a list of results
         raw = await self._sma.read_values(keys)
-        cleaned = self.clean(raw)
-        cleaned['name'] = self._name
-        return cleaned
+        return self.clean(raw)
+
+    async def read_key(self, key):
+        """Read a specified inverter key."""
+        raw_result = await self._sma.read_values([key])
+        return self.clean({ key: raw_result.get(key) })
 
     async def read_history_period(self, period):
         """Collect the production history for the specified period."""
@@ -194,9 +211,6 @@ class Inverter():
         async with self._lock:
             state = self._instantaneous.get(key, None).copy()
         cleaned = self.clean({ key: state })
-        cleaned['name'] = self._name
-        cleaned['unit'] = self.get_unit(key)
-        cleaned['precision'] = self.get_precision(key)
         return cleaned
 
     def name(self):

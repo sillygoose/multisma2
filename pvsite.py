@@ -82,8 +82,8 @@ STATES = [
         '6380_40251E00',        # DC Power (current power)
         '6180_08416500',        # Reason for derating
         '6100_0046C200',        # PV generation power (current power)
-        '6400_0046C300',        # Meter count and PV gen. meter (total power)
-        '6380_40451F00',        # DC Voltage
+#        '6400_0046C300',        # Meter count and PV gen. meter (total power)
+#        '6380_40451F00',        # DC Voltage
     ]
 
 
@@ -142,11 +142,6 @@ class Site():
     async def read_instantaneous(self):
         """###."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
-
-    async def read_keys(self, keys):
-        """###."""
-        key_list = await asyncio.gather(*(inverter.read_keys(keys) for inverter in self._inverters))
-        return key_list
 
     async def read_history_period(self, period):
         """###."""
@@ -249,34 +244,42 @@ class Site():
         """Get the total production of each inverter and the total of all inverters."""
         return await self.get_composite(['6400_0046C300'])
 
-    async def get_composite(self, keys):
+    async def read_keys(self, keys):
+        """###."""
+        return await self.get_composite(keys, source=True)
+
+    async def get_composite(self, keys, source=False):
         """Get the key values of each inverter and optionally the total."""
         sensors = []
         for key in keys:
+            # use read_key if not in cache
+            results = []
+            if not source:
+                results = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
+            else:
+                results = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
+
             composite = {}
             total = 0
-            results = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
             calculate_total = AGGREGATE_KEYS.count(key)
             for index, inverter in enumerate(results):
                 result = inverter.get(key)
-                unit = inverter.get('unit', None)
-                precision = inverter.get('precision', None)
-                if isinstance(result, dict):
+                val = result.get('val', None)
+                unit = result.get('unit', None)
+                precision = result.get('precision', None)
+                if isinstance(val, dict):
                     if calculate_total:
-                        subtotal = 0
-                        for k, v in result.items():
-                            subtotal += v
-                            total += v
-                        result['total'] = subtotal
+                        subtotal = val.get('total')
+                        total += subtotal
                 else:
                     if calculate_total:
-                        total += result
+                        total += val
 
-                composite[inverter.get('name')] = result
                 if unit:
                     composite['unit'] = unit
                 if precision is not None:
                     composite['precision'] = precision
+                composite[inverter.get('name')] = val
 
             if calculate_total:
                 composite['total'] = total
@@ -326,20 +329,20 @@ class Site():
         while True:
             try:
                 info = await queue.get()
-                with Timer() as t:
-                    await self.read_instantaneous()
-
+                await self.read_instantaneous()
             finally:
-                #if t.interval > longest:
-                    #longest = t.interval
-                    #logger.info(f"longest read_instantaneous() request took {longest:.3f} sec.")
                 queue.task_done()
 
             # Broadcast
+            #snap = await self.snapshot()
+            #pprint(snap)
+            #results = await self.read_keys(STATES)
+            #pprint(results)
             mqtt.publish(await self.snapshot())
-            mqtt.publish(await self.current_production())
-            mqtt.publish(await self.current_dc_values())
-            mqtt.publish(await self.current_state())
+            mqtt.publish(await self.read_keys(STATES))
+            #mqtt.publish(await self.current_production())
+            #mqtt.publish(await self.current_dc_values())
+            #mqtt.publish(await self.current_state())
 
     async def task_30s(self, queue):
         """###."""
