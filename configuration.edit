@@ -1,0 +1,49 @@
+# Site location details for solar time calculations
+SITE_NAME = "My Solar Site"
+SITE_REGION = "New York"
+TIMEZONE = 'America/New_York'
+SITE_LATITUDE = 42
+SITE_LONGITUDE = -76
+
+# Inverter daily production log file customizations
+ENABLE_PRODUCTION_LOGGING = False
+PRODUCTION_LOG_FILE_PREFIX = 'data/multisma2'
+
+# Application log file customization
+APPLICATION_LOG_FILE = 'log/multisma2'
+APPLICATION_LOG_FORMAT = '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
+APPLICATION_LOG_LOGGER_NAME = 'multisma2'
+
+# Production fuel mix factor (kgCO2e per kWh) which is an estimate of local utility KgCO2e/kWh
+# You can get these estimates from the EPA, your utility company
+# or from https://www.carbonfootprint.com/international_electricity_factors.html
+CO2_AVOIDANCE = 0.44000
+
+# MQTT configuration options:
+#  MQTT_ENABLE            set to True to enable sending messages to the broker
+#  MQTT_CLIENT            set to a unique broker client nane and used as top level topic
+#  MQTT_BROKER_IPADDR     set to the fully qualified domain name or IP address of the broker
+#  MQTT_BROKER_PORT       set to port (default to 1883 if set to 0)
+#  MQTT_USERNAME          set to the username if authentication is used
+#  MQTT_PASSWORD          set to the password port if authentication is used
+MQTT_ENABLE = False
+MQTT_CLIENT = 'multisma2'
+MQTT_BROKER_IPADDR = 'broker.mqtt.com'
+MQTT_BROKER_PORT = 0
+MQTT_USERNAME = 'username'
+MQTT_PASSWORD = 'password'
+
+# Inverter login information
+INVERTER_USERNAME = 'user'
+INVERTER_PASSWORD = 'password'
+
+# Inverter configuration
+# Supply the IP address and login credentials for each inverter.  The inverter names are used
+# in MQTT messages for the individual inverter sensors, :
+# multisma2/production_lifetime {"unit": "kWh", "inv0": 3287.216, "total": 8966.242, "inv1": 2417.215}
+
+INVERTERS = [
+   { 'ip': 'https://10.0.0.4', 'name': 'inv1', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+   { 'ip': 'https://10.0.0.5', 'name': 'inv2', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+   { 'ip': 'https://10.0.0.6', 'name': 'inv3', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+]
