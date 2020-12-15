@@ -183,30 +183,41 @@ class Site():
             period_stats['unit'] = 'kWh'
             period_stats['topic'] = 'production/' + period
             stats.append(period_stats)
+
         return stats
 
     async def co2_avoided(self):
-        """Calculate the CO2 avoided."""
+        """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
         CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
+        CO2_SETTINGS = [
+            { 'period': 'today',    'unit': 'kg',   'precision': 2, 'factor': CO2_AVOIDANCE_KG },
+            { 'period': 'month',    'unit': 'kg',   'precision': 0, 'factor': CO2_AVOIDANCE_KG },
+            { 'period': 'year',     'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
+            { 'period': 'lifetime', 'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
+        ]
+
         tp = await self.production_stats()
         co2avoided = []
         for index, total in enumerate(tp):
             total_topic = total['topic']
-            for period in ['today', 'month', 'year', 'lifetime']:
+            for settings in CO2_SETTINGS:
                 co2avoided_period = {}
+                period = settings.get('period')
                 if period in total_topic:
-                    unit = 'kg'
-                    factor = CO2_AVOIDANCE_KG
-                    if period in ['year', 'lifetime']:
-                        unit = 'tons'
-                        factor = CO2_AVOIDANCE_TON
-                    co2avoided_period['total'] = round(total['total'] * factor, 2)
+                    unit = settings.get('unit')
+                    factor = settings.get('factor')
+                    precision = settings.get('precision')
+                    if precision:
+                        co2avoided_period['total'] = round(total['total'] * factor, precision)
+                    else:
+                        co2avoided_period['total'] = int(total['total'] * factor)
                     co2avoided_period['topic'] = 'co2avoided/' + period
                     co2avoided_period['unit'] = unit
                     co2avoided_period['factor'] = factor
                     co2avoided.append(co2avoided_period)
                     break
+
         return co2avoided
 
     async def current_dc_values(self):
@@ -274,8 +285,8 @@ class Site():
 
     # testing values
     SAMPLE_PERIOD = [
-        { 'scale': 3 },
-        { 'scale': 1 },
+        { 'scale': 1 },     # night
+        { 'scale': 1 },     # day
     ]
 
     async def task_scheduler(self, queue5, queue30, queue60):
@@ -317,7 +328,8 @@ class Site():
             finally:
                 queue.task_done()
 
-            mqtt.publish(await self.snapshot())
+            mqtt.publish(await self.co2_avoided())
+            #mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.read_keys(STATES))
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
