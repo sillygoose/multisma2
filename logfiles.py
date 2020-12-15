@@ -4,7 +4,6 @@ import os
 import sys
 import logging
 from datetime import datetime
-from pprint import pprint
 
 from configuration import (
     INVERTERS,
@@ -136,13 +135,16 @@ def append(log_data, local_time, solar_time):
     ac_power = {}
     dc_power = {}
     inv_state = {}
-    for index, sensor in enumerate(log_data):
+    for sensor in log_data:
         if sensor['topic'] == 'ac_measurements/power':
             ac_power = sensor
+            continue
         if sensor['topic'] == 'dc_measurements/power':
             dc_power = sensor
+            continue
         if sensor['topic'] == 'status/reason_for_derating':
             inv_state = sensor
+            continue
 
     # Log the local and solar times
     LOGGING_VAR["datalogging"].write(local_time.strftime("%H:%M"))

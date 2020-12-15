@@ -2,11 +2,12 @@
 
 import asyncio
 import datetime
-from dateutil import tz
-from pprint import pprint
 import time
 import logging
 import os
+
+from pprint import pprint
+from dateutil import tz
 
 import astral
 from astral import sun
@@ -80,6 +81,9 @@ class Site():
     def __init__(self, session):
         """Create a new Site object."""
         self._tasks = None
+        self._total_production = None
+        self._cached_keys = None
+
         self._inverters = []
         for inv, inverter in enumerate(INVERTERS, 1):
             object = Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], session)
@@ -165,74 +169,90 @@ class Site():
         aggregate['unit'] = 'kWh'
         return [aggregate]
 
-    async def production_stats(self):
+    async def read_total_production(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
-        PRODUCTION_SETTINGS = [
-            { 'period': 'today',    'unit': 'kWh',  'scale': 1000,	    'precision': 2 },
-            { 'period': 'month',    'unit': 'kWh',  'scale': 1000,		'precision': 0 },
-            { 'period': 'year',     'unit': 'MWh',  'scale': 1000000,   'precision': 3 },
-            { 'period': 'lifetime', 'unit': 'MWh',  'scale': 1000000,   'precision': 3 },
-        ]
-        total_prod_list = await self.total_production()
-        total_prod = total_prod_list[0]
-        stats = []
-        for settings in PRODUCTION_SETTINGS:
-            period = settings.get('period')
-            unit = settings.get('unit')
-            scaling = settings.get('scale')
-            precision = settings.get('precision')
-            period_stats = {}
-            total = 0
-            for inverter in self._inverters:
-                name = inverter.name()
-                diff = (total_prod[name] - inverter._history[period].get('v')) / scaling
-                if precision:
-                    period_stats[name] = round(diff, precision)
+        total_production_list = await self.total_production()
+        for total_production in total_production_list:
+            unit = total_production.pop('unit')
+            raw_stats = []
+            for period in ['today', 'month', 'year', 'lifetime']:
+                period_stats = {}
+                inverter_periods = await asyncio.gather(*(inverter.start_production(period) for inverter in self._inverters))
+
+                total = 0
+                for inverter in inverter_periods:
+                    for inverter_name, history_value in inverter.items():
+                        period_total = total_production[inverter_name] - history_value
+                        total += period_total
+                        period_stats[inverter_name] = period_total
+
+                    period_stats['total'] = total
+                    period_stats['period'] = period
+                    period_stats['unit'] = unit
+
+                raw_stats.append(period_stats)
+
+        self._total_production = raw_stats
+        return raw_stats
+
+    async def production_history(self):
+        """Get the daily, monthly, yearly, and lifetime production values."""
+        PRODUCTION_SETTINGS = {
+            'today':      { 'unit': 'kWh',  'scale': 0.001,	    'precision': 2 },
+            'month':      { 'unit': 'kWh',  'scale': 0.001,		'precision': 0 },
+            'year':       { 'unit': 'MWh',  'scale': 0.000001,  'precision': 3 },
+            'lifetime':   { 'unit': 'MWh',  'scale': 0.000001,  'precision': 3 },
+        }
+
+        histories = []
+        for period in ['today', 'month', 'year', 'lifetime']:
+            settings = PRODUCTION_SETTINGS.get(period)
+            tp = self.find_total_production(period)
+            period = tp.pop('period')
+            unit = tp.pop('unit')
+            history = {}
+            for key, value in tp.items():
+                production = value * settings['scale']
+                if settings['precision']:
+                    history[key] = round(production, settings['precision'])
                 else:
-                    period_stats[name] = int(diff)
-                total += diff
+                    history[key] = int(production)
 
-            if precision:
-                period_stats['total'] = round(total, precision)
-            else:
-                period_stats['total'] = int(total)
-            period_stats['unit'] = unit
-            period_stats['topic'] = 'production/' + period
-            stats.append(period_stats)
+            history['topic'] = 'production/' + period
+            history['unit'] = settings['unit']
+            histories.append(history)
 
-        return stats
+        return histories
 
     async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
         CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
-        CO2_SETTINGS = [
-            { 'period': 'today',    'unit': 'kg',   'precision': 2, 'factor': CO2_AVOIDANCE_KG },
-            { 'period': 'month',    'unit': 'kg',   'precision': 0, 'factor': CO2_AVOIDANCE_KG },
-            { 'period': 'year',     'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
-            { 'period': 'lifetime', 'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
-        ]
+        CO2_SETTINGS = {
+            'today':    {'scale': 0.001,    'unit': 'kg',   'precision': 2, 'factor': CO2_AVOIDANCE_KG },
+            'month':    {'scale': 0.001,    'unit': 'kg',   'precision': 0, 'factor': CO2_AVOIDANCE_KG },
+            'year':     {'scale': 0.001,    'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
+            'lifetime': {'scale': 0.001,    'unit': 'tons', 'precision': 2, 'factor': CO2_AVOIDANCE_TON },
+        }
 
-        tp = await self.production_stats()
         co2avoided = []
-        for index, total in enumerate(tp):
-            total_topic = total['topic']
-            for settings in CO2_SETTINGS:
-                co2avoided_period = {}
-                period = settings.get('period')
-                if period in total_topic:
-                    unit = settings.get('unit')
-                    factor = settings.get('factor')
-                    precision = settings.get('precision')
-                    if precision:
-                        co2avoided_period['total'] = round(total['total'] * factor, precision)
-                    else:
-                        co2avoided_period['total'] = int(total['total'] * factor)
-                    co2avoided_period['topic'] = 'co2avoided/' + period
-                    co2avoided_period['unit'] = unit
-                    co2avoided_period['factor'] = factor
-                    co2avoided.append(co2avoided_period)
-                    break
+        for period in ['today', 'month', 'year', 'lifetime']:
+            settings = CO2_SETTINGS.get(period)
+            tp = self.find_total_production(period)
+            period = tp.pop('period')
+            unit = tp.pop('unit')
+            co2avoided_period = {}
+            for key, value in tp.items():
+                co2 = value * settings['scale'] * settings['factor']
+                if settings['precision']:
+                    co2avoided_period[key] = round(co2, settings['precision'])
+                else:
+                    co2avoided_period[key] = int(co2)
+
+            co2avoided_period['topic'] = 'co2avoided/' + period
+            co2avoided_period['unit'] = settings['unit']
+            co2avoided_period['factor'] = settings['factor']
+            co2avoided.append(co2avoided_period)
 
         return co2avoided
 
@@ -312,6 +332,9 @@ class Site():
         info = dict(time=last_tick, daylight=self.daylight(), dawn=self._dawn, delta=self._solar_time_diff, dusk=self._dusk)
         scaling = Site.SAMPLE_PERIOD[info['daylight']].get('scale')
 
+        await self.read_instantaneous()
+        await self.read_total_production()
+
         while True:
             tick = int(time.time())
             scaled_tick = tick / scaling
@@ -320,8 +343,10 @@ class Site():
                 info['time'] = tick
 
                 if scaled_tick % 5 == 0:
+                    await self.read_instantaneous()
                     queue5.put_nowait(info)
                 if scaled_tick % 30 == 0:
+                    await self.read_total_production()
                     queue30.put_nowait(info)
                 if scaled_tick % 60 == 0:
                     queue60.put_nowait(info)
@@ -340,7 +365,6 @@ class Site():
         while True:
             try:
                 info = await queue.get()
-                await self.read_instantaneous()
             finally:
                 queue.task_done()
 
@@ -358,8 +382,8 @@ class Site():
             finally:
                 queue.task_done()
 
-            mqtt.publish(await self.production_stats())
-            #mqtt.publish(await self.total_production())
+            # publishing jobs
+            mqtt.publish(await self.production_history())
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -369,6 +393,7 @@ class Site():
             finally:
                 queue.task_done()
 
+            # publishing jobs
             mqtt.publish(await self.co2_avoided())
             mqtt.publish(await self.read_history_period('day'))
             mqtt.publish(await self.read_history_period('month'))
@@ -426,3 +451,10 @@ class Site():
         """Determines if a key in the inverter cache."""
         cached = key in self._cached_keys
         return cached
+
+    def find_total_production(self, period):
+        """."""
+        for d_period in self._total_production:
+            if d_period.get('period') is period:
+                return d_period.copy()
+        return None

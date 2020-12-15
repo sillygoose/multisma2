@@ -1,5 +1,6 @@
 # ignore the configuration file
 configuration.py
+tox.ini
 
 # Ignore local dirs
 backup/

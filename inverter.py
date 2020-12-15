@@ -254,3 +254,8 @@ class Inverter():
     def lookup_tag(self, key):
         """Return tag dictionary value for the specified key."""
         return self._tags.get(str(key), '???')
+
+    async def start_production(self, period):
+        """Return production value for the start of the specified period."""
+        history = self._history.get(period)
+        return {self.name(): history['v']}

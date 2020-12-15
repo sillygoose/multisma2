@@ -137,8 +137,8 @@ class SMA:
         result_body = await self._read_body(URL_ONLINE, payload)
         return result_body
 
-    async def read_history(self, tStart, tEnd):
+    async def read_history(self, start, end):
         """{"destDev":[],"key":28704,"tStart":1601521200,"tEnd":1604217600}."""
-        payload = {"destDev": [], "key": 28704, "tStart": tStart, "tEnd": tEnd}
+        payload = {"destDev": [], "key": 28704, "tStart": start, "tEnd": end}
         result_body = await self._read_body(URL_LOGGER, payload)
         return result_body

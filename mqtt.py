@@ -7,7 +7,6 @@ import random
 import string
 import time
 import logging
-from pprint import pprint
 
 import json
 import paho.mqtt.client as mqtt
@@ -102,11 +101,11 @@ def publish(sensors):
         # Limit floats to the requested precision
         for key, value in sensor.items():
             if isinstance(value, dict):
-                for k, v in value.items():
+                for dict_key, dict_value in value.items():
                     if precision:
-                        value[k] = round(v, precision)
+                        value[dict_key] = round(dict_value, precision)
                     else:
-                        value[k] = v
+                        value[dict_key] = dict_value
 
             if isinstance(value, float):
                 if precision:
@@ -115,15 +114,14 @@ def publish(sensors):
                     sensor[key] = value
 
         # Encode each sensor in JSON and publish
-        if sensor:
-            sensor_json = json.dumps(sensor)
-            message_info = local_vars["mqtt_client"].publish(MQTT_CLIENT + "/" + topic, sensor_json)
-            if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
-                logger.warning(
-                    "MQTT message topic %s failed to publish: %s",
-                    topic,
-                    error_msg(message_info.rc),
-                )
+        sensor_json = json.dumps(sensor)
+        message_info = local_vars["mqtt_client"].publish(MQTT_CLIENT + "/" + topic, sensor_json)
+        if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
+            logger.warning(
+                "MQTT message topic %s failed to publish: %s",
+                topic,
+                error_msg(message_info.rc),
+            )
 
 
 def test_connection():
