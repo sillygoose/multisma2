@@ -19,7 +19,7 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 if __name__ == "__main__":
 
     async def main():
-        """###."""
+        """Set up and start multisma."""
         async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
             site = Site(session)
             try:
@@ -48,7 +48,7 @@ if __name__ == "__main__":
                 await site.close()
                 logfiles.close()
 
-
+    # make sure we can run multisma2
     if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
         asyncio.run(main())
     print("python 3.7 or better required")

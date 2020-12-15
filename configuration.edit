@@ -43,7 +43,7 @@ INVERTER_PASSWORD = 'password'
 # multisma2/production_lifetime {"unit": "kWh", "inv0": 3287.216, "total": 8966.242, "inv1": 2417.215}
 
 INVERTERS = [
-   { 'ip': 'https://10.0.0.4', 'name': 'inv1', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
-   { 'ip': 'https://10.0.0.5', 'name': 'inv2', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
-   { 'ip': 'https://10.0.0.6', 'name': 'inv3', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+   {'ip': 'https://10.0.0.4', 'name': 'inv1', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+   {'ip': 'https://10.0.0.5', 'name': 'inv2', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
+   {'ip': 'https://10.0.0.6', 'name': 'inv3', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
 ]

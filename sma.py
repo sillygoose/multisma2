@@ -8,7 +8,6 @@ import json
 import logging
 
 import async_timeout
-import attr
 import jmespath
 from aiohttp import client_exceptions
 
@@ -27,6 +26,7 @@ URL_LOGOUT = "/dyn/logout.json"
 URL_VALUES = "/dyn/getValues.json"
 URL_LOGGER = "/dyn/getLogger.json"
 URL_ONLINE = "/dyn/getAllOnlValues.json"
+
 
 class SMA:
     """Class to connect to the SMA webconnect module and read parameters."""
@@ -139,6 +139,6 @@ class SMA:
 
     async def read_history(self, tStart, tEnd):
         """{"destDev":[],"key":28704,"tStart":1601521200,"tEnd":1604217600}."""
-        payload = {"destDev":[],"key":28704,"tStart":tStart,"tEnd":tEnd}
+        payload = {"destDev": [], "key": 28704, "tStart": tStart, "tEnd": tEnd}
         result_body = await self._read_body(URL_LOGGER, payload)
         return result_body

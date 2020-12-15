@@ -39,6 +39,7 @@ def error_msg(code):
     }
     return error_messages.get(str(code), "unknown error code: " + str(code))
 
+
 def on_disconnect(client, userdata, result_code):
     """Process the on_disconnect callback."""
     # pylint: disable=unused-argument
@@ -52,6 +53,7 @@ def on_disconnect(client, userdata, result_code):
             "MQTT client unexpectedly disconnected: %s, trying reconnect()",
             error_msg(result_code),
         )
+
 
 def on_connect(client, userdata, flags, result_code):
     """Process the on_connect callback."""
@@ -67,6 +69,7 @@ def on_connect(client, userdata, flags, result_code):
     else:
         client.connection_failed = True
         logger.info("MQTT client connection failed: %s", error_msg(result_code))
+
 
 def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
@@ -121,6 +124,7 @@ def publish(sensors):
                     topic,
                     error_msg(message_info.rc),
                 )
+
 
 def test_connection():
     """Tests and caches the client MQTT broker connectioon."""

@@ -106,7 +106,6 @@ class Inverter():
             unit = self.get_unit(key)
             precision = self.get_precision(key)
             states = value.pop('1', None)
-            results = {}
             if type == 0:
                 sensors = {}
                 total = 0
@@ -125,12 +124,12 @@ class Inverter():
                     if aggregate:
                         sensors['total'] = total
                     val = sensors
-                cleaned[key] = { 'val': val, 'unit': unit, 'precision': precision }
+                cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
             elif type == 1:
                 for index, state in enumerate(states):
                     tag_list = state.get('val')
                     tag = self.lookup_tag(tag_list[0].get('tag'))
-                cleaned[key] = { 'val': tag }
+                cleaned[key] = {'val': tag}
             else:
                 logger.warning(f"unexpected sma type: {type}")
 
@@ -147,7 +146,7 @@ class Inverter():
     async def read_key(self, key):
         """Read a specified inverter key."""
         raw_result = await self._sma.read_values([key])
-        return self.clean({ key: raw_result.get(key) })
+        return self.clean({key: raw_result.get(key)})
 
     async def read_history_period(self, period):
         """Collect the production history for the specified period."""
@@ -188,7 +187,7 @@ class Inverter():
                 prio = meta.get('Prio')
                 format = meta.get('DataFrmt')
                 scale = meta.get('Scale')
-                name = self.lookup_tag(meta.get('TagId', '###'))
+                name = self.lookup_tag(meta.get('TagId'))
                 if type == 1:
                     for k1, v1 in value.items():
                         for e1 in v1:
@@ -214,7 +213,7 @@ class Inverter():
         """Return the state for a given key."""
         async with self._lock:
             state = self._instantaneous.get(key, None).copy()
-        cleaned = self.clean({ key: state })
+        cleaned = self.clean({key: state})
         return cleaned
 
     def name(self):
