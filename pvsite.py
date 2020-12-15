@@ -167,19 +167,33 @@ class Site():
 
     async def production_stats(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
+        PRODUCTION_SETTINGS = [
+            { 'period': 'today',    'precision': 2 },
+            { 'period': 'month',    'precision': 0 },
+            { 'period': 'year',     'precision': 0 },
+            { 'period': 'lifetime', 'precision': 0 },
+        ]
         tprod_list = await self.total_production()
         tprod = tprod_list[0]
         stats = []
-        for period in ['today', 'month', 'year', 'lifetime']:
+        for settings in PRODUCTION_SETTINGS:
+            period = settings.get('period')
+            precision = settings.get('precision')
             period_stats = {}
             total = 0
             for inverter in self._inverters:
                 name = inverter.name()
                 diff = tprod[name] - inverter._history[period].get('v')
-                period_stats[name] = diff / 1000
+                if precision:
+                    period_stats[name] = round(diff / 1000, precision)
+                else:
+                    period_stats[name] = int(diff / 1000)
                 total += diff
 
-            period_stats['total'] = total / 1000
+            if precision:
+                period_stats['total'] = round(total / 1000, precision)
+            else:
+                period_stats['total'] = int(total / 1000)
             period_stats['unit'] = 'kWh'
             period_stats['topic'] = 'production/' + period
             stats.append(period_stats)
@@ -328,8 +342,7 @@ class Site():
             finally:
                 queue.task_done()
 
-            mqtt.publish(await self.co2_avoided())
-            #mqtt.publish(await self.snapshot())
+            mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.read_keys(STATES))
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
