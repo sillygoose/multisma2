@@ -168,33 +168,35 @@ class Site():
     async def production_stats(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = [
-            { 'period': 'today',    'precision': 2 },
-            { 'period': 'month',    'precision': 0 },
-            { 'period': 'year',     'precision': 0 },
-            { 'period': 'lifetime', 'precision': 0 },
+            { 'period': 'today',    'unit': 'kWh',  'scale': 1000,	    'precision': 2 },
+            { 'period': 'month',    'unit': 'kWh',  'scale': 1000,		'precision': 0 },
+            { 'period': 'year',     'unit': 'MWh',  'scale': 1000000,   'precision': 3 },
+            { 'period': 'lifetime', 'unit': 'MWh',  'scale': 1000000,   'precision': 3 },
         ]
-        tprod_list = await self.total_production()
-        tprod = tprod_list[0]
+        total_prod_list = await self.total_production()
+        total_prod = total_prod_list[0]
         stats = []
         for settings in PRODUCTION_SETTINGS:
             period = settings.get('period')
+            unit = settings.get('unit')
+            scaling = settings.get('scale')
             precision = settings.get('precision')
             period_stats = {}
             total = 0
             for inverter in self._inverters:
                 name = inverter.name()
-                diff = tprod[name] - inverter._history[period].get('v')
+                diff = (total_prod[name] - inverter._history[period].get('v')) / scaling
                 if precision:
-                    period_stats[name] = round(diff / 1000, precision)
+                    period_stats[name] = round(diff, precision)
                 else:
-                    period_stats[name] = int(diff / 1000)
+                    period_stats[name] = int(diff)
                 total += diff
 
             if precision:
-                period_stats['total'] = round(total / 1000, precision)
+                period_stats['total'] = round(total, precision)
             else:
-                period_stats['total'] = int(total / 1000)
-            period_stats['unit'] = 'kWh'
+                period_stats['total'] = int(total)
+            period_stats['unit'] = unit
             period_stats['topic'] = 'production/' + period
             stats.append(period_stats)
 
