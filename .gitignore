@@ -1,6 +1,8 @@
 # ignore the configuration file
 configuration.py
 tox.ini
+pyproject.toml
+.pylintrc
 
 # Ignore local dirs
 backup/

@@ -115,7 +115,9 @@ def publish(sensors):
 
         # Encode each sensor in JSON and publish
         sensor_json = json.dumps(sensor)
-        message_info = local_vars["mqtt_client"].publish(MQTT_CLIENT + "/" + topic, sensor_json)
+        message_info = local_vars["mqtt_client"].publish(
+            MQTT_CLIENT + "/" + topic, sensor_json
+        )
         if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(
                 "MQTT message topic %s failed to publish: %s",
@@ -130,7 +132,11 @@ def test_connection():
         return False
 
     # Create a unique client name
-    local_vars["clientname"] = MQTT_CLIENT + "_" + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    local_vars["clientname"] = (
+        MQTT_CLIENT
+        + "_"
+        + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    )
 
     # Check if MQTT is configured properly, create the connection
     port = (1883, MQTT_BROKER_PORT)[MQTT_BROKER_PORT > 0]

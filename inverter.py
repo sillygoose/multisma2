@@ -1,9 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-# todo
-#   - clean up futures
-#
-
 import asyncio
 import datetime
 import logging
@@ -13,11 +9,13 @@ from pprint import pprint
 import sma
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
+
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
-class Inverter():
+class Inverter:
     """Class to encapsulate a single inverter."""
+
     def __init__(self, name, url, group, password, session):
         """Setup an Inverter class instance."""
         self._name = name
@@ -56,20 +54,25 @@ class Inverter():
     async def initialize(self):
         """Setup inverter for data collection."""
         # SMA class object for access to inverters
-        self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
+        self._sma = sma.SMA(
+            session=self._session,
+            url=self._url,
+            password=self._password,
+            group=self._group,
+        )
         await self._sma.new_session()
         if self._sma.sma_sid is None:
-            logger.info(f"{self._name} - no session ID")
+            logger.info("%s - no session ID", self._name)
             return None
 
         # Grab the metadata dictionary
-        metadata_url = self._url + '/data/ObjectMetadata_Istl.json'
+        metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
         async with self._session.get(metadata_url) as resp:
             assert resp.status == 200
             self._metadata = json.loads(await resp.text())
 
         # Grab the inverter tag dictionary
-        tag_url = self._url + '/data/l10n/en-US.json'
+        tag_url = self._url + "/data/l10n/en-US.json"
         async with self._session.get(tag_url) as resp:
             assert resp.status == 200
             self._tags = json.loads(await resp.text())
@@ -93,7 +96,7 @@ class Inverter():
             self._instantaneous = await self._sma.read_instantaneous()
 
     AGGREGATE_KEYS = [
-        '6380_40251E00',        # DC Power (current power)
+        "6380_40251E00",  # DC Power (current power)
     ]
 
     def clean(self, raw_results):
@@ -101,18 +104,18 @@ class Inverter():
         cleaned = {}
         for key, value in raw_results.items():
             aggregate = Inverter.AGGREGATE_KEYS.count(key)
-            type = self.get_type(key)
+            sma_type = self.get_type(key)
             scale = self.get_scale(key)
             unit = self.get_unit(key)
             precision = self.get_precision(key)
-            states = value.pop('1', None)
-            if type == 0:
+            states = value.pop("1", None)
+            if sma_type == 0:
                 sensors = {}
                 total = 0
-                subkeys = ['a', 'b', 'c']
-                val = 0
+                subkeys = ["a", "b", "c"]
+                # val = 0
                 for index, state in enumerate(states):
-                    val = state.get('val', None)
+                    val = state.get("val", None)
                     if val is None:
                         val = 0
                     if scale != 1:
@@ -122,24 +125,24 @@ class Inverter():
 
                 if len(states) > 1:
                     if aggregate:
-                        sensors['total'] = total
+                        sensors["total"] = total
                     val = sensors
-                cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
-            elif type == 1:
+                cleaned[key] = {"val": val, "unit": unit, "precision": precision}
+            elif sma_type == 1:
                 for index, state in enumerate(states):
-                    tag_list = state.get('val')
-                    tag = self.lookup_tag(tag_list[0].get('tag'))
-                cleaned[key] = {'val': tag}
+                    tag_list = state.get("val")
+                    tag = self.lookup_tag(tag_list[0].get("tag"))
+                cleaned[key] = {"val": tag}
             else:
-                logger.warning(f"unexpected sma type: {type}")
+                logger.warning("unexpected sma type: %d", sma_type)
 
-        cleaned['name'] = self._name
+        cleaned["name"] = self._name
         return cleaned
 
     async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
         results = []
-        for index, key in enumerate(keys):
+        for key in keys:
             results.append(self.read_key(key))
         return results
 
@@ -150,17 +153,19 @@ class Inverter():
 
     async def read_history_period(self, period):
         """Collect the production history for the specified period."""
-        assert period == 'day' or period == 'month'
-        PERIOD_LENGTH = {'day': 32, 'month': 366}
-        start = datetime.datetime.combine(datetime.date.today(), datetime.time(22, 0)) - datetime.timedelta(days=PERIOD_LENGTH[period])
+        assert period in ("day", "month")
+        PERIOD_LENGTH = {"day": 30, "month": 366}
+        start = datetime.datetime.combine(datetime.date.today(), datetime.time(22, 0)) - datetime.timedelta(
+            days=PERIOD_LENGTH[period]
+        )
         end = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)) + datetime.timedelta(days=1)
         history = await self._sma.read_history(int(start.timestamp()), int(end.timestamp()))
 
-        TOTAL_PRODUCTION = '6400_0046C300'
+        TOTAL_PRODUCTION = "6400_0046C300"
         latest_production = await self.get_state(TOTAL_PRODUCTION)
         results = latest_production.pop(TOTAL_PRODUCTION)
-        history.append({'t': int(end.timestamp()), 'v': results.get('val')})
-        history.insert(0, {'name': self._name})
+        history.append({"t": int(end.timestamp()), "v": results.get("val")})
+        history.insert(0, {"name": self._name})
         return history
 
     async def read_history(self):
@@ -168,46 +173,24 @@ class Inverter():
         one_hour = 60 * 60 * 1
         three_hours = 60 * 60 * 3
         today_start = int(datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)).timestamp())
-        month_start = int(datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp())
-        year_start = int(datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp())
+        month_start = int(
+            datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp()
+        )
+        year_start = int(
+            datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp()
+        )
         today = await self._sma.read_history(today_start - one_hour, today_start + three_hours)
         month = await self._sma.read_history(month_start - one_hour, today_start)
         year = await self._sma.read_history(year_start - one_hour, today_start)
-        self._history['today'] = today[0]
-        self._history['month'] = month[0]
-        self._history['year'] = year[0]
-        self._history['lifetime'] = {'t': 0, 'v': 0}
+        self._history["today"] = today[0]
+        self._history["month"] = month[0]
+        self._history["year"] = year[0]
+        self._history["lifetime"] = {"t": 0, "v": 0}
 
-    def display_metadata(self, key=None):
-        """Display the inverter metadata."""
-        if key is None:
-            for key, value in self._instantaneous.items():
-                meta = self._metadata.get(key)
-                type = meta.get('Typ')
-                prio = meta.get('Prio')
-                format = meta.get('DataFrmt')
-                scale = meta.get('Scale')
-                name = self.lookup_tag(meta.get('TagId'))
-                if type == 1:
-                    for k1, v1 in value.items():
-                        for e1 in v1:
-                            t1 = e1.get('val')
-                            for e2 in t1:
-                                tag = e2.get('tag')
-                                e1['val'] = self.lookup_tag(tag)
-
-                print(f'{type} {prio} {format} {scale}  {key}   {name}')
-                print(f'                    {value}')
-        else:
-            metadata = self._metadata.get(key, None)
-            pprint(f"{self._name}/{key}/{metadata}")
-
-    async def display_history(self):
-        """Display the baseline production for select periods."""
-        print(f"{self._name}    today baseline {datetime.datetime.fromtimestamp(self._history['today'].get('t'))}   {self._history['today'].get('v')}")
-        print(f"{self._name}    month baseline {datetime.datetime.fromtimestamp(self._history['month'].get('t'))}   {self._history['month'].get('v')}")
-        print(f"{self._name}     year baseline {datetime.datetime.fromtimestamp(self._history['year'].get('t'))}   {self._history['year'].get('v')}")
-        print(f"{self._name} lifetime baseline {datetime.datetime.fromtimestamp(self._history['lifetime'].get('t'))}   {self._history['lifetime'].get('v')}")
+    def display_metadata(self, key):
+        """Display the inverter metadata for a key."""
+        metadata = self._metadata.get(key, None)
+        pprint(f"{self._name}/{key}/{metadata}")
 
     async def get_state(self, key):
         """Return the state for a given key."""
@@ -222,9 +205,9 @@ class Inverter():
 
     def get_unit(self, key):
         """Return the unit used for a given key."""
-        metadata = self._metadata.get(key, '???')
+        metadata = self._metadata.get(key, "???")
         if metadata:
-            unit_tag = metadata.get('Unit', None)
+            unit_tag = metadata.get("Unit", None)
             if unit_tag:
                 return self.lookup_tag(unit_tag)
         return None
@@ -234,7 +217,7 @@ class Inverter():
         precision = None
         metadata = self._metadata.get(key, None)
         if metadata:
-            precision = metadata.get('DataFrmt', None)
+            precision = metadata.get("DataFrmt", None)
             if precision > 3:
                 precision = None
         return precision
@@ -243,19 +226,19 @@ class Inverter():
         """Return the scale value for a given key."""
         metadata = self._metadata.get(key, None)
         if metadata:
-            return metadata.get('Scale', None)
+            return metadata.get("Scale", None)
         return None
 
     def get_type(self, key):
         """Return the type of a given key."""
-        metadata = self._metadata.get(key, '???')
-        return metadata.get('Typ', None)
+        metadata = self._metadata.get(key, "???")
+        return metadata.get("Typ", None)
 
     def lookup_tag(self, key):
         """Return tag dictionary value for the specified key."""
-        return self._tags.get(str(key), '???')
+        return self._tags.get(str(key), "???")
 
     async def start_production(self, period):
         """Return production value for the start of the specified period."""
         history = self._history.get(period)
-        return {self.name(): history['v']}
+        return {self.name(): history["v"]}
