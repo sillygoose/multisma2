@@ -38,35 +38,45 @@ MQTT_TOPICS = {
     "6380_40451F00": "dc_measurements/voltage",
     "6380_40452100": "dc_measurements/current",
     "6180_08416500": "status/reason_for_derating",
+    "6180_08412800": "status/general_operating_status",
+    "6180_08416400": "status/grid_relay",
+    "6180_08414C00": "status/condition",
 }
 
 # These are keys that we calculate a total across all inverters
 AGGREGATE_KEYS = [
-    "6100_40263F00",  # AC grid power (current)
-    "6100_0046C200",  # PV generation power (current)
-    "6400_0046C300",  # Meter count and PV gen. meter (total power)
-    "6380_40251E00",  # DC power (1 per string)
+    "6100_40263F00",    # AC grid power (current)
+    "6100_0046C200",    # PV generation power (current)
+    "6400_0046C300",    # Meter count and PV gen. meter (total power)
+    "6380_40251E00",    # DC power (1 per string)
 ]
 
 AC_MEASUREMENTS = [
-    "6100_40263F00",  # AC grid power (current)
-    "6100_00465700",  # Grid frequency
-    "6100_00464B00",  # Phase L1 against L2 voltage
+    "6100_40263F00",    # AC grid power (current)
+    "6100_00465700",    # Grid frequency
+    "6100_00464B00",    # Phase L1 against L2 voltage
 ]
 
 SITE_SNAPSHOT = [
-    "6100_40263F00",  # AC grid power (current)
-    "6180_08416500",  # Reason for derating
-    "6380_40251E00",  # DC power (current)
+    "6100_40263F00",    # AC grid power (current)
+    "6380_40251E00",    # DC power (current)
+    "6180_08416500",    # Status: Reason for derating
+    "6180_08412800",    # Status: General operating status
+    "6180_08416400",    # Status: Grid relay
+    "6180_08414C00",    # Status: Condition
 ]
 
-DC_MEASUREMENTS = ["6380_40251E00", "6380_40451F00", "6380_40452100"]  # DC Power (current)  # DC Voltage  # DC Current
+DC_MEASUREMENTS = [
+    "6380_40251E00",    # DC Power (current)
+    "6380_40451F00",    # DC Voltage
+    "6380_40452100"     # DC Current
+]
 
-STATES = [
-    "6100_40263F00",  # AC grid power (current)
-    "6180_08416500",  # Reason for derating
-    "6380_40251E00",  # DC power (current)
-    "6800_08855C00",  # SMA Shadefix Activated (not cached)
+STATES = [              # testing use
+    "6100_40263F00",    # AC grid power (current)
+    "6180_08416500",    # Reason for derating
+    "6380_40251E00",    # DC power (current)
+    "6800_08855C00",    # SMA Shadefix Activated (not cached)
 ]
 
 
@@ -135,13 +145,15 @@ class Site:
         self._cached_keys = cached_keys[0]
 
         queue5 = asyncio.Queue()
+        queue15 = asyncio.Queue()
         queue30 = asyncio.Queue()
         queue60 = asyncio.Queue()
         self._tasks = [
             asyncio.create_task(self.task_5s(queue5)),
+            asyncio.create_task(self.task_15s(queue15)),
             asyncio.create_task(self.task_30s(queue30)),
             asyncio.create_task(self.task_60s(queue60)),
-            asyncio.create_task(self.task_scheduler(queue5, queue30, queue60)),
+            asyncio.create_task(self.task_scheduler(queue5, queue15, queue30, queue60)),
         ]
 
     async def close(self):
@@ -363,7 +375,7 @@ class Site:
         {"scale": 1},   # day
     ]
 
-    async def task_scheduler(self, queue5, queue30, queue60):
+    async def task_scheduler(self, queue5, queue15, queue30, queue60):
         """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
         last_tick = int(time.time())
@@ -385,8 +397,9 @@ class Site:
                 if scaled_tick % 5 == 0:
                     await self.read_instantaneous()
                     queue5.put_nowait(info)
+                if scaled_tick % 15 == 0:
+                    queue15.put_nowait(info)
                 if scaled_tick % 30 == 0:
-                    await self.read_total_production()
                     queue30.put_nowait(info)
                 if scaled_tick % 60 == 0:
                     queue60.put_nowait(info)
@@ -407,11 +420,25 @@ class Site:
             finally:
                 queue.task_done()
 
+            # publishing jobs
             mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.read_keys(STATES))
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
             #mqtt.publish(await self.current_status())
+
+    async def task_15s(self, queue):
+        """Work done every 15 seconds."""
+        while True:
+            try:
+                info = await queue.get()
+            finally:
+                await self.read_total_production()
+                queue.task_done()
+
+            # publishing jobs
+            mqtt.publish(await self.production_history())
+
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -422,7 +449,7 @@ class Site:
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.production_history())
+            mqtt.publish(await self.co2_avoided())
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -433,7 +460,6 @@ class Site:
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.co2_avoided())
             mqtt.publish(await self.read_history_period("day"))
             mqtt.publish(await self.read_history_period("month"))
 
@@ -474,8 +500,6 @@ class Site:
 
     def sun_events(self, daylight):
         """Determines if a solar event has occured."""
-        if not daylight:
-            return
         astral_now = astral.sun.now(tzinfo=self._tzinfo)
         for event_dict in Site.SOLAR_EVENTS:
             for event in event_dict.values():
