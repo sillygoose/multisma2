@@ -41,7 +41,6 @@ INVERTER_PASSWORD = 'password'
 # Supply the IP address and login credentials for each inverter.  The inverter names are used
 # in MQTT messages for the individual inverter sensors, :
 # multisma2/production_lifetime {"unit": "kWh", "inv0": 3287.216, "total": 8966.242, "inv1": 2417.215}
-
 INVERTERS = [
    {'ip': 'https://10.0.0.4', 'name': 'inv1', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
    {'ip': 'https://10.0.0.5', 'name': 'inv2', 'user': INVERTER_USERNAME, 'password': INVERTER_PASSWORD},
