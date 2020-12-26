@@ -1,10 +1,12 @@
-version: '3.4'
+version: '3.6'
 services:
-  multisma:
+  multisma2:
     container_name: multisma2
-    image: multisma:latest
-    network_mode: "host"
-    restart: always
+    image: multisma2:latest
+    restart: unless-stopped
     volumes:
-      - ./volumes/multisma2/log:/solar/log
-      - ./volumes/multisma2/data:/solar/data
+    - ./volumes/multisma2/log:/solar/log
+    - ./volumes/multisma2/data:/solar/data
+    depends_on:
+    - mosquitto
+    
