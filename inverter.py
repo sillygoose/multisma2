@@ -113,7 +113,7 @@ class Inverter:
                 sensors = {}
                 total = 0
                 subkeys = ["a", "b", "c"]
-                # val = 0
+                val = 0
                 for index, state in enumerate(states):
                     val = state.get("val", None)
                     if val is None:
@@ -129,6 +129,7 @@ class Inverter:
                     val = sensors
                 cleaned[key] = {"val": val, "unit": unit, "precision": precision}
             elif sma_type == 1:
+                tag = 0
                 for index, state in enumerate(states):
                     tag_list = state.get("val")
                     tag = self.lookup_tag(tag_list[0].get("tag"))

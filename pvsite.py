@@ -175,7 +175,7 @@ class Site:
         while history_list:
             inverter = history_list.pop()
             last_seen = 0
-            inverter_name = inverter.pop(0)
+            inverter.pop(0)
             for index, item in enumerate(inverter, 1):
                 if index == len(inverter):
                     break
@@ -197,7 +197,7 @@ class Site:
 
         if period in ['month']:
             reduced = {}
-            for t, v in aggregate.items():
+            for v in aggregate.values():
                 dt = datetime.datetime.fromtimestamp(v.get('t'))
                 date_time = int(
                     datetime.datetime.combine(datetime.date(dt.year, dt.month, 1), datetime.time(0, 0)).timestamp()
@@ -220,9 +220,9 @@ class Site:
     async def read_total_production(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         total_production_list = await self.total_production()
+        raw_stats = []
         for total_production in total_production_list:
             unit = total_production.pop("unit")
-            raw_stats = []
             for period in ["today", "month", "year", "lifetime"]:
                 period_stats = {}
                 inverter_periods = await asyncio.gather(
@@ -259,7 +259,7 @@ class Site:
             settings = PRODUCTION_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop("period")
-            unit = tp.pop("unit")
+            tp.pop("unit")
             history = {}
             for key, value in tp.items():
                 production = value * settings["scale"]
@@ -290,7 +290,7 @@ class Site:
             settings = CO2_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop("period")
-            unit = tp.pop("unit")
+            tp.pop("unit")
             co2avoided_period = {}
             for key, value in tp.items():
                 co2 = value * settings["scale"] * settings["factor"]
@@ -416,7 +416,7 @@ class Site:
         """Work done every 5 seconds."""
         while True:
             try:
-                info = await queue.get()
+                await queue.get()
             finally:
                 queue.task_done()
 
@@ -431,7 +431,7 @@ class Site:
         """Work done every 15 seconds."""
         while True:
             try:
-                info = await queue.get()
+                await queue.get()
             finally:
                 await self.read_total_production()
                 queue.task_done()
@@ -444,7 +444,7 @@ class Site:
         """Work done every 30 seconds."""
         while True:
             try:
-                info = await queue.get()
+                await queue.get()
             finally:
                 queue.task_done()
 

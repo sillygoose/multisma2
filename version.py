@@ -51,6 +51,7 @@ def get_version():
             subprocess.call(["git", "status"], stdout=fd_devnull, stderr=fd_devnull)
 
         cmd = "git diff-index --name-only HEAD".split()
+        dirty = ""
         try:
             dirty = subprocess.check_output(cmd).decode().strip()
         except subprocess.CalledProcessError:
