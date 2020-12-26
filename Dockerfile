@@ -14,18 +14,19 @@ RUN apt-get install -y tzdata
 RUN apt-get install -y python3
 RUN apt-get install -y python3-pip
 
-# add crontab file in the cron directory and add execution rights
+# add crontab file in the cron directory
 ADD crontab /etc/cron.d/multisma2-cron
 RUN chmod 0644 /etc/cron.d/multisma2-cron
 
 # install other packages
-RUN pip3 install paho-mqtt
+RUN pip3 install aiohttp astral python-dateutil
+RUN pip3 install paho-mqtt jmespath
 
 # clone the repo into the docker container
 WORKDIR /solar
 RUN git clone https://github.com/sillygoose/multisma2.git
 
-# add the site-specific configuration file (which was clobed from a private project)
+# add the site-specific configuration file
 WORKDIR /solar/multisma2
 ADD configuration.py .
 
