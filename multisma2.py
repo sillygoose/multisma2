@@ -69,7 +69,7 @@ class Multisma2:
         logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
 
     async def _astop(self):
-        logger.info("Closing multisma2 application, see you on the other side of midnight")
+        logger.info("Closing multisma2 application, back on the other side of midnight")
         logfiles.close()
         await self._site.close()
         await self._session.close()
@@ -139,7 +139,6 @@ class Multisma2:
         if not to_cancel:
             return
 
-        #if len(to_cancel):
         logger.error("At least one task is still running, error?")
         for task in to_cancel:
             task.cancel()
