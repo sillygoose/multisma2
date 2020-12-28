@@ -28,8 +28,8 @@ class NormalCompletion(Exception):
 
 
 class Multisma2:
-    def __init__(self, session):
-        self._session = session
+    def __init__(self):
+        self._session = None
         self._loop = None
         self._site = None
         self._wait_event = None
@@ -60,12 +60,13 @@ class Multisma2:
                 logger.info("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
-        #async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
+        self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         #    self._site = Site(session)
         print("_astart()")
 
     async def _astop(self):
         print("_astop()")
+        await self._session.close()
 
     async def _waiter(self, event):
         #print("_waiter()")
@@ -173,11 +174,10 @@ class Multisma2:
 
 
 def main():
-    """Set up and start multisma."""
-    session = None # async aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-    multisma2 = Multisma2(session)
+    """Set up and start multisma2."""
+    multisma2 = Multisma2()
     multisma2.run()
-    return
+
 
 if __name__ == "__main__":
     # make sure we can run multisma2
