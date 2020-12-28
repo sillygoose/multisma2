@@ -6,7 +6,8 @@ import sys
 
 import asyncio
 import aiohttp
-from delayed import DelayedKeyboardInterrupt
+from asyncio.unix_events import _compute_returncode
+from delayedkybrdint import DelayedKeyboardInterrupt
 
 from pvsite import Site
 import mqtt
@@ -27,11 +28,12 @@ class NormalCompletion(Exception):
 
 
 class Multisma2:
-    def __init__(self):
+    def __init__(self, session):
+        self._session = session
         self._loop = None
         self._site = None
-        #self._wait_event = None                         # type: Optional[asyncio.Event]
-        self._wait_task = None                          # type: Optional[asyncio.Task]
+        self._wait_event = None
+        self._wait_task = None
 
     def run(self):
         self._loop = asyncio.new_event_loop()
@@ -41,79 +43,61 @@ class Multisma2:
             try:
                 with DelayedKeyboardInterrupt():
                     self._start()
-
-            # If there was an attempt to terminate the application,
-            # the KeyboardInterrupt is raised AFTER the _start() finishes
-            # its job.
-            #
-            # In that case, the KeyboardInterrupt is re-raised and caught in
-            # exception handler below and _stop() is called to clean all resources.
-            #
-            # Note that it might be generally unsafe to call stop() methods
-            # on objects that are not started properly.
-            # This is the main reason why the whole execution of _start()
-            # is shielded.
             except KeyboardInterrupt:
-                print(f'!!! AsyncApplication.run: got KeyboardInterrupt during start')
+                logger.info("Received KeyboardInterrupt during startup")
                 raise
 
-            # Application is started now and is running.
-            # Wait for a termination event infinitely.
-            print(f'AsyncApplication.run: entering wait loop')
+            # Application is running, wait for completion.
             self._wait()
-            print(f'AsyncApplication.run: exiting wait loop')
             raise NormalCompletion
 
         except (KeyboardInterrupt, NormalCompletion):
             # The _stop() is also shielded from termination.
             try:
                 with DelayedKeyboardInterrupt():
-                    print("Trying _stop()")
                     self._stop()
             except KeyboardInterrupt:
-                print(f'!!! AsyncApplication.run: got KeyboardInterrupt during stop')
+                logger.info("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
         #async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
         #    self._site = Site(session)
         print("_astart()")
-        #self._service1 = AsyncService1()
-        #self._service2 = AsyncService2()
-
-        #await self._service1.start()
-        #await self._service2.start()
 
     async def _astop(self):
         print("_astop()")
-        #await self._service2.stop()
-        #await self._service1.stop()
 
-    async def _waiter(self):
-        print("_waiter()")
-        end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(14, 23))
+    async def _waiter(self, event):
+        #print("_waiter()")
+        end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
         while True:
-            await asyncio.sleep(5)
+            if event.is_set():
+                await event.wait()
+                break   
             current_time = datetime.datetime.now()
-            if current_time > end_time: ### or event.is_set():
-                #event.set()
+            if current_time > end_time:
                 break
+            await asyncio.sleep(1)
 
     async def _await(self):
         print("_await()")
-        #self._wait_event = asyncio.Event()
+        self._wait_event = asyncio.Event()
         #self._wait_task = asyncio.create_task(self._wait_event.wait())
-        #self._wait_task = asyncio.create_task(self._waiter(self._wait_event))
-        self._wait_task = asyncio.create_task(self._waiter())
+        self._wait_task = asyncio.create_task(self._waiter(self._wait_event))
+        #self._wait_task = asyncio.create_task(self._waiter())
         await self._wait_task
-        self._wait_task = None
 
     def _start(self):
         print("_start()")
-        #self._loop.run_until_complete(self._astart())
+        self._loop.run_until_complete(self._astart())
+
+    def _wait(self):
+        print("_wait()")
+        self._loop.run_until_complete(self._await())
 
     def _stop(self):
         print("_stop()")
-        #self._loop.run_until_complete(self._astop())
+        self._loop.run_until_complete(self._astop())
 
         # Because we want clean exit, we patiently wait for completion
         # of the _wait_task (otherwise this task might get cancelled
@@ -124,13 +108,15 @@ class Multisma2:
         # has been terminated before calling _wait(), therefore we have to
         # carefully check for their presence.
 
-        #if self._wait_event:
-            #print("self._wait_event")
-            #self._wait_event.set()
+        if self._wait_event:
+            print("self._wait_event")
+            self._wait_event.set()
 
         if self._wait_task:
-            print("self._wait_task")
+            print(f"self._wait_task is {self._wait_task.done()}")
+            #print("self._wait_task")
             self._loop.run_until_complete(self._wait_task)
+            print(f"self._wait_task is now {self._wait_task.done()}")
 
         # Before the loop is finalized, we setup an exception handler that
         # suppresses several nasty exceptions.
@@ -188,12 +174,8 @@ class Multisma2:
 
         finally:
             # ... and close the loop.
-            print(f'AsyncApplication._stop: closing event loop')
+            #print(f'AsyncApplication._stop: closing event loop')
             self._loop.close()
-
-    def _wait(self):
-        print("wait_()")
-        self._loop.run_until_complete(self._await())
 
     def _cancel_all_tasks(self):
         """
@@ -237,7 +219,8 @@ class Multisma2:
 
 def main():
     """Set up and start multisma."""
-    multisma2 = Multisma2()
+    session = None # async aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
+    multisma2 = Multisma2(session)
     multisma2.run()
     return
 
