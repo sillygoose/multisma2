@@ -60,12 +60,26 @@ class Multisma2:
                 logger.info("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
-        self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        #    self._site = Site(session)
         print("_astart()")
+        self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
+
+        # Initialize the inverters
+        self._site = Site(self._session)
+        await self._site.initialize()
+
+        # Create the application log and welcome message
+        logfiles.create_application_log(logger)
+        logger.info(f"multisma2 inverter collection utility {version.get_version()}")
+        logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
+
+        # Test out the MQTT broker connection, initialized if checks out
+        mqtt.test_connection()
 
     async def _astop(self):
         print("_astop()")
+        logger.info("Closing multisma2 application, see you on the other side of midnight")
+        logfiles.close()
+        await self._site.close()
         await self._session.close()
 
     async def _waiter(self, event):
