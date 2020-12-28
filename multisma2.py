@@ -114,41 +114,8 @@ class Multisma2:
 
         if self._wait_task:
             print(f"self._wait_task is {self._wait_task.done()}")
-            #print("self._wait_task")
             self._loop.run_until_complete(self._wait_task)
             print(f"self._wait_task is now {self._wait_task.done()}")
-
-        # Before the loop is finalized, we setup an exception handler that
-        # suppresses several nasty exceptions.
-        #
-        # ConnectionResetError
-        # --------------------
-        # This exception is sometimes raised on Windows, possibly because of a bug in Python.
-        #
-        # ref: https://bugs.python.org/issue39010
-        #
-        # When this exception is raised, the context looks like this:
-        # context = {
-        #     'message': 'Error on reading from the event loop self pipe',
-        #     'exception': ConnectionResetError(
-        #         22, 'The I/O operation has been aborted because of either a thread exit or an application request',
-        #         None, 995, None
-        #       ),
-        #     'loop': <ProactorEventLoop running=True closed=False debug=False>
-        # }
-        #
-        # OSError
-        # -------
-        # This exception is sometimes raised on Windows - usually when application is
-        # interrupted early after start.
-        #
-        # When this exception is raised, the context looks like this:
-        # context = {
-        #     'message': 'Cancelling an overlapped future failed',
-        #     'exception': OSError(9, 'The handle is invalid', None, 6, None),
-        #     'future': <_OverlappedFuture pending overlapped=<pending, 0x1d8937601f0>
-        #                 cb=[BaseProactorEventLoop._loop_self_reading()]>,
-        # }
 
         def __loop_exception_handler(loop, context: Dict[str, Any]):
             if type(context['exception']) == ConnectionResetError:
@@ -161,12 +128,6 @@ class Multisma2:
         self._loop.set_exception_handler(__loop_exception_handler)
 
         try:
-            # Cancel all remaining uncompleted tasks.
-            # We should strive to not make any, but mistakes happen and laziness
-            # is also a thing.
-            #
-            # Generally speaking, cancelling tasks shouldn't do any harm (unless
-            # they do...).
             self._cancel_all_tasks()
 
             # Shutdown all active asynchronous generators.
@@ -182,12 +143,6 @@ class Multisma2:
         Cancel all tasks in the loop.
         This method injects an asyncio.CancelledError exception
         into all tasks and lets them handle it.
-        Note that after cancellation, the event loop is executed again and
-        waits for all tasks to complete the cancellation.  This means that
-        if some task contains code similar to this:
-        >>> except asyncio.CancelledError:
-        >>>     await asyncio.Event().wait()
-        ... then the loop doesn't ever finish.
         """
 
         print("_cancel_all_tasks()")
@@ -223,35 +178,6 @@ def main():
     multisma2 = Multisma2(session)
     multisma2.run()
     return
-
-    #async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as session:
-        #site = Site(session)
-        #try:
-            # Create the application log and welcome message
-            #logfiles.create_application_log(logger)
-            #logger.info(f"multisma2 inverter collection utility {version.get_version()}")
-            #logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[site.daylight()]}")
-
-            # Test out the MQTT broker connection, initialized if checks out
-            #mqtt.test_connection()
-
-            # Initialize the inverters
-            #await site.initialize()
-
-            #end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
-
-            #while True:
-                #await asyncio.sleep(5)
-
-                #current_time = datetime.datetime.now()
-                #if current_time > end_time:
-                    #break
-
-        #finally:
-            #logger.info("Closing multisma2 application, see you on the other side of midnight")
-            #await site.close()
-            #logfiles.close()
-
 
 if __name__ == "__main__":
     # make sure we can run multisma2
