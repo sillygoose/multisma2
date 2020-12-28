@@ -60,13 +60,13 @@ class Multisma2:
         self._site = Site(self._session)
         await self._site.initialize()
 
-        # Test out the MQTT broker connection, initialized if checks out
-        mqtt.test_connection()
-
-        # Create the application log and welcome messages
+         # Create the application log and welcome messages
         logfiles.create_application_log(logger)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}")
         logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
+
+        # Setup and test out the MQTT broker connection
+        mqtt.test_connection()
 
     async def _astop(self):
         logger.info("Closing multisma2 application, back on the other side of midnight")
