@@ -5,7 +5,7 @@
 import datetime
 import logging
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, NoReturn
 
 import asyncio
 import aiohttp
@@ -77,13 +77,14 @@ class Multisma2:
     async def _wait_for_end(self, event):
         end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
         while True:
-            if event.is_set():
-                await event.wait()
-                break   
+            for _ in range(10):
+                if event.is_set():
+                    await event.wait()
+                    return   
+                await asyncio.sleep(0.5)
             current_time = datetime.datetime.now()
             if current_time > end_time:
-                break
-            await asyncio.sleep(1)
+                return
 
     async def _await(self):
         self._wait_event = asyncio.Event()
