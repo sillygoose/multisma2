@@ -68,6 +68,7 @@ SITE_SNAPSHOT = [
     "6180_08412800",    # Status: General operating status
     "6180_08416400",    # Status: Grid relay
     "6180_08414C00",    # Status: Condition
+    "6400_0046C300",    # AC Total yield (aggregated)
 ]
 
 SITE_TOTALS = [
@@ -433,8 +434,9 @@ class Site:
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.snapshot())
-            self._influx.write(await self.read_keys(SITE_TOTALS))
+            snapshot = await self.snapshot()
+            self._influx.write(snapshot)
+            #mqtt.publish(await self.snapshot())
             #mqtt.publish(await self.read_keys(STATES))
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
@@ -446,11 +448,11 @@ class Site:
             try:
                 await queue.get()
             finally:
-                await self.read_total_production()
+                #await self.read_total_production()
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.production_history())
+            #mqtt.publish(await self.production_history())
 
 
     async def task_30s(self, queue):
@@ -462,7 +464,7 @@ class Site:
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.co2_avoided())
+            #mqtt.publish(await self.co2_avoided())
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -473,8 +475,8 @@ class Site:
                 queue.task_done()
 
             # publishing jobs
-            mqtt.publish(await self.read_history_period("day"))
-            mqtt.publish(await self.read_history_period("month"))
+            #mqtt.publish(await self.read_history_period("day"))
+            #mqtt.publish(await self.read_history_period("month"))
 
             # Log production and status to the production log
             if info.get("daylight"):

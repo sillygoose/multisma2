@@ -28,17 +28,15 @@ class InfluxDB():
             self._client.close()
             logger.info(f"Closed the InfluxDB database '{INFLUXDB_DATABASE}'")
 
-    def _json_to_influx_line_protocol(self, json):
-        return
-
     def write(self, points):
         if not self._client:
             return
+        #pprint(points)
         ts = time.time_ns()
         lps = []
         for point in points:
-            precision = point.pop('precision')
-            unit = point.pop('unit')
+            precision = point.pop('precision', None)
+            unit = point.pop('unit', None)
             topic = point.pop('topic')
             topic = topic.replace('/', '_')
             #pprint(point)
@@ -59,11 +57,18 @@ class InfluxDB():
                         else:
                             lp += f",{k}_{sk}={sv}i"
                 else:
+                    prefix = ''
+                    suffix = ''
+                    if isinstance(v, str): 
+                        prefix = '"'
+                        suffix = '"'
+                    elif isinstance(v, int):
+                        suffix = 'i'
                     if first:
-                        lp += f"{k}={v}i"
+                        lp += f"{k}={prefix}{v}{suffix}"
                         first = False
                     else:
-                        lp += f",{k}={v}i"
+                        lp += f",{k}={prefix}{v}{suffix}"
             lp += f" {ts}"
             lps.append(lp)
         #pprint(lps)
