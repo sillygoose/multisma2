@@ -14,6 +14,7 @@ from astral import sun
 
 from inverter import Inverter
 import mqtt
+import influx
 import logfiles
 
 from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
@@ -25,6 +26,7 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
+# Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
     "6100_0046C200": "production/current",
     "6400_0046C300": "production/total",
@@ -41,6 +43,8 @@ MQTT_TOPICS = {
     "6180_08412800": "status/general_operating_status",
     "6180_08416400": "status/grid_relay",
     "6180_08414C00": "status/condition",
+    # This key is the same as "production/total" but not aggregated
+    "6400_00260100": "total_production",
 }
 
 # These are keys that we calculate a total across all inverters
@@ -66,6 +70,13 @@ SITE_SNAPSHOT = [
     "6180_08414C00",    # Status: Condition
 ]
 
+SITE_TOTALS = [
+#    "6400_00260100",    # AC Total yield (not aggregated)
+    "6100_40263F00",    # AC grid power (current)
+    "6380_40251E00",    # DC Power (current)
+    "6400_0046C300",    # AC Total yield (aggregated)
+]
+
 DC_MEASUREMENTS = [
     "6380_40251E00",    # DC Power (current)
     "6380_40451F00",    # DC Voltage
@@ -85,8 +96,9 @@ class Site:
 
     SOLAR_EVENTS = []
 
-    def __init__(self, session):
+    def __init__(self, session, influx):
         """Create a new Site object."""
+        self._influx = influx
         self._tasks = None
         self._total_production = None
         self._cached_keys = None
@@ -422,6 +434,7 @@ class Site:
 
             # publishing jobs
             mqtt.publish(await self.snapshot())
+            self._influx.write(await self.read_keys(SITE_TOTALS))
             #mqtt.publish(await self.read_keys(STATES))
             #mqtt.publish(await self.current_production())
             #mqtt.publish(await self.current_dc_values())
@@ -499,7 +512,7 @@ class Site:
         return daylight
 
     def sun_events(self, daylight):
-        """Determines if a solar event has occured."""
+        """Determines if a solar event has occurred."""
         astral_now = astral.sun.now(tzinfo=self._tzinfo)
         for event_dict in Site.SOLAR_EVENTS:
             for event in event_dict.values():

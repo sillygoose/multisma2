@@ -10,8 +10,10 @@ from typing import Dict, Any, NoReturn
 import asyncio
 import aiohttp
 from delayedints import DelayedKeyboardInterrupt
+from influxdb import InfluxDBClient
 
 from pvsite import Site
+from influx import InfluxDB
 import mqtt
 import version
 import logfiles
@@ -26,8 +28,9 @@ class Multisma2:
         pass
 
     def __init__(self):
+        self._loop = asyncio.new_event_loop()
         self._session = None
-        self._loop = asyncio.new_event_loop() # None
+        self._influx = InfluxDB()
         self._site = None
         self._wait_event = None
         self._wait_task = None
@@ -55,24 +58,26 @@ class Multisma2:
                 logger.info("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
-        # Create the client session and initialize the inverters
-        self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = Site(self._session)
-        await self._site.initialize()
-
-         # Create the application log and welcome messages
+        # Create the application log and welcome messages
         logfiles.create_application_log(logger)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}")
-        logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
+
+        # Create the client session and initialize the inverters
+        self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
+        self._site = Site(self._session, self._influx)
+        await self._site.initialize()
 
         # Setup and test out the MQTT broker connection
         mqtt.test_connection()
+        self._influx.start()
+        logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
 
     async def _astop(self):
-        logger.info("Closing multisma2 application, back on the other side of midnight")
-        logfiles.close()
+        self._influx.stop()
         await self._site.close()
         await self._session.close()
+        logger.info("Closing multisma2 application, back on the other side of midnight")
+        logfiles.close()
 
     async def _wait_for_end(self, event):
         end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
