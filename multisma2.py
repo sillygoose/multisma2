@@ -14,7 +14,6 @@ from influxdb import InfluxDBClient
 
 from pvsite import Site
 from influx import InfluxDB
-import mqtt
 import version
 import logfiles
 
@@ -32,8 +31,6 @@ class Multisma2:
         self._session = None
         self._influx = InfluxDB()
         self._site = None
-        self._wait_event = None
-        self._wait_task = None
 
     def run(self):
         try:
@@ -66,35 +63,17 @@ class Multisma2:
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = Site(self._session, self._influx)
         await self._site.initialize()
-
-        # Setup and test out the MQTT broker connection
-        mqtt.test_connection()
         self._influx.start()
-        logger.info(f"{('Waiting for daylight', 'Starting solar data collection now')[self._site.daylight()]}")
 
     async def _astop(self):
         self._influx.stop()
         await self._site.close()
         await self._session.close()
-        logger.info("Closing multisma2 application, back on the other side of midnight")
+        logger.info("Closing multisma2 application")
         logfiles.close()
 
-    async def _wait_for_end(self, event):
-        end_time = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 50))
-        while True:
-            for _ in range(10):
-                if event.is_set():
-                    await event.wait()
-                    return   
-                await asyncio.sleep(0.5)
-            current_time = datetime.datetime.now()
-            if current_time > end_time:
-                return
-
     async def _await(self):
-        self._wait_event = asyncio.Event()
-        self._wait_task = asyncio.create_task(self._wait_for_end(self._wait_event))
-        await self._wait_task
+        await self._site.run()
 
     def _start(self):
         self._loop.run_until_complete(self._astart())
@@ -104,65 +83,6 @@ class Multisma2:
 
     def _stop(self):
         self._loop.run_until_complete(self._astop())
-
-        # Because we want a clean exit, wait for completion
-        # of the _wait_task (otherwise this task might get cancelled
-        # in the _cancel_all_tasks() method - which wouldn't be a problem,
-        # but it would be dirty).
-        if self._wait_event:
-            self._wait_event.set()
-
-        if self._wait_task:
-            if not self._wait_task.done():
-                self._loop.run_until_complete(self._wait_task)
-
-        def __loop_exception_handler(loop, context: Dict[str, Any]):
-            if type(context['exception']) == ConnectionResetError:
-                logger.warn("suppressing ConnectionResetError")
-            elif type(context['exception']) == OSError:
-                logger.warn("suppressing OSError")
-            else:
-                logger.warn(f"unhandled exception: {context}")
-
-        self._loop.set_exception_handler(__loop_exception_handler)
-        try:
-            # Shutdown tasks and any active asynchronous generators.
-            self._cancel_all_tasks()
-            self._loop.run_until_complete(self._loop.shutdown_asyncgens())
-
-        finally:
-            # ... and close the loop.
-            self._loop.close()
-
-    def _cancel_all_tasks(self):
-        """
-        Cancel all tasks in the loop.
-        This method injects an asyncio.CancelledError exception
-        into all tasks and lets them handle it.
-        """
-        # Code kindly borrowed from asyncio.run().
-        to_cancel = asyncio.tasks.all_tasks(self._loop)
-        if not to_cancel:
-            return
-
-        logger.error("At least one task is still running, error?")
-        for task in to_cancel:
-            task.cancel()
-
-        self._loop.run_until_complete(
-            asyncio.tasks.gather(*to_cancel, loop=self._loop, return_exceptions=True)
-        )
-
-        for task in to_cancel:
-            if task.cancelled():
-                continue
-
-            if task.exception() is not None:
-                self._loop.call_exception_handler({
-                    'message': 'unhandled exception during Application.run() shutdown',
-                    'exception': task.exception(),
-                    'task': task,
-                })
 
 
 def main():

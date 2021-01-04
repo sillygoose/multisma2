@@ -46,6 +46,15 @@ class InfluxDB():
 
     cache = {}
 
+    def write_history(self, site):
+        #pprint(histories)
+        #return
+        for inverter in site:
+            inverter_name = inverter.pop(0)
+            print(f"History for inverter {inverter_name['inverter']}")
+            for history in inverter:
+                print(f"{time.ctime(history['t'])}  {history['v']}")
+
     def write(self, points):
         if not self._client:
             return
