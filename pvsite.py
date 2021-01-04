@@ -39,8 +39,6 @@ class Site:
 
     async def run(self):
         while True:
-            #start = 1596250800
-            #stop = 1598943600
             month = 7
             year = 2020
             start = int((datetime.datetime.combine(datetime.date.today().replace(year=year, month=month, day=1), datetime.time(23, 0)) - datetime.timedelta(days=1)).timestamp())
