@@ -71,13 +71,6 @@ SITE_SNAPSHOT = [
     "6400_0046C300",    # AC Total yield (aggregated)
 ]
 
-SITE_TOTALS = [
-#    "6400_00260100",    # AC Total yield (not aggregated)
-    "6100_40263F00",    # AC grid power (current)
-    "6380_40251E00",    # DC Power (current)
-    "6400_0046C300",    # AC Total yield (aggregated)
-]
-
 DC_MEASUREMENTS = [
     "6380_40251E00",    # DC Power (current)
     "6380_40451F00",    # DC Voltage
