@@ -61,8 +61,7 @@ class Multisma2:
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = PVSite(self._session)
         result = await self._site.start()
-        if not result:
-            raise Multisma2.FailedInitialization
+        if not result: raise Multisma2.FailedInitialization
 
     async def _await(self):
         await self._site.run()

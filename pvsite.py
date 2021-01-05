@@ -79,8 +79,7 @@ class PVSite:
         if result:
             cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
             result = (None not in cached_keys) and result
-            if result:
-                self._cached_keys = cached_keys[0]
+            if result: self._cached_keys = cached_keys[0]
         return result
 
     async def stop(self):
@@ -138,10 +137,7 @@ class PVSite:
             history = {}
             for key, value in tp.items():
                 production = value * settings["scale"]
-                if settings["precision"]:
-                    history[key] = round(production, settings["precision"])
-                else:
-                    history[key] = int(production)
+                history[key] = round(production, settings["precision"]) if settings["precision"] else int(production)
 
             history["topic"] = "production/" + period
             history["unit"] = settings["unit"]
@@ -169,10 +165,7 @@ class PVSite:
             co2avoided_period = {}
             for key, value in tp.items():
                 co2 = value * settings["scale"] * settings["factor"]
-                if settings["precision"]:
-                    co2avoided_period[key] = round(co2, settings["precision"])
-                else:
-                    co2avoided_period[key] = int(co2)
+                co2avoided_period[key] = round(co2, settings["precision"]) if settings["precision"] else int(co2)
 
             co2avoided_period["topic"] = "co2avoided/" + period
             co2avoided_period["unit"] = settings["unit"]
@@ -183,24 +176,14 @@ class PVSite:
 
     async def inverter_efficiency(self):
         """Calculate the the inverter efficiencies."""
-        dc_power_list = await self.get_composite(["6380_40251E00"])
-        ac_power_list = await self.get_composite(["6100_40263F00"])
+        dc_power = (await self.get_composite(["6380_40251E00"]))[0]
+        ac_power = (await self.get_composite(["6100_40263F00"]))[0]
         efficiencies = {}
-        ac_power = ac_power_list[0]
-        dc_power = dc_power_list[0]
-        ac_power.pop('precision')
-        ac_power.pop('topic')
-        ac_power.pop('unit')
         for k, v in ac_power.items():
-            num = v
-            dem = 0
+            if k in ['unit', 'precision', 'topic']: continue
             dc = dc_power.get(k)
-            if isinstance(dc, dict):
-                dem = dc.get('site')
-            else:
-                dem = dc_power.get(k)
-            eff = round((float(num) / float(dem)) * 100, 2)
-            efficiencies[k] = eff
+            denom = dc.get('site') if isinstance(dc, dict) else dc
+            efficiencies[k] = 0.0 if denom == 0 else round((float(v) / denom) * 100, 2)
         efficiencies['topic'] = 'ac_measurements/efficiency'
         return [efficiencies]
 
@@ -241,15 +224,11 @@ class PVSite:
                     if calculate_total:
                         total += val
 
-                if unit:
-                    composite["unit"] = unit
-                if precision is not None:
-                    composite["precision"] = precision
+                if unit: composite["unit"] = unit
+                if precision is not None: composite["precision"] = precision
                 composite[inverter.get("name")] = val
 
-            if calculate_total:
-                composite["site"] = total
-
+            if calculate_total: composite["site"] = total
             composite["topic"] = MQTT_TOPICS.get(key, key)
             sensors.append(composite)
 
