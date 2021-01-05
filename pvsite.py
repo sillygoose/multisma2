@@ -92,85 +92,6 @@ class PVSite:
         """Update the instantaneous cache from the inverter."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
 
-    async def read_history_period(self, period):
-        """Collect the production history for a specified period."""
-        history_list = await asyncio.gather(*(inverter.read_history_period(period) for inverter in self._inverters))
-
-        aggregate = {}
-        while history_list:
-            inverter = history_list.pop()
-            last_seen = 0
-            inverter.pop(0)
-            for index, item in enumerate(inverter, 1):
-                if index == len(inverter):
-                    break
-                start_of_period = inverter[index - 1].get("v")
-                end_of_period = inverter[index].get("v")
-                if not start_of_period:
-                    start_of_period = last_seen
-                if not end_of_period:
-                    end_of_period = start_of_period
-                total = (end_of_period - start_of_period) / 1000
-                date_time = item.get("t")
-                day_slot = 'day' + str(index)
-                if day_slot in aggregate:
-                    day_value = aggregate[day_slot].get('v', 0)
-                else:
-                    day_value = 0
-                aggregate[day_slot] = {'t': date_time, 'v': day_value + total}
-                last_seen = end_of_period
-
-        if period in ['month']:
-            reduced = {}
-            for v in aggregate.values():
-                dt = datetime.datetime.fromtimestamp(v.get('t'))
-                date_time = int(
-                    datetime.datetime.combine(datetime.date(dt.year, dt.month, 1), datetime.time(0, 0)).timestamp()
-                )
-                month_slot = 'month' + str(dt.month)
-                if month_slot in reduced:
-                    month_value = reduced[month_slot].get('v', 0)
-                else:
-                    month_value = 0
-                month_value += v.get('v')
-                reduced[month_slot] = {'t': date_time, 'v': month_value}
-
-            aggregate = reduced
-
-        aggregate["topic"] = "history/" + period
-        aggregate["precision"] = 3
-        aggregate["unit"] = "kWh"
-        return [aggregate]
-
-    async def history_delete_me(self):
-        month = 6
-        year = 2020
-        start = int((datetime.datetime.combine(datetime.date.today().replace(year=year, month=month, day=1), datetime.time(23, 0)) - datetime.timedelta(days=1)).timestamp())
-        stop = int((datetime.datetime.combine(datetime.date.today(), datetime.time(3, 0))).timestamp())
-        histories = await asyncio.gather(*(inverter.read_inverter_history(start, stop) for inverter in self._inverters))
-        total = {}
-        for inverter in histories:
-            for i in range(1, len(inverter)):
-                t = inverter[i]['t']
-                v = inverter[i]['v']
-                if v is None:
-                    if i > 1:
-                        inverter[i]['v'] = inverter[i-1]['v']
-                    else:
-                        inverter[i]['v'] = inverter[i+1]['v']
-                    v = inverter[i]['v']
-                if t in total:
-                    total[t] += v
-                else:
-                    total[t] = v
-
-        site_total = []
-        for t, v in total.items():
-            site_total.append({'t': t, 'v': v})
-        site_total.insert(0, {'inverter': 'site'})
-        histories.append(site_total)
-        self._influx.write_history(histories)
-
     async def read_total_production(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         total_production_list = await self.total_production()
@@ -199,7 +120,7 @@ class PVSite:
         self._total_production = raw_stats
         return raw_stats
 
-    async def production_history(self):
+    async def production_history(self): ###
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = {
             "today": {"unit": "kWh", "scale": 0.001, "precision": 2},
@@ -342,8 +263,10 @@ class PVSite:
                     mqtt.publish(snapshot)
                     pass
                 if tick % 15 == 0:
+                    mqtt.publish(await self.production_history())
                     pass
                 if tick % 30 == 0:
+                    mqtt.publish(await self.co2_avoided())
                     pass
                 if tick % 60 == 0:
                     pass

@@ -125,23 +125,6 @@ class Inverter:
         raw_result = await self._sma.read_values([key])
         return self.clean({key: raw_result.get(key)})
 
-    async def read_history_period(self, period):
-        """Collect the production history for the specified period."""
-        assert period in ("day", "month")
-        PERIOD_LENGTH = {"day": 30, "month": 366}
-        start = datetime.datetime.combine(datetime.date.today(), datetime.time(22, 0)) - datetime.timedelta(
-            days=PERIOD_LENGTH[period]
-        )
-        end = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)) + datetime.timedelta(days=1)
-        history = await self._sma.read_history(int(start.timestamp()), int(end.timestamp()))
-
-        TOTAL_PRODUCTION = "6400_0046C300"
-        latest_production = await self.get_state(TOTAL_PRODUCTION)
-        results = latest_production.pop(TOTAL_PRODUCTION)
-        history.append({"t": int(end.timestamp()), "v": results.get("val")})
-        history.insert(0, {"name": self._name})
-        return history
-
     async def read_history(self):
         """Read the baseline inverter production for select periods."""
         one_hour = 60 * 60 * 1
