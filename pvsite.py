@@ -39,10 +39,9 @@ class Site:
 
     async def run(self):
         while True:
-            month = 7
+            month = 6
             year = 2020
             start = int((datetime.datetime.combine(datetime.date.today().replace(year=year, month=month, day=1), datetime.time(23, 0)) - datetime.timedelta(days=1)).timestamp())
-            #stop = int((datetime.datetime.combine(datetime.date.today().replace(year=year, month=month+1, day=1), datetime.time(3, 0))).timestamp())
             stop = int((datetime.datetime.combine(datetime.date.today(), datetime.time(3, 0))).timestamp())
             histories = await asyncio.gather(*(inverter.read_history(start, stop) for inverter in self._inverters))
             #pprint(histories)
