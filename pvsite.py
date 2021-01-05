@@ -339,7 +339,7 @@ class PVSite:
                     snapshot = await self.snapshot()
                     #pprint(snapshot)
                     self._influx.write_points(snapshot)
-                    #mqtt.publish(snapshot
+                    mqtt.publish(snapshot)
                     pass
                 if tick % 15 == 0:
                     pass

@@ -92,7 +92,7 @@ def publish(sensors):
     for sensor in sensors:
         if "topic" not in sensor:
             logger.warning("'topic' not in sensor dictionary: %s", str(sensor))
-            return
+            continue
 
         # Extract the topic and precision from the dictionary
         topic = sensor.pop("topic")

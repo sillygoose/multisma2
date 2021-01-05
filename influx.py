@@ -77,7 +77,9 @@ class InfluxDB():
 
         ts = int(time.time())
         lps = []
-        for point in sensors:
+
+        for old_point in sensors:
+            point = old_point.copy()
             topic = point.pop('topic', None)
             point.pop('unit', None)
             point.pop('precision', None)
