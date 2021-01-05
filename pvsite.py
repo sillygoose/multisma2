@@ -10,7 +10,7 @@ from pprint import pprint
 from dateutil import tz
 
 from inverter import Inverter
-#import influx
+from influx import InfluxDB
 
 from configuration import INVERTERS
 from configuration import APPLICATION_LOG_LOGGER_NAME
@@ -21,21 +21,23 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 class Site:
     """Class to describe a PV site with one or more inverters."""
-    def __init__(self, session, influx):
+    def __init__(self, session):
         """Create a new Site object."""
-        self._influx = influx
+        self._influx = InfluxDB()
         self._inverters = []
         for inverter in INVERTERS:
             self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
 
     async def initialize(self):
         """Initialize the Site object."""
+        self._influx.start()
         results = await asyncio.gather(*(inverter.initialize() for inverter in self._inverters))
         return False not in results
 
     async def close(self):
         """Shutdown the Site object."""
         await asyncio.gather(*(inverter.close() for inverter in self._inverters))
+        self._influx.stop()
 
     async def run(self):
         while True:

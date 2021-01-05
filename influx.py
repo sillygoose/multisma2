@@ -8,6 +8,7 @@ import logging
 from pprint import pprint
 
 from influxdb import InfluxDBClient
+from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
 from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT
@@ -58,19 +59,21 @@ class InfluxDB():
                     lp = f'production,inverter={name} total={v}i {t}'
                     lps.append(lp)
 
-        #pprint(lps)
-        if len(lps):
+        try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-            if not result:
-                logger.error(f"Database write_points() failed")
+            logger.info(f"Wrote {len(lps)} history points")
+        except (InfluxDBClientError, InfluxDBServerError):
+            logger.error(f"Database write_history() failed")
+            result = False
+        return result
 
-    def write(self, points):
+    def write_points(self, sensors):
         if not self._client:
-            return
+            return False
 
         ts = int(time.time())
         lps = []
-        for point in points:
+        for point in sensors:
             topic = point.pop('topic', None)
             point.pop('unit', None)
             point.pop('precision', None)
@@ -109,8 +112,10 @@ class InfluxDB():
                         lp += f' {ts}'
                         lps.append(lp)
 
-        if len(lps):
-            #pprint(lps)
+        try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-            if not result:
-                logger.error(f"Database write_points() failed")
+            logger.info(f"Wrote {len(lps)} sensor points")
+        except (InfluxDBClientError, InfluxDBServerError):
+            logger.error(f"Database write_history() failed")
+            result = False
+        return result

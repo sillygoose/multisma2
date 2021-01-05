@@ -13,7 +13,6 @@ from delayedints import DelayedKeyboardInterrupt
 from influxdb import InfluxDBClient
 
 from pvsite import Site
-from influx import InfluxDB
 import version
 import logfiles
 
@@ -31,7 +30,6 @@ class Multisma2:
     def __init__(self):
         self._loop = asyncio.new_event_loop()
         self._session = None
-        self._influx = InfluxDB()
         self._site = None
 
     def run(self):
@@ -63,14 +61,12 @@ class Multisma2:
 
         # Create the client session and initialize the inverters
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = Site(self._session, self._influx)
+        self._site = Site(self._session)
         result = await self._site.initialize()
         if not result:
             raise Multisma2.FailedInitialization
-        self._influx.start()
 
     async def _astop(self):
-        self._influx.stop()
         await self._site.close()
         await self._session.close()
         logger.info("Closing multisma2 application")
