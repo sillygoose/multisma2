@@ -25,6 +25,8 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 class Multisma2:
     class NormalCompletion(Exception):
         pass
+    class FailedInitialization(Exception):
+        pass
 
     def __init__(self):
         self._loop = asyncio.new_event_loop()
@@ -46,7 +48,7 @@ class Multisma2:
             self._wait()
             raise Multisma2.NormalCompletion
 
-        except (KeyboardInterrupt, Multisma2.NormalCompletion):
+        except (KeyboardInterrupt, Multisma2.NormalCompletion, Multisma2.FailedInitialization):
             # The _stop() is also shielded from termination.
             try:
                 with DelayedKeyboardInterrupt():
@@ -62,7 +64,9 @@ class Multisma2:
         # Create the client session and initialize the inverters
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = Site(self._session, self._influx)
-        await self._site.initialize()
+        result = await self._site.initialize()
+        if not result:
+            raise Multisma2.FailedInitialization
         self._influx.start()
 
     async def _astop(self):

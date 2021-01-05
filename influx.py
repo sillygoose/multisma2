@@ -47,13 +47,22 @@ class InfluxDB():
     cache = {}
 
     def write_history(self, site):
-        #pprint(histories)
-        #return
+        lps = []
         for inverter in site:
             inverter_name = inverter.pop(0)
-            print(f"History for inverter {inverter_name['inverter']}")
+            name = inverter_name['inverter']
             for history in inverter:
-                print(f"{time.ctime(history['t'])}  {history['v']}")
+                t = history['t']
+                v = history['v']
+                if isinstance(v, int):
+                    lp = f'production,inverter={name} total={v}i {t}'
+                    lps.append(lp)
+
+        #pprint(lps)
+        if len(lps):
+            result = self._client.write_points(points=lps, time_precision='s', protocol='line')
+            if not result:
+                logger.error(f"Database write_points() failed")
 
     def write(self, points):
         if not self._client:

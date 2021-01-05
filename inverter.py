@@ -43,9 +43,6 @@ class Inverter:
 
     async def read_history(self, start, stop):
         """Read the baseline inverter production."""
-        one_hour = 0 #60 * 60 * 1
-        three_hours = 0 #60 * 60 * 3
-        history = await self._sma.read_history(start - one_hour, stop + three_hours)
-        #print(history)
+        history = await self._sma.read_history(start, stop)
         history.insert(0, {'inverter': self._name})
         return history
