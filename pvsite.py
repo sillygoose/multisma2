@@ -120,7 +120,7 @@ class PVSite:
         self._total_production = raw_stats
         return raw_stats
 
-    async def production_history(self): ###
+    def production_history(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = {
             "today": {"unit": "kWh", "scale": 0.001, "precision": 2},
@@ -150,7 +150,7 @@ class PVSite:
         return histories
 
     ### async?
-    async def co2_avoided(self):
+    def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
         CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
@@ -263,10 +263,10 @@ class PVSite:
                     mqtt.publish(snapshot)
                     pass
                 if tick % 15 == 0:
-                    mqtt.publish(await self.production_history())
+                    mqtt.publish(self.production_history())
                     pass
                 if tick % 30 == 0:
-                    mqtt.publish(await self.co2_avoided())
+                    mqtt.publish(self.co2_avoided())
                     pass
                 if tick % 60 == 0:
                     pass
