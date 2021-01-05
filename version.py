@@ -28,7 +28,7 @@ def get_version():
     # Assume we find no tags
     version = "unknown"
 
-    # Save currenrt directory and switch to the file directory
+    # Save current directory and switch to the file directory
     current = os.getcwd()
     directory = dirname(__file__)
     os.chdir(directory)

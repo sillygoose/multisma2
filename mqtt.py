@@ -126,10 +126,10 @@ def publish(sensors):
             )
 
 
-def test_connection():
-    """Tests and caches the client MQTT broker connectioon."""
+def start():
+    """Tests and caches the client MQTT broker connection."""
     if not MQTT_ENABLE:
-        return False
+        return True
 
     # Create a unique client name
     local_vars["clientname"] = (
@@ -153,6 +153,7 @@ def test_connection():
         MQTT_BROKER_IPADDR,
         port,
     )
+
     client.on_connect = on_connect
     client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
     try:
@@ -195,12 +196,12 @@ def test_connection():
         atexit.register(mqtt_exit)
         return True
 
-    # Some sort of error occured
+    # Some sort of error occurred
     return False
 
 
 if __name__ == "__main__":
     test_msg = [{"Topic": "test", "Value": "Test message"}]
     # Test connection and if successful publish a test message
-    if test_connection():
+    if start():
         publish(test_msg)

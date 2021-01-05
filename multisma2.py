@@ -2,17 +2,15 @@
 # Robust initialization and shutdown code courtesy of 
 # https://github.com/wbenny/python-graceful-shutdown.git
 
-import datetime
 import logging
 import sys
 from typing import Dict, Any, NoReturn
 
 import asyncio
 import aiohttp
-from delayedints import DelayedKeyboardInterrupt
-from influxdb import InfluxDBClient
 
-from pvsite import Site
+from delayedints import DelayedKeyboardInterrupt
+from pvsite import PVSite
 import version
 import logfiles
 
@@ -56,24 +54,23 @@ class Multisma2:
 
     async def _astart(self):
         # Create the application log and welcome messages
-        logfiles.create_application_log(logger)
+        logfiles.start(logger)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}")
 
         # Create the client session and initialize the inverters
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = Site(self._session)
-        result = await self._site.initialize()
+        self._site = PVSite(self._session)
+        result = await self._site.start()
         if not result:
             raise Multisma2.FailedInitialization
 
-    async def _astop(self):
-        await self._site.close()
-        await self._session.close()
-        logger.info("Closing multisma2 application")
-        logfiles.close()
-
     async def _await(self):
         await self._site.run()
+
+    async def _astop(self):
+        logger.info("Closing multisma2 application")
+        await self._site.stop()
+        await self._session.close()
 
     def _start(self):
         self._loop.run_until_complete(self._astart())

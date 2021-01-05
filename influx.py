@@ -33,12 +33,16 @@ class InfluxDB():
         self._client = None
 
     def start(self):
+        result = True
         if INFLUXDB_ENABLE:
             self._client = InfluxDBClient(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE)
             if self._client:
                 logger.info(f"Opened the InfluxDB database '{INFLUXDB_DATABASE}' for output")
+                result = True
             else:
                 logger.error(f"Failed to open the InfluxDB database '{INFLUXDB_DATABASE}'")
+                result = False
+        return result
 
     def stop(self):
         if self._client:
@@ -114,7 +118,6 @@ class InfluxDB():
 
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-            logger.info(f"Wrote {len(lps)} sensor points")
         except (InfluxDBClientError, InfluxDBServerError):
             logger.error(f"Database write_history() failed")
             result = False
