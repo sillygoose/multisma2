@@ -111,7 +111,7 @@ class PVSite:
                         total += period_total
                         period_stats[inverter_name] = period_total
 
-                    period_stats["total"] = total
+                    period_stats["site"] = total
                     period_stats["period"] = period
                     period_stats["unit"] = unit
 
@@ -149,7 +149,6 @@ class PVSite:
 
         return histories
 
-    ### async?
     def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
@@ -182,6 +181,29 @@ class PVSite:
 
         return co2avoided
 
+    async def inverter_efficiency(self):
+        """Calculate the the inverter efficiencies."""
+        dc_power_list = await self.get_composite(["6380_40251E00"])
+        ac_power_list = await self.get_composite(["6100_40263F00"])
+        efficiencies = {}
+        ac_power = ac_power_list[0]
+        dc_power = dc_power_list[0]
+        ac_power.pop('precision')
+        ac_power.pop('topic')
+        ac_power.pop('unit')
+        for k, v in ac_power.items():
+            num = v
+            dem = 0
+            dc = dc_power.get(k)
+            if isinstance(dc, dict):
+                dem = dc.get('site')
+            else:
+                dem = dc_power.get(k)
+            eff = round((float(num) / float(dem)) * 100, 2)
+            efficiencies[k] = eff
+        efficiencies['topic'] = 'ac_measurements/efficiency'
+        return [efficiencies]
+
     async def snapshot(self):
         """Get the values of interest from each inverter."""
         return await self.get_composite(SITE_SNAPSHOT)
@@ -213,7 +235,7 @@ class PVSite:
                 precision = result.get("precision", None)
                 if isinstance(val, dict):
                     if calculate_total:
-                        subtotal = val.get("total")
+                        subtotal = val.get("site")
                         total += subtotal
                 else:
                     if calculate_total:
@@ -226,7 +248,7 @@ class PVSite:
                 composite[inverter.get("name")] = val
 
             if calculate_total:
-                composite["total"] = total
+                composite["site"] = total
 
             composite["topic"] = MQTT_TOPICS.get(key, key)
             sensors.append(composite)
@@ -257,7 +279,12 @@ class PVSite:
                 last_tick = tick
                 if tick % 5 == 0:
                     await self.read_instantaneous()
+
+                    eff = await self.inverter_efficiency()
                     snapshot = await self.snapshot()
+                    
+                    self._influx.write_points(eff)
+                    mqtt.publish(eff)
                     #pprint(snapshot)
                     self._influx.write_points(snapshot)
                     mqtt.publish(snapshot)

@@ -98,9 +98,9 @@ class Inverter:
 
                 if len(states) > 1:
                     if aggregate:
-                        sensors["total"] = total
+                        sensors['site'] = total
                     val = sensors
-                cleaned[key] = {"val": val, "unit": unit, "precision": precision}
+                cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
             elif sma_type == 1:
                 tag = 0
                 for index, state in enumerate(states):

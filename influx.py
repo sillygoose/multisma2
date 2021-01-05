@@ -26,6 +26,7 @@ LP_LOOKUP = {
     'status/grid_relay': {'measurement': 'status', 'field': 'grid_relay'},
     'status/condition': {'measurement': 'status', 'field': 'condition'},
     'production/total': {'measurement': 'production', 'field': 'total'},
+    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'field': 'efficiency'},
 }
 
 class InfluxDB():
@@ -93,15 +94,11 @@ class InfluxDB():
                         if isinstance(v, str): 
                             lp += f',inverter={k} {lookup.get("field")}="{v}"'
                         elif isinstance(v, int) or isinstance(v, float):
-                            if k == 'total':
-                                k = 'site'
                             lp += f',inverter={k} {lookup.get("field")}={v}'
                         elif isinstance(v, dict): 
                             lp += f',inverter={k} '
                             first = True
                             for k1, v1 in v.items():
-                                if k1 == 'total':
-                                    k1 = 'inverter'
                                 if first:
                                     first = False
                                     lp += f'{lookup.get("field")}_{k1}={v1}'
