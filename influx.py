@@ -56,7 +56,7 @@ class InfluxDB():
                 t = history['t']
                 v = history['v']
                 if isinstance(v, int):
-                    lp = f'production,inverter={name} total={v}i {t}'
+                    lp = f'production,inverter={name} total={v} {t}'
                     lps.append(lp)
 
         try:
@@ -86,10 +86,10 @@ class InfluxDB():
                         signature = f'{measurement}_{k}_{lookup.get("field")}'
                         if isinstance(v, str): 
                             lp += f',inverter={k} {lookup.get("field")}="{v}"'
-                        elif isinstance(v, int):
+                        elif isinstance(v, int) or isinstance(v, float):
                             if k == 'total':
                                 k = 'site'
-                            lp += f',inverter={k} {lookup.get("field")}={v}i'
+                            lp += f',inverter={k} {lookup.get("field")}={v}'
                         elif isinstance(v, dict): 
                             lp += f',inverter={k} '
                             first = True
@@ -98,9 +98,9 @@ class InfluxDB():
                                     k1 = 'inverter'
                                 if first:
                                     first = False
-                                    lp += f'{lookup.get("field")}_{k1}={v1}i'
+                                    lp += f'{lookup.get("field")}_{k1}={v1}'
                                 else:
-                                    lp += f',{lookup.get("field")}_{k1}={v1}i'
+                                    lp += f',{lookup.get("field")}_{k1}={v1}'
 
                         # Check if in the cache, if not or different update cache and write
                         cached_result = InfluxDB.cache.get(signature, None)

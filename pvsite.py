@@ -46,7 +46,6 @@ class Site:
             start = int((datetime.datetime.combine(datetime.date.today().replace(year=year, month=month, day=1), datetime.time(23, 0)) - datetime.timedelta(days=1)).timestamp())
             stop = int((datetime.datetime.combine(datetime.date.today(), datetime.time(3, 0))).timestamp())
             histories = await asyncio.gather(*(inverter.read_history(start, stop) for inverter in self._inverters))
-            #pprint(histories)
             total = {}
             for inverter in histories:
                 for i in range(1, len(inverter)):
@@ -67,12 +66,9 @@ class Site:
             for t, v in total.items():
                 site_total.append({'t': t, 'v': v})
             site_total.insert(0, {'inverter': 'site'})
-            #pprint(site_total)
             histories.append(site_total)
-            #pprint(histories)
             self._influx.write_history(histories)
             break
-            #await asyncio.sleep(1)
 
 
 
