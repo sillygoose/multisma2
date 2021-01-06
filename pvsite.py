@@ -8,10 +8,14 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
+import astral
+from astral import sun
+
 from inverter import Inverter
 from influx import InfluxDB
 import mqtt
 
+from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
 from configuration import CO2_AVOIDANCE
 from configuration import INVERTERS
 from configuration import APPLICATION_LOG_LOGGER_NAME
@@ -68,8 +72,22 @@ class PVSite:
         self._inverters = []
         self._total_production = None
         self._cached_keys = None
+
         for inverter in INVERTERS:
             self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
+
+        self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
+        self._tzinfo = tz.gettz(TIMEZONE)
+
+        local_noon = datetime.datetime.combine(datetime.date.today(), datetime.time(12, 0), tzinfo=self._tzinfo)
+        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
+        self._solar_time_diff = solar_noon - local_noon
+
+        astral_now = astral.sun.now(tzinfo=self._tzinfo)
+        astral_dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
+        astral_dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
+        self._daylight = astral_dawn < astral_now < astral_dusk
+        logger.info(f"{SITE_NAME} is currently in {'daylight' if self._daylight else 'darkness'}")
 
     async def start(self):
         """Initialize the PVSite object."""
