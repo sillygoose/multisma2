@@ -100,7 +100,7 @@ class Inverter:
 
                 if len(states) > 1:
                     if aggregate:
-                        sensors['site'] = total
+                        sensors['inverter'] = total
                     val = sensors
                 cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
             elif sma_type == 1:

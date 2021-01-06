@@ -182,7 +182,7 @@ class PVSite:
         for k, v in ac_power.items():
             if k in ['unit', 'precision', 'topic']: continue
             dc = dc_power.get(k)
-            denom = dc.get('site') if isinstance(dc, dict) else dc
+            denom = dc.get('inverter') if isinstance(dc, dict) else dc
             efficiencies[k] = 0.0 if denom == 0 else round((float(v) / denom) * 100, 2)
         efficiencies['topic'] = 'ac_measurements/efficiency'
         return [efficiencies]
@@ -218,7 +218,7 @@ class PVSite:
                 precision = result.get("precision", None)
                 if isinstance(val, dict):
                     if calculate_total:
-                        subtotal = val.get("site")
+                        subtotal = val.get("inverter")
                         total += subtotal
                 else:
                     if calculate_total:
