@@ -4,6 +4,8 @@
 
 import logging
 import sys
+import os
+import signal
 from typing import Dict, Any, NoReturn
 
 import asyncio
@@ -24,11 +26,19 @@ class Multisma2:
         pass
     class FailedInitialization(Exception):
         pass
+    class TerminateSignal(Exception):
+        pass
 
     def __init__(self):
         self._loop = asyncio.new_event_loop()
         self._session = None
         self._site = None
+        signal.signal(signal.SIGTERM, self.catch)
+        signal.siginterrupt(signal.SIGTERM, False)
+
+    def catch(self, signum, frame):
+        logger.info("Received SIGTERM signal, forcing shutdown")
+        raise Multisma2.TerminateSignal
 
     def run(self):
         try:
@@ -44,7 +54,7 @@ class Multisma2:
             self._wait()
             raise Multisma2.NormalCompletion
 
-        except (KeyboardInterrupt, Multisma2.NormalCompletion, Multisma2.FailedInitialization):
+        except (KeyboardInterrupt, Multisma2.NormalCompletion, Multisma2.FailedInitialization, Multisma2.TerminateSignal):
             # The _stop() is also shielded from termination.
             try:
                 with DelayedKeyboardInterrupt():
@@ -55,7 +65,7 @@ class Multisma2:
     async def _astart(self):
         # Create the application log and welcome messages
         logfiles.start(logger)
-        logger.info(f"multisma2 inverter collection utility {version.get_version()}")
+        logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
         # Create the client session and initialize the inverters
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
@@ -64,6 +74,9 @@ class Multisma2:
         if not result: raise Multisma2.FailedInitialization
 
     async def _await(self):
+        #while True:
+        #    print("waiting....")
+        #    await asyncio.sleep(3)
         await self._site.run()
 
     async def _astop(self):

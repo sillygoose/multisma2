@@ -37,6 +37,7 @@ class Inverter:
         if self._sma.sma_sid is None:
             logger.info("%s - no session ID", self._name)
             return None
+        logger.info(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
         # Grab the metadata dictionary
         metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
@@ -60,6 +61,7 @@ class Inverter:
     async def stop(self):
         """Log out of the interter."""
         if self._sma:
+            logger.info(f"Closing session on SMA inverter '{self._name}'")
             await self._sma.close_session()
             self._sma = None
 
