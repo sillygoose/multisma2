@@ -102,16 +102,9 @@ def publish(sensors):
         for key, value in sensor.items():
             if isinstance(value, dict):
                 for dict_key, dict_value in value.items():
-                    if precision:
-                        value[dict_key] = round(dict_value, precision)
-                    else:
-                        value[dict_key] = dict_value
-
+                    value[dict_key] = round(dict_value, precision) if precision else dict_value
             if isinstance(value, float):
-                if precision:
-                    sensor[key] = round(value, precision)
-                else:
-                    sensor[key] = value
+                sensor[key] = round(value, precision) if precision else value
 
         # Encode each sensor in JSON and publish
         sensor_json = json.dumps(sensor)
