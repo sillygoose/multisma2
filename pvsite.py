@@ -84,10 +84,13 @@ class PVSite:
         self._solar_time_diff = solar_noon - local_noon
 
         astral_now = astral.sun.now(tzinfo=self._tzinfo)
-        astral_dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
-        astral_dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
-        self._daylight = astral_dawn < astral_now < astral_dusk
-        logger.info(f"{SITE_NAME} is currently in {'daylight' if self._daylight else 'darkness'}")
+        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._daylight = self._dawn < astral_now < self._dusk
+        logger.info(f"{SITE_NAME} is currently in {'daylight' if self._daylight else 'darkness'}, solar noon is {solar_noon.time()}")
+        doy = int(astral_now.strftime('%j'))
+        suffixes = ['st', 'nd', 'rd', 'th']
+        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {doy}{suffixes[3 if doy >= 4 else doy-1]} day of the year")
 
     async def start(self):
         """Initialize the PVSite object."""
