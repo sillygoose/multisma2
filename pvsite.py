@@ -79,6 +79,7 @@ class PVSite:
 
         self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
+        self.solar_data_update()
 
     def solar_data_update(self) -> None:
         now = datetime.datetime.now()
@@ -104,30 +105,30 @@ class PVSite:
         #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         #if None in cached_keys: return False
         #self._cached_keys = cached_keys[0]
+        return True
 
-        self.solar_data_update()
-
+    async def run(self):
         queues = {
             '5s': asyncio.Queue(),
             '15s': asyncio.Queue(),
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
         }
-        self._tasks = [
-            asyncio.create_task(self.daylight()),
-            asyncio.create_task(self.midnight()),
-            asyncio.create_task(self.scheduler(queues)),
-            asyncio.create_task(self.task_5s(queues.get('5s'))),
-            asyncio.create_task(self.task_15s(queues.get('15s'))),
-            asyncio.create_task(self.task_30s(queues.get('30s'))),
-            asyncio.create_task(self.task_60s(queues.get('60s'))),
-        ]
-        return True
+        results = await asyncio.gather(
+            self.daylight(),
+            self.midnight(),
+            self.scheduler(queues),
+            self.task_5s(queues.get('5s')),
+            self.task_15s(queues.get('15s')),
+            self.task_30s(queues.get('30s')),
+            self.task_60s(queues.get('60s')),
+        )
+        print(results)
 
     async def stop(self):
         """Shutdown the PVSite object."""
-        for task in self._tasks:
-            task.cancel()
+        #for task in self._tasks:
+        #    task.cancel()
         #    await task
         #await asyncio.gather(*(task.cancel() for task in self._tasks))
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
@@ -140,8 +141,6 @@ class PVSite:
         last_tick = int(time.time())
         #await self.read_instantaneous()
         #await self.read_total_production()
-        #queue5 = queues.get('5s')
-        #queue15 = queues.get('15s')
         while True:
             try:
                 tick = int(time.time())
@@ -164,40 +163,30 @@ class PVSite:
     async def task_5s(self, queue):
         """Work done every 5 seconds."""
         while True:
-            try:
-                await queue.get()
-                logger.info(f"'task_5s()' is running")
-                pass
-            finally:
-                queue.task_done()
+            await queue.get()
+            logger.info(f"'task_5s()' is running")
+            queue.task_done()
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
         while True:
-            try:
-                await queue.get()
-                logger.info(f"'task_15s()' is running")
-            finally:
-                queue.task_done()
+            await queue.get()
+            logger.info(f"'task_15s()' is running")
+            queue.task_done()
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
-            try:
-                await queue.get()
-                logger.info(f"'task_30s()' is running")
-                pass
-            finally:
-                queue.task_done()
+            await queue.get()
+            logger.info(f"'task_30s()' is running")
+            queue.task_done()
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
-            try:
-                await queue.get()
-                logger.info(f"'task_60s()' is running")
-            finally:
-                queue.task_done()
+            await queue.get()
+            logger.info(f"'task_60s()' is running")
+            queue.task_done()
 
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")

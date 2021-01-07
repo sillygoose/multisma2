@@ -74,10 +74,10 @@ class Multisma2:
         if not result: raise Multisma2.FailedInitialization
 
     async def _await(self):
-        while True:
+        #while True:
             #print("waiting....")
-            await asyncio.sleep(10)
-        #await self._site.run()
+            #await asyncio.sleep(10)
+        await self._site.run()
 
     async def _astop(self):
         logger.info("Closing multisma2 application")
