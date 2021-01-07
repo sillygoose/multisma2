@@ -21,9 +21,7 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 def start(app_logger):
     """Create the application log."""
     now = datetime.now()
-    filename = os.path.expanduser(
-        APPLICATION_LOG_FILE + "_" + now.strftime("%Y-%m-%d") + ".log"
-    )
+    filename = os.path.expanduser(APPLICATION_LOG_FILE + ".log")
 
     # Create the directory if needed
     filename_parts = os.path.split(filename)

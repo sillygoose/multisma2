@@ -70,16 +70,21 @@ class PVSite:
         """Create a new PVSite object."""
         self._influx = InfluxDB()
         self._inverters = []
+        self._tasks = None
         self._total_production = None
-        self._cached_keys = None
+        self._cached_keys = []
 
         for inverter in INVERTERS:
             self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
 
         self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
+        self.solar_data_update()
+        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
 
-        local_noon = datetime.datetime.combine(datetime.date.today(), datetime.time(12, 0), tzinfo=self._tzinfo)
+    def solar_data_update(self) -> None:
+        now = datetime.datetime.now()
+        local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
         solar_noon = astral.sun.noon(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
         self._solar_time_diff = solar_noon - local_noon
 
@@ -87,26 +92,100 @@ class PVSite:
         self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._daylight = self._dawn < astral_now < self._dusk
-        logger.info(f"{SITE_NAME} is currently in {'daylight' if self._daylight else 'darkness'}, solar noon is {solar_noon.time()}")
-        doy = int(astral_now.strftime('%j'))
+
+    def day_of_year(self) -> str:
+        doy = int(datetime.datetime.now().strftime('%j'))
         suffixes = ['st', 'nd', 'rd', 'th']
-        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {doy}{suffixes[3 if doy >= 4 else doy-1]} day of the year")
+        return str(doy) + suffixes[3 if doy >= 4 else doy-1]
 
     async def start(self):
         """Initialize the PVSite object."""
-        result = self._influx.start()
-        if result:
-            result = mqtt.start()
-        if result:
-            cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-            result = (None not in cached_keys) and result
-            if result: self._cached_keys = cached_keys[0]
-        return result
+        #if not self._influx.start(): return False
+        #if not mqtt.start(): return False
+
+        #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
+        #if None in cached_keys: return False
+        #self._cached_keys = cached_keys[0]
+        self._tasks = [
+            asyncio.create_task(self.daylight()),
+            asyncio.create_task(self.midnight()),
+            asyncio.create_task(self.scheduler()),
+        ]
+        return True
 
     async def stop(self):
         """Shutdown the PVSite object."""
-        await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        self._influx.stop()
+        for task in self._tasks:
+            task.cancel()
+        #    await task
+        #await asyncio.gather(*(task.cancel() for task in self._tasks))
+        #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
+        #self._influx.stop()
+ 
+    async def scheduler(self):
+        """Task to schedule actions at regular intervals."""
+        #logger.info(f"'scheduler' task has started")
+        SLEEP = 0.5
+        last_tick = int(time.time())
+        #await self.read_instantaneous()
+        #await self.read_total_production()
+        while True:
+            try:
+                tick = int(time.time())
+                if tick != last_tick:
+                    last_tick = tick
+                    if tick % 5 == 0:
+                        #logger.info(f"'scheduler(5)' is running")
+                        pass
+                    if tick % 15 == 0:
+                        #logger.info(f"'scheduler(15)' is running")
+                        pass
+                    if tick % 30 == 0:
+                        #logger.info(f"'scheduler(30)' is running")
+                        pass
+                    if tick % 60 == 0:
+                        #logger.info(f"'scheduler(60)' is running")
+                        pass
+                await asyncio.sleep(SLEEP)
+
+            except asyncio.CancelledError:
+                logger.info(f"'scheduler' task has been cancelled")
+                raise
+
+    async def daylight(self) -> None:
+        #logger.info(f"'daylight' task has started")
+        astral_now = astral.sun.now(tzinfo=self._tzinfo)
+        self._daylight = self._dawn < astral_now < self._dusk
+        while True:
+            try:
+                daylight = self._daylight
+                astral_now = astral.sun.now(tzinfo=self._tzinfo)
+                self._daylight = self._dawn < astral_now < self._dusk
+                if not daylight and self._daylight:
+                    logger.info(f"Good morning, it now daylight")
+                elif daylight and not self._daylight:
+                    logger.info(f"Good evening, it is now nighttime")
+                await asyncio.sleep(60)
+
+            except asyncio.CancelledError:
+                logger.info(f"'daylight' task has been cancelled")
+                raise
+
+    async def midnight(self) -> None:
+        #logger.info(f"'midnight' task has started")
+        while True:
+            try:
+                now = datetime.datetime.now()
+                tomorrow = now + datetime.timedelta(days=1)
+                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
+                sleep = midnight - now
+                await asyncio.sleep(sleep)
+                self.solar_data_update()
+                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
+
+            except asyncio.CancelledError:
+                logger.info(f"'midnight' task has been cancelled")
+                raise
 
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
@@ -267,7 +346,7 @@ class PVSite:
                 return d_period.copy()
         return None
 
-    async def run(self):
+    async def run_old(self):
         """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
         last_tick = int(time.time())
