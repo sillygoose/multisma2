@@ -179,7 +179,8 @@ class PVSite:
                 tomorrow = now + datetime.timedelta(days=1)
                 midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
                 sleep = midnight - now
-                await asyncio.sleep(sleep)
+                logger.info(f"midnight() sleeping for {sleep}")
+                await asyncio.sleep(sleep.total_seconds())
                 self.solar_data_update()
                 logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
 
