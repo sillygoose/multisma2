@@ -114,16 +114,16 @@ class PVSite:
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
         }
-        results = await asyncio.gather(
-            self.daylight(),
-            self.midnight(),
-            self.scheduler(queues),
-            self.task_5s(queues.get('5s')),
-            self.task_15s(queues.get('15s')),
-            self.task_30s(queues.get('30s')),
-            self.task_60s(queues.get('60s')),
-        )
-        print(results)
+        tasks = [
+            asyncio.create_task(self.daylight()),
+            asyncio.create_task(self.midnight()),
+            asyncio.create_task(self.task_5s(queues.get('5s'))),
+            asyncio.create_task(self.task_15s(queues.get('15s'))),
+            asyncio.create_task(self.task_30s(queues.get('30s'))),
+            asyncio.create_task(self.task_60s(queues.get('60s'))),
+        ]
+        scheduler = asyncio.create_task(self.scheduler(queues))
+        await scheduler
 
     async def stop(self):
         """Shutdown the PVSite object."""
@@ -142,23 +142,18 @@ class PVSite:
         #await self.read_instantaneous()
         #await self.read_total_production()
         while True:
-            try:
-                tick = int(time.time())
-                if tick != last_tick:
-                    last_tick = tick
-                    if tick % 5 == 0:
-                        queues.get('5s').put_nowait(1)
-                    if tick % 15 == 0:
-                        queues.get('15s').put_nowait(1)
-                    if tick % 30 == 0:
-                        queues.get('30s').put_nowait(1)
-                    if tick % 60 == 0:
-                        queues.get('60s').put_nowait(1)
-                await asyncio.sleep(SLEEP)
-
-            except asyncio.CancelledError:
-                logger.info(f"'scheduler' task has been cancelled")
-                raise
+            tick = int(time.time())
+            if tick != last_tick:
+                last_tick = tick
+                if tick % 5 == 0:
+                    queues.get('5s').put_nowait(1)
+                if tick % 15 == 0:
+                    queues.get('15s').put_nowait(1)
+                if tick % 30 == 0:
+                    queues.get('30s').put_nowait(1)
+                if tick % 60 == 0:
+                    queues.get('60s').put_nowait(1)
+            await asyncio.sleep(SLEEP)
 
     async def task_5s(self, queue):
         """Work done every 5 seconds."""
