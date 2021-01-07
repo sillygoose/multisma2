@@ -61,7 +61,7 @@ class Inverter:
     async def stop(self):
         """Log out of the interter."""
         if self._sma:
-            logger.info(f"Closing session on SMA inverter '{self._name}'")
+            #logger.info(f"Closing session on SMA inverter '{self._name}'")
             await self._sma.close_session()
             self._sma = None
 

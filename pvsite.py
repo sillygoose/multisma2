@@ -99,12 +99,12 @@ class PVSite:
 
     async def start(self):
         """Initialize the PVSite object."""
-        #if not self._influx.start(): return False
-        #if not mqtt.start(): return False
+        if not self._influx.start(): return False
+        if not mqtt.start(): return False
 
-        #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-        #if None in cached_keys: return False
-        #self._cached_keys = cached_keys[0]
+        cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
+        if None in cached_keys: return False
+        self._cached_keys = cached_keys[0]
         return True
 
     async def run(self):
@@ -131,24 +131,23 @@ class PVSite:
         """Shutdown the PVSite object."""
         for task in self._tasks:
             task.cancel()
-        #    await task
-        #await asyncio.gather(*(task.cancel() for task in self._tasks))
-        #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        #self._influx.stop()
+        await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
+        self._influx.stop()
  
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
         #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
         last_tick = int(time.time())
-        #await self.read_instantaneous()
-        #await self.read_total_production()
+        await self.read_instantaneous()
+        await self.read_total_production()
         while True:
             try:
                 tick = int(time.time())
                 if tick != last_tick:
                     last_tick = tick
                     if tick % 5 == 0:
+                        await self.read_instantaneous()
                         queues.get('5s').put_nowait(1)
                     if tick % 15 == 0:
                         queues.get('15s').put_nowait(1)
@@ -159,7 +158,7 @@ class PVSite:
                 await asyncio.sleep(SLEEP)
 
             except asyncio.CancelledError:
-                logger.info(f"'scheduler()' task has been cancelled")
+                #logger.info(f"'scheduler()' task has been cancelled")
                 raise
 
     async def task_5s(self, queue):
@@ -169,9 +168,13 @@ class PVSite:
                 await queue.get()
                 queue.task_done()
             except asyncio.CancelledError:
-                logger.info(f"'task_5s()' task has been cancelled")
+                #logger.info(f"'task_5s()' task has been cancelled")
                 raise
-            logger.info(f"'task_5s()' is running")
+            mqtt.publish(await self.inverter_efficiency())
+            snapshot = await self.snapshot()
+            self._influx.write_points(snapshot)
+            mqtt.publish(snapshot)
+            #logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
@@ -180,9 +183,10 @@ class PVSite:
                 await queue.get()
                 queue.task_done()
             except asyncio.CancelledError:
-                logger.info(f"'task_15s()' task has been cancelled")
+                #logger.info(f"'task_15s()' task has been cancelled")
                 raise
-            logger.info(f"'task_15s()' is running")
+            mqtt.publish(self.production_history())
+            #logger.info(f"'task_15s()' is running")
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -191,9 +195,10 @@ class PVSite:
                 await queue.get()
                 queue.task_done()
             except asyncio.CancelledError:
-                logger.info(f"'task_30s()' task has been cancelled")
+                #logger.info(f"'task_30s()' task has been cancelled")
                 raise
-            logger.info(f"'task_30s()' is running")
+            mqtt.publish(self.co2_avoided())
+            #logger.info(f"'task_30s()' is running")
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -202,14 +207,15 @@ class PVSite:
                 await queue.get()
                 queue.task_done()
             except asyncio.CancelledError:
-                logger.info(f"'task_60s()' task has been cancelled")
+                #logger.info(f"'task_60s()' task has been cancelled")
                 raise
-            logger.info(f"'task_60s()' is running")
+            #logger.info(f"'task_60s()' is running")
 
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")
         astral_now = astral.sun.now(tzinfo=self._tzinfo)
         self._daylight = self._dawn < astral_now < self._dusk
+        logger.info(f"Welcome to multisma2, it is now {'daylight' if self._daylight else 'night time'}")
         while True:
             try:
                 daylight = self._daylight
@@ -222,7 +228,7 @@ class PVSite:
                 await asyncio.sleep(60)
 
             except asyncio.CancelledError:
-                logger.info(f"'daylight()' task has been cancelled")
+                #logger.info(f"'daylight()' task has been cancelled")
                 raise
 
     async def midnight(self) -> None:
@@ -234,12 +240,12 @@ class PVSite:
                 tomorrow = now + datetime.timedelta(days=1)
                 midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
                 sleep = midnight - now
-                logger.info(f"midnight() sleeping for {sleep}")
+                #logger.info(f"midnight() sleeping for {sleep}")
                 await asyncio.sleep(sleep.total_seconds())
                 self.solar_data_update()
 
             except asyncio.CancelledError:
-                logger.info(f"'midnight()' task has been cancelled")
+                #logger.info(f"'midnight()' task has been cancelled")
                 raise
 
     async def read_instantaneous(self):
@@ -405,29 +411,30 @@ class PVSite:
         """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
         last_tick = int(time.time())
-        await self.read_instantaneous()
-        await self.read_total_production()
+        #wait self.read_instantaneous()
+        #await self.read_total_production()
         while True:
             tick = int(time.time())
             if tick != last_tick:
                 last_tick = tick
                 if tick % 5 == 0:
-                    await self.read_instantaneous()
+                    #await self.read_instantaneous()
 
                     eff = await self.inverter_efficiency()
                     snapshot = await self.snapshot()
                     
                     self._influx.write_points(eff)
-                    mqtt.publish(eff)
+                    mqtt.publish(await self.inverter_efficiency())
                     #pprint(snapshot)
+                    snapshot = await self.snapshot()
                     self._influx.write_points(snapshot)
                     mqtt.publish(snapshot)
                     pass
                 if tick % 15 == 0:
-                    mqtt.publish(self.production_history())
+                    #mqtt.publish(self.production_history())
                     pass
                 if tick % 30 == 0:
-                    mqtt.publish(self.co2_avoided())
+                    #mqtt.publish(self.co2_avoided())
                     pass
                 if tick % 60 == 0:
                     pass
