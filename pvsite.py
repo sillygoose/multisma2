@@ -79,8 +79,6 @@ class PVSite:
 
         self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
-        self.solar_data_update()
-        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
 
     def solar_data_update(self) -> None:
         now = datetime.datetime.now()
@@ -106,10 +104,23 @@ class PVSite:
         #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         #if None in cached_keys: return False
         #self._cached_keys = cached_keys[0]
+
+        self.solar_data_update()
+
+        queues = {
+            '5s': asyncio.Queue(),
+            '15s': asyncio.Queue(),
+            '30s': asyncio.Queue(),
+            '60s': asyncio.Queue(),
+        }
         self._tasks = [
             asyncio.create_task(self.daylight()),
             asyncio.create_task(self.midnight()),
-            asyncio.create_task(self.scheduler()),
+            asyncio.create_task(self.scheduler(queues)),
+            asyncio.create_task(self.task_5s(queues.get('5s'))),
+            asyncio.create_task(self.task_15s(queues.get('15s'))),
+            asyncio.create_task(self.task_30s(queues.get('30s'))),
+            asyncio.create_task(self.task_60s(queues.get('60s'))),
         ]
         return True
 
@@ -122,35 +133,71 @@ class PVSite:
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         #self._influx.stop()
  
-    async def scheduler(self):
+    async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
         #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
         last_tick = int(time.time())
         #await self.read_instantaneous()
         #await self.read_total_production()
+        #queue5 = queues.get('5s')
+        #queue15 = queues.get('15s')
         while True:
             try:
                 tick = int(time.time())
                 if tick != last_tick:
                     last_tick = tick
                     if tick % 5 == 0:
-                        #logger.info(f"'scheduler(5)' is running")
-                        pass
+                        queues.get('5s').put_nowait(1)
                     if tick % 15 == 0:
-                        #logger.info(f"'scheduler(15)' is running")
-                        pass
+                        queues.get('15s').put_nowait(1)
                     if tick % 30 == 0:
-                        #logger.info(f"'scheduler(30)' is running")
-                        pass
+                        queues.get('30s').put_nowait(1)
                     if tick % 60 == 0:
-                        #logger.info(f"'scheduler(60)' is running")
-                        pass
+                        queues.get('60s').put_nowait(1)
                 await asyncio.sleep(SLEEP)
 
             except asyncio.CancelledError:
                 logger.info(f"'scheduler' task has been cancelled")
                 raise
+
+    async def task_5s(self, queue):
+        """Work done every 5 seconds."""
+        while True:
+            try:
+                await queue.get()
+                logger.info(f"'task_5s()' is running")
+                pass
+            finally:
+                queue.task_done()
+
+    async def task_15s(self, queue):
+        """Work done every 15 seconds."""
+        while True:
+            try:
+                await queue.get()
+                logger.info(f"'task_15s()' is running")
+            finally:
+                queue.task_done()
+
+    async def task_30s(self, queue):
+        """Work done every 30 seconds."""
+        while True:
+            try:
+                await queue.get()
+                logger.info(f"'task_30s()' is running")
+                pass
+            finally:
+                queue.task_done()
+
+    async def task_60s(self, queue):
+        """Work done every 60 seconds."""
+        while True:
+            try:
+                await queue.get()
+                logger.info(f"'task_60s()' is running")
+            finally:
+                queue.task_done()
 
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")
@@ -175,6 +222,7 @@ class PVSite:
         #logger.info(f"'midnight' task has started")
         while True:
             try:
+                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
                 now = datetime.datetime.now()
                 tomorrow = now + datetime.timedelta(days=1)
                 midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
@@ -182,7 +230,6 @@ class PVSite:
                 logger.info(f"midnight() sleeping for {sleep}")
                 await asyncio.sleep(sleep.total_seconds())
                 self.solar_data_update()
-                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
 
             except asyncio.CancelledError:
                 logger.info(f"'midnight' task has been cancelled")
