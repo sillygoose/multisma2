@@ -108,13 +108,16 @@ class PVSite:
         return True
 
     async def run(self):
+        """Run the site and wait for an event."""
         queues = {
             '5s': asyncio.Queue(),
             '15s': asyncio.Queue(),
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
         }
-        tasks = [
+        scheduler = asyncio.create_task(self.scheduler(queues))
+        self._tasks = [
+            scheduler,
             asyncio.create_task(self.daylight()),
             asyncio.create_task(self.midnight()),
             asyncio.create_task(self.task_5s(queues.get('5s'))),
@@ -122,13 +125,12 @@ class PVSite:
             asyncio.create_task(self.task_30s(queues.get('30s'))),
             asyncio.create_task(self.task_60s(queues.get('60s'))),
         ]
-        scheduler = asyncio.create_task(self.scheduler(queues))
         await scheduler
 
     async def stop(self):
         """Shutdown the PVSite object."""
-        #for task in self._tasks:
-        #    task.cancel()
+        for task in self._tasks:
+            task.cancel()
         #    await task
         #await asyncio.gather(*(task.cancel() for task in self._tasks))
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
@@ -142,46 +144,67 @@ class PVSite:
         #await self.read_instantaneous()
         #await self.read_total_production()
         while True:
-            tick = int(time.time())
-            if tick != last_tick:
-                last_tick = tick
-                if tick % 5 == 0:
-                    queues.get('5s').put_nowait(1)
-                if tick % 15 == 0:
-                    queues.get('15s').put_nowait(1)
-                if tick % 30 == 0:
-                    queues.get('30s').put_nowait(1)
-                if tick % 60 == 0:
-                    queues.get('60s').put_nowait(1)
-            await asyncio.sleep(SLEEP)
+            try:
+                tick = int(time.time())
+                if tick != last_tick:
+                    last_tick = tick
+                    if tick % 5 == 0:
+                        queues.get('5s').put_nowait(1)
+                    if tick % 15 == 0:
+                        queues.get('15s').put_nowait(1)
+                    if tick % 30 == 0:
+                        queues.get('30s').put_nowait(1)
+                    if tick % 60 == 0:
+                        queues.get('60s').put_nowait(1)
+                await asyncio.sleep(SLEEP)
+
+            except asyncio.CancelledError:
+                logger.info(f"'scheduler()' task has been cancelled")
+                raise
 
     async def task_5s(self, queue):
         """Work done every 5 seconds."""
         while True:
-            await queue.get()
+            try:
+                await queue.get()
+                queue.task_done()
+            except asyncio.CancelledError:
+                logger.info(f"'task_5s()' task has been cancelled")
+                raise
             logger.info(f"'task_5s()' is running")
-            queue.task_done()
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
         while True:
-            await queue.get()
+            try:
+                await queue.get()
+                queue.task_done()
+            except asyncio.CancelledError:
+                logger.info(f"'task_15s()' task has been cancelled")
+                raise
             logger.info(f"'task_15s()' is running")
-            queue.task_done()
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
-            await queue.get()
+            try:
+                await queue.get()
+                queue.task_done()
+            except asyncio.CancelledError:
+                logger.info(f"'task_30s()' task has been cancelled")
+                raise
             logger.info(f"'task_30s()' is running")
-            queue.task_done()
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
-            await queue.get()
+            try:
+                await queue.get()
+                queue.task_done()
+            except asyncio.CancelledError:
+                logger.info(f"'task_60s()' task has been cancelled")
+                raise
             logger.info(f"'task_60s()' is running")
-            queue.task_done()
 
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")
@@ -199,7 +222,7 @@ class PVSite:
                 await asyncio.sleep(60)
 
             except asyncio.CancelledError:
-                logger.info(f"'daylight' task has been cancelled")
+                logger.info(f"'daylight()' task has been cancelled")
                 raise
 
     async def midnight(self) -> None:
@@ -216,7 +239,7 @@ class PVSite:
                 self.solar_data_update()
 
             except asyncio.CancelledError:
-                logger.info(f"'midnight' task has been cancelled")
+                logger.info(f"'midnight()' task has been cancelled")
                 raise
 
     async def read_instantaneous(self):
