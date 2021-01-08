@@ -64,11 +64,13 @@ SITE_SNAPSHOT = [
 ]
 
 
+influxdb = InfluxDB()
+
+
 class PVSite:
     """Class to describe a PV site with one or more inverters."""
     def __init__(self, session):
         """Create a new PVSite object."""
-        self._influx = InfluxDB()
         self._inverters = []
         self._tasks = None
         self._total_production = None
@@ -92,19 +94,23 @@ class PVSite:
         self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._daylight = self._dawn < astral_now < self._dusk
 
-    def day_of_year(self) -> str:
-        doy = int(datetime.datetime.now().strftime('%j'))
+    def day_of_year(self, full_string: True):
+        now = datetime.datetime.now()
+        doy = int(now.strftime('%j'))
+        if not full_string:
+            return doy
+        year = now.strftime('%Y')
         suffixes = ['st', 'nd', 'rd', 'th']
-        return str(doy) + suffixes[3 if doy >= 4 else doy-1]
+        return str(doy) + suffixes[3 if doy >= 4 else doy-1] + ' day of ' + str(year)
 
     async def start(self):
         """Initialize the PVSite object."""
-        if not self._influx.start(): return False
+        if not influxdb.start(): return False
         if not mqtt.start(): return False
 
-        cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-        if None in cached_keys: return False
-        self._cached_keys = cached_keys[0]
+        #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
+        #if None in cached_keys: return False
+        #self._cached_keys = cached_keys[0]
         return True
 
     async def run(self):
@@ -120,10 +126,10 @@ class PVSite:
             scheduler,
             asyncio.create_task(self.daylight()),
             asyncio.create_task(self.midnight()),
-            asyncio.create_task(self.task_5s(queues.get('5s'))),
-            asyncio.create_task(self.task_15s(queues.get('15s'))),
-            asyncio.create_task(self.task_30s(queues.get('30s'))),
-            asyncio.create_task(self.task_60s(queues.get('60s'))),
+            #asyncio.create_task(self.task_5s(queues.get('5s'))),
+            #asyncio.create_task(self.task_15s(queues.get('15s'))),
+            #asyncio.create_task(self.task_30s(queues.get('30s'))),
+            #asyncio.create_task(self.task_60s(queues.get('60s'))),
         ]
         await scheduler
 
@@ -131,29 +137,85 @@ class PVSite:
         """Shutdown the PVSite object."""
         for task in self._tasks:
             task.cancel()
-        await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        self._influx.stop()
+        #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
+        influxdb.stop()
  
+    SAMPLE_PERIOD = [
+        {"scale": 3},  # night
+        {"scale": 1},   # day
+    ]
+
+    async def daylight(self) -> None:
+        #logger.info(f"'daylight' task has started")
+        astral_now = astral.sun.now(tzinfo=self._tzinfo)
+        self._daylight = self._dawn < astral_now < self._dusk
+        logger.info(f"Welcome to multisma2, it is now {'daylight' if self._daylight else 'night time'}")
+        while True:
+            try:
+                now = astral.sun.now(tzinfo=self._tzinfo)
+                dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+                if now < dawn:
+                    self._daylight = False
+                    sleep = dawn - now
+                    logger.info(f"Good morning, waiting for the sun to come up")
+                elif now > dusk:
+                    self._daylight = False
+                    tomorrow = now + datetime.timedelta(days=1)
+                    dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
+                    sleep = dawn - now
+                    logger.info(f"Good evening, waiting for the sun to come up in the morning")
+                else:
+                    self._daylight = True
+                    sleep = dusk - now
+                    logger.info(f"Good day, enjoy the daylight")
+
+                FUDGE = 60
+                await asyncio.sleep(sleep.total_seconds() + FUDGE)
+
+            except asyncio.CancelledError:
+                #logger.info(f"'daylight()' task has been cancelled")
+                raise
+
+    async def midnight(self) -> None:
+        #logger.info(f"'midnight' task has started")
+        while True:
+            try:
+                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
+                now = datetime.datetime.now()
+                tomorrow = now + datetime.timedelta(days=1)
+                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
+                sleep = midnight - now
+                #logger.info(f"midnight() sleeping for {sleep}")
+                await asyncio.sleep(sleep.total_seconds())
+                self.solar_data_update()
+
+            except asyncio.CancelledError:
+                #logger.info(f"'midnight()' task has been cancelled")
+                raise
+
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
         #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
         last_tick = int(time.time())
-        await self.read_instantaneous()
-        await self.read_total_production()
+        scaling = PVSite.SAMPLE_PERIOD[self._daylight].get("scale")
+
+        #await self.read_instantaneous()
+        #await self.read_total_production()
         while True:
             try:
                 tick = int(time.time())
+                scaled_tick = tick / scaling
                 if tick != last_tick:
-                    last_tick = tick
-                    if tick % 5 == 0:
-                        await self.read_instantaneous()
+                    last_tick = scaled_tick
+                    if scaled_tick % 5 == 0:
+                        #await self.read_instantaneous()
                         queues.get('5s').put_nowait(1)
-                    if tick % 15 == 0:
+                    if scaled_tick % 15 == 0:
                         queues.get('15s').put_nowait(1)
-                    if tick % 30 == 0:
+                    if scaled_tick % 30 == 0:
                         queues.get('30s').put_nowait(1)
-                    if tick % 60 == 0:
+                    if scaled_tick % 60 == 0:
                         queues.get('60s').put_nowait(1)
                 await asyncio.sleep(SLEEP)
 
@@ -172,7 +234,7 @@ class PVSite:
                 raise
             mqtt.publish(await self.inverter_efficiency())
             snapshot = await self.snapshot()
-            self._influx.write_points(snapshot)
+            influxdb.write_points(snapshot)
             mqtt.publish(snapshot)
             #logger.info(f"'task_5s()' is running")
 
@@ -210,43 +272,6 @@ class PVSite:
                 #logger.info(f"'task_60s()' task has been cancelled")
                 raise
             #logger.info(f"'task_60s()' is running")
-
-    async def daylight(self) -> None:
-        #logger.info(f"'daylight' task has started")
-        astral_now = astral.sun.now(tzinfo=self._tzinfo)
-        self._daylight = self._dawn < astral_now < self._dusk
-        logger.info(f"Welcome to multisma2, it is now {'daylight' if self._daylight else 'night time'}")
-        while True:
-            try:
-                daylight = self._daylight
-                astral_now = astral.sun.now(tzinfo=self._tzinfo)
-                self._daylight = self._dawn < astral_now < self._dusk
-                if not daylight and self._daylight:
-                    logger.info(f"Good morning, it now daylight")
-                elif daylight and not self._daylight:
-                    logger.info(f"Good evening, it is now nighttime")
-                await asyncio.sleep(60)
-
-            except asyncio.CancelledError:
-                #logger.info(f"'daylight()' task has been cancelled")
-                raise
-
-    async def midnight(self) -> None:
-        #logger.info(f"'midnight' task has started")
-        while True:
-            try:
-                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year()} day of the year")
-                now = datetime.datetime.now()
-                tomorrow = now + datetime.timedelta(days=1)
-                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
-                sleep = midnight - now
-                #logger.info(f"midnight() sleeping for {sleep}")
-                await asyncio.sleep(sleep.total_seconds())
-                self.solar_data_update()
-
-            except asyncio.CancelledError:
-                #logger.info(f"'midnight()' task has been cancelled")
-                raise
 
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
@@ -406,38 +431,3 @@ class PVSite:
             if d_period.get("period") is period:
                 return d_period.copy()
         return None
-
-    async def run_old(self):
-        """Task to schedule actions at regular intervals."""
-        SLEEP = 0.5
-        last_tick = int(time.time())
-        #wait self.read_instantaneous()
-        #await self.read_total_production()
-        while True:
-            tick = int(time.time())
-            if tick != last_tick:
-                last_tick = tick
-                if tick % 5 == 0:
-                    #await self.read_instantaneous()
-
-                    eff = await self.inverter_efficiency()
-                    snapshot = await self.snapshot()
-                    
-                    self._influx.write_points(eff)
-                    mqtt.publish(await self.inverter_efficiency())
-                    #pprint(snapshot)
-                    snapshot = await self.snapshot()
-                    self._influx.write_points(snapshot)
-                    mqtt.publish(snapshot)
-                    pass
-                if tick % 15 == 0:
-                    #mqtt.publish(self.production_history())
-                    pass
-                if tick % 30 == 0:
-                    #mqtt.publish(self.co2_avoided())
-                    pass
-                if tick % 60 == 0:
-                    pass
-                if tick % 300 == 0:
-                    pass
-            await asyncio.sleep(SLEEP)
