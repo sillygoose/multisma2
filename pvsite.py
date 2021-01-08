@@ -18,6 +18,7 @@ import mqtt
 from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
 from configuration import CO2_AVOIDANCE
 from configuration import INVERTERS
+from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
 
@@ -64,7 +65,7 @@ SITE_SNAPSHOT = [
 ]
 
 
-influxdb = InfluxDB()
+influxdb = InfluxDB(INFLUXDB_ENABLE)
 
 
 class PVSite:
@@ -109,7 +110,7 @@ class PVSite:
 
     async def start(self):
         """Initialize the PVSite object."""
-        #if not influxdb.start(): return False
+        if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE): return False
         #if not mqtt.start(): return False
 
         #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
@@ -140,7 +141,7 @@ class PVSite:
         #for task in self._tasks:
         #    task.cancel()
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        #influxdb.stop()
+        influxdb.stop()
  
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")
@@ -231,14 +232,14 @@ class PVSite:
             try:
                 await queue.get()
                 queue.task_done()
+                #mqtt.publish(await self.inverter_efficiency())
+                #snapshot = await self.snapshot()
+                #influxdb.write_points(snapshot)
+                #mqtt.publish(snapshot)
+                logger.info(f"'task_5s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_5s()' task has been cancelled")
                 raise
-            #mqtt.publish(await self.inverter_efficiency())
-            #snapshot = await self.snapshot()
-            #influxdb.write_points(snapshot)
-            #mqtt.publish(snapshot)
-            logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
@@ -246,11 +247,11 @@ class PVSite:
             try:
                 await queue.get()
                 queue.task_done()
+                #mqtt.publish(self.production_history())
+                logger.info(f"'task_15s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_15s()' task has been cancelled")
                 raise
-            #mqtt.publish(self.production_history())
-            logger.info(f"'task_15s()' is running")
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -258,11 +259,11 @@ class PVSite:
             try:
                 await queue.get()
                 queue.task_done()
+                #mqtt.publish(self.co2_avoided())
+                logger.info(f"'task_30s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_30s()' task has been cancelled")
                 raise
-            #mqtt.publish(self.co2_avoided())
-            logger.info(f"'task_30s()' is running")
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -270,10 +271,10 @@ class PVSite:
             try:
                 await queue.get()
                 queue.task_done()
+                #logger.info(f"'task_60s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_60s()' task has been cancelled")
                 raise
-            #logger.info(f"'task_60s()' is running")
 
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""

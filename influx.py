@@ -11,7 +11,6 @@ from influxdb import InfluxDBClient
 from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
-from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
@@ -30,25 +29,27 @@ LP_LOOKUP = {
 }
 
 class InfluxDB():
-    def __init__(self):
+    def __init__(self, enabled):
         self._client = None
+        self._enabled = enabled
 
-    def start(self):
-        result = True
-        if INFLUXDB_ENABLE:
-            self._client = InfluxDBClient(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE)
-            if self._client:
-                logger.info(f"Opened the InfluxDB database '{INFLUXDB_DATABASE}' for output")
-                result = True
-            else:
-                logger.error(f"Failed to open the InfluxDB database '{INFLUXDB_DATABASE}'")
-                result = False
+    def __del__(self):
+        if self._client:
+            self._client.close()
+
+    def start(self, host, port, database):
+        if not self._enabled:
+            return True
+        self._client = InfluxDBClient(host=host, port=port, database=database)
+        result = self._client if self._client else False
+        logger.info(f"{'Opened' if result else 'Failed to open'} the InfluxDB database '{database}'")
         return result
 
     def stop(self):
         if self._client:
             self._client.close()
-            logger.info(f"Closed the InfluxDB database '{INFLUXDB_DATABASE}'")
+            self._client = None
+            logger.info(f"Closed the InfluxDB database")
 
     cache = {}
 
