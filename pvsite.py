@@ -121,22 +121,20 @@ class PVSite:
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
         }
-        scheduler = asyncio.create_task(self.scheduler(queues))
-        self._tasks = [
-            scheduler,
-            asyncio.create_task(self.daylight()),
-            asyncio.create_task(self.midnight()),
-            asyncio.create_task(self.task_5s(queues.get('5s'))),
-            asyncio.create_task(self.task_15s(queues.get('15s'))),
-            asyncio.create_task(self.task_30s(queues.get('30s'))),
-            asyncio.create_task(self.task_60s(queues.get('60s'))),
-        ]
-        await scheduler
+        await asyncio.gather(
+            self.daylight(),
+            self.midnight(),
+            self.scheduler(queues),
+            self.task_5s(queues.get('5s')),
+            self.task_15s(queues.get('15s')),
+            self.task_30s(queues.get('30s')),
+            self.task_60s(queues.get('60s')),
+        )
 
     async def stop(self):
         """Shutdown the PVSite object."""
-        for task in self._tasks:
-            task.cancel()
+        #for task in self._tasks:
+        #    task.cancel()
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         #influxdb.stop()
  
@@ -189,8 +187,8 @@ class PVSite:
                 raise
 
     SAMPLE_PERIOD = [
-        {"scale": 6},   # night
-        {"scale": 1},   # day
+        {"scale": 100},     # night
+        {"scale": 1},       # day
     ]
 
     async def scheduler(self, queues):
