@@ -75,6 +75,7 @@ class PVSite:
         self._tasks = None
         self._total_production = None
         self._cached_keys = []
+        self._scaling = 1
 
         for inverter in INVERTERS:
             self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
@@ -94,6 +95,9 @@ class PVSite:
         self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._daylight = self._dawn < now < self._dusk
 
+    def is_daylight(self) -> bool:
+        return self._daylight
+        
     def day_of_year(self, full_string: True):
         now = datetime.datetime.now()
         doy = int(now.strftime('%j'))
@@ -114,7 +118,7 @@ class PVSite:
         return True
 
     async def run(self):
-        """Run the site and wait for an event."""
+        """Run the site and wait for an event to exit."""
         queues = {
             '5s': asyncio.Queue(),
             '15s': asyncio.Queue(),
@@ -159,6 +163,8 @@ class PVSite:
                     self._daylight = True
                     next_event = dusk - now
                     logger.info(f"Good day, enjoy the daylight")
+
+                self._scaling = PVSite.SAMPLE_PERIOD[self.is_daylight()].get("scale")
                 logger.info(f"daylight() sleeping for {next_event}")
 
                 FUDGE = 60
@@ -173,7 +179,8 @@ class PVSite:
         #logger.info(f"'midnight' task has started")
         while True:
             try:
-                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
+                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
+                            f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
                 now = datetime.datetime.now()
                 tomorrow = now + datetime.timedelta(days=1)
                 midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 2))
@@ -196,27 +203,22 @@ class PVSite:
         #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
         last_tick = int(time.time())
-        scaling = PVSite.SAMPLE_PERIOD[self._daylight].get("scale")
         #await self.read_instantaneous()
         #await self.read_total_production()
         while True:
             try:
-                tick = int(time.time())
-                scaled_tick = tick / scaling                
-                if scaled_tick != last_tick:
-                    last_tick = scaled_tick
-                    if scaled_tick % 5 == 0:
+                tick = int(time.time() / self._scaling)
+                if tick != last_tick:
+                    last_tick = tick
+                    if tick % 5 == 0:
                         #await self.read_instantaneous()
                         queues.get('5s').put_nowait(tick)
-                    if scaled_tick % 15 == 0:
+                    if tick % 15 == 0:
                         queues.get('15s').put_nowait(tick)
-                    if scaled_tick % 30 == 0:
+                    if tick % 30 == 0:
                         queues.get('30s').put_nowait(tick)
-                    if scaled_tick % 60 == 0:
+                    if tick % 60 == 0:
                         queues.get('60s').put_nowait(tick)
-                    if tick % 180 == 0:
-                        scaling = PVSite.SAMPLE_PERIOD[self._daylight].get("scale")
-
                 await asyncio.sleep(SLEEP)
 
             except asyncio.CancelledError:
@@ -236,7 +238,7 @@ class PVSite:
             #snapshot = await self.snapshot()
             #influxdb.write_points(snapshot)
             #mqtt.publish(snapshot)
-            #logger.info(f"'task_5s()' is running")
+            logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
@@ -248,7 +250,7 @@ class PVSite:
                 #logger.info(f"'task_15s()' task has been cancelled")
                 raise
             #mqtt.publish(self.production_history())
-            #logger.info(f"'task_15s()' is running")
+            logger.info(f"'task_15s()' is running")
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -260,7 +262,7 @@ class PVSite:
                 #logger.info(f"'task_30s()' task has been cancelled")
                 raise
             #mqtt.publish(self.co2_avoided())
-            #logger.info(f"'task_30s()' is running")
+            logger.info(f"'task_30s()' is running")
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
