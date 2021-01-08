@@ -89,10 +89,10 @@ class PVSite:
         solar_noon = astral.sun.noon(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
         self._solar_time_diff = solar_noon - local_noon
 
-        astral_now = astral.sun.now(tzinfo=self._tzinfo)
+        now = astral.sun.now(tzinfo=self._tzinfo)
         self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._daylight = self._dawn < astral_now < self._dusk
+        self._daylight = self._dawn < now < self._dusk
 
     def day_of_year(self, full_string: True):
         now = datetime.datetime.now()
@@ -142,13 +142,11 @@ class PVSite:
  
     async def daylight(self) -> None:
         #logger.info(f"'daylight' task has started")
-        astral_now = astral.sun.now(tzinfo=self._tzinfo)
-        self._daylight = self._dawn < astral_now < self._dusk
-        logger.info(f"Welcome to multisma2, it is now {'daylight' if self._daylight else 'night time'}")
         while True:
             try:
                 now = astral.sun.now(tzinfo=self._tzinfo)
-                dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+                dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+                dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
                 if now < dawn:
                     self._daylight = False
                     next_event = dawn - now
@@ -180,7 +178,7 @@ class PVSite:
                 logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
                 now = datetime.datetime.now()
                 tomorrow = now + datetime.timedelta(days=1)
-                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
+                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 2))
                 sleep = midnight - now
                 logger.info(f"midnight() sleeping for {sleep}")
                 await asyncio.sleep(sleep.total_seconds())
