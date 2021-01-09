@@ -87,34 +87,37 @@ class InfluxDB():
             point.pop('precision', None)
             if topic:
                 lookup = LP_LOOKUP.get(topic, None)
-                if lookup:
-                    measurement = lookup.get('measurement')
-                    for k, v in point.items():
-                        lp = f'{measurement}'
-                        signature = f'{measurement}_{k}_{lookup.get("field")}'
-                        if isinstance(v, str): 
-                            lp += f',inverter={k} {lookup.get("field")}="{v}"'
-                        elif isinstance(v, int) or isinstance(v, float):
-                            lp += f',inverter={k} {lookup.get("field")}={v}'
-                        elif isinstance(v, dict): 
-                            lp += f',inverter={k} '
-                            first = True
-                            for k1, v1 in v.items():
-                                if first:
-                                    first = False
-                                    lp += f'{lookup.get("field")}_{k1}={v1}'
-                                else:
-                                    lp += f',{lookup.get("field")}_{k1}={v1}'
+                if not lookup:
+                    logger.error(f"Unknown topic '{topic}'")
+                    continue
 
-                        # Check if in the cache, if not or different update cache and write
-                        cached_result = InfluxDB.cache.get(signature, None)
-                        if cached_result:
-                            if lp == cached_result:
-                                continue
+                measurement = lookup.get('measurement')
+                for k, v in point.items():
+                    lp = f'{measurement}'
+                    signature = f'{measurement}_{k}_{lookup.get("field")}'
+                    if isinstance(v, str): 
+                        lp += f',inverter={k} {lookup.get("field")}="{v}"'
+                    elif isinstance(v, int) or isinstance(v, float):
+                        lp += f',inverter={k} {lookup.get("field")}={v}'
+                    elif isinstance(v, dict): 
+                        lp += f',inverter={k} '
+                        first = True
+                        for k1, v1 in v.items():
+                            if first:
+                                first = False
+                                lp += f'{lookup.get("field")}_{k1}={v1}'
+                            else:
+                                lp += f',{lookup.get("field")}_{k1}={v1}'
 
-                        InfluxDB.cache[signature] = lp
-                        lp += f' {ts}'
-                        lps.append(lp)
+                    # Check if in the cache, if not or different update cache and write
+                    cached_result = InfluxDB.cache.get(signature, None)
+                    if cached_result:
+                        if lp == cached_result:
+                            continue
+
+                    InfluxDB.cache[signature] = lp
+                    lp += f' {ts}'
+                    lps.append(lp)
 
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')

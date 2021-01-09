@@ -35,7 +35,7 @@ class Inverter:
         self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
         await self._sma.new_session()
         if self._sma.sma_sid is None:
-            logger.info("%s - no session ID", self._name)
+            logger.info(f"{self._name} - no session ID")
             return None
         logger.info(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
@@ -61,7 +61,6 @@ class Inverter:
     async def stop(self):
         """Log out of the interter."""
         if self._sma:
-            #logger.info(f"Closing session on SMA inverter '{self._name}'")
             await self._sma.close_session()
             self._sma = None
 
@@ -69,9 +68,12 @@ class Inverter:
         """Update the instantaneous inverter states."""
         async with self._lock:
             self._instantaneous = await self._sma.read_instantaneous()
+            if self._instantaneous is None:
+                logger.info(f"Retrying 'read_instantaneous()' to create a new session")
+                self._instantaneous = await self._sma.read_instantaneous()
 
     AGGREGATE_KEYS = [
-        "6380_40251E00",  # DC Power (current power)
+        '6380_40251E00',  # DC Power (current power)
     ]
 
     def clean(self, raw_results):
@@ -83,14 +85,14 @@ class Inverter:
             scale = self.get_scale(key)
             unit = self.get_unit(key)
             precision = self.get_precision(key)
-            states = value.pop("1", None)
+            states = value.pop('1', None)
             if sma_type == 0:
                 sensors = {}
                 total = 0
-                subkeys = ["a", "b", "c"]
+                subkeys = ['a', 'b', 'c']
                 val = 0
                 for index, state in enumerate(states):
-                    val = state.get("val", None)
+                    val = state.get('val', None)
                     if val is None:
                         val = 0
                     if scale != 1:
@@ -106,11 +108,11 @@ class Inverter:
             elif sma_type == 1:
                 tag = 0
                 for index, state in enumerate(states):
-                    tag_list = state.get("val")
-                    tag = self.lookup_tag(tag_list[0].get("tag"))
-                cleaned[key] = {"val": tag}
+                    tag_list = state.get('val')
+                    tag = self.lookup_tag(tag_list[0].get('tag'))
+                cleaned[key] = {'val': tag}
             else:
-                logger.warning("unexpected sma type: %d", sma_type)
+                logger.warning(f"unexpected sma type: {sma_type}")
 
         cleaned["name"] = self._name
         return cleaned
@@ -138,13 +140,15 @@ class Inverter:
         year_start = int(
             datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp()
         )
-        today = await self._sma.read_history(today_start - one_hour, today_start + three_hours)
-        month = await self._sma.read_history(month_start - one_hour, today_start)
-        year = await self._sma.read_history(year_start - one_hour, today_start)
-        self._history["today"] = today[0]
-        self._history["month"] = month[0]
-        self._history["year"] = year[0]
-        self._history["lifetime"] = {"t": 0, "v": 0}
+        results = await asyncio.gather(
+            self._sma.read_history(today_start - one_hour, today_start + three_hours),
+            self._sma.read_history(month_start - one_hour, today_start),
+            self._sma.read_history(year_start - one_hour, today_start),
+        )
+        self._history['today'] = results[0][0]
+        self._history['month'] = results[1][0]
+        self._history['year'] = results[2][0]
+        self._history['lifetime'] = {'t': 0, 'v': 0}
 
     def display_metadata(self, key):
         """Display the inverter metadata for a key."""
@@ -153,6 +157,7 @@ class Inverter:
 
     async def get_state(self, key):
         """Return the state for a given key."""
+        assert self._instantaneous != None
         async with self._lock:
             state = self._instantaneous.get(key, None).copy()
         cleaned = self.clean({key: state})
@@ -164,9 +169,9 @@ class Inverter:
 
     def get_unit(self, key):
         """Return the unit used for a given key."""
-        metadata = self._metadata.get(key, "???")
+        metadata = self._metadata.get(key, '???')
         if metadata:
-            unit_tag = metadata.get("Unit", None)
+            unit_tag = metadata.get('Unit', None)
             if unit_tag:
                 return self.lookup_tag(unit_tag)
         return None
@@ -176,7 +181,7 @@ class Inverter:
         precision = None
         metadata = self._metadata.get(key, None)
         if metadata:
-            precision = metadata.get("DataFrmt", None)
+            precision = metadata.get('DataFrmt', None)
             if precision > 3:
                 precision = None
         return precision
@@ -185,25 +190,26 @@ class Inverter:
         """Return the scale value for a given key."""
         metadata = self._metadata.get(key, None)
         if metadata:
-            return metadata.get("Scale", None)
+            return metadata.get('Scale', None)
         return None
 
     def get_type(self, key):
         """Return the type of a given key."""
-        metadata = self._metadata.get(key, "???")
-        return metadata.get("Typ", None)
+        metadata = self._metadata.get(key, '???')
+        return metadata.get('Typ', None)
 
     def lookup_tag(self, key):
         """Return tag dictionary value for the specified key."""
-        return self._tags.get(str(key), "???")
+        return self._tags.get(str(key), '???')
 
     async def start_production(self, period):
         """Return production value for the start of the specified period."""
         history = self._history.get(period)
-        return {self.name(): history["v"]}
+        return {self.name(): history['v']}
         
     async def read_inverter_history(self, start, stop):
         """Read the baseline inverter production."""
         history = await self._sma.read_history(start, stop)
         history.insert(0, {'inverter': self._name})
         return history
+        

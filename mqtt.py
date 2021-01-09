@@ -45,13 +45,11 @@ def on_disconnect(client, userdata, result_code):
     client.connected = False
     client.disconnect_failed = False
     if result_code == mqtt.MQTT_ERR_SUCCESS:
-        logger.info("MQTT client successfully disconnected")
+        logger.info(f"MQTT client successfully disconnected")
     else:
         client.disconnect_failed = True
         logger.info(
-            "MQTT client unexpectedly disconnected: %s, trying reconnect()",
-            error_msg(result_code),
-        )
+            f"MQTT client unexpectedly disconnected: {error_msg(result_code)}, trying reconnect()")
 
 
 def on_connect(client, userdata, flags, result_code):
@@ -59,23 +57,18 @@ def on_connect(client, userdata, flags, result_code):
     # pylint: disable=unused-argument
     if result_code == mqtt.MQTT_ERR_SUCCESS:
         client.connected = True
-        logger.info(
-            "MQTT %s client successfully connected to %s:%d",
-            userdata["Type"],
-            userdata["IP"],
-            userdata["Port"],
-        )
+        logger.info(f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']}")
     else:
         client.connection_failed = True
-        logger.info("MQTT client connection failed: %s", error_msg(result_code))
+        logger.info(f"MQTT client connection failed: {error_msg(result_code)}")
 
 
 def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
     # Disconnect the MQTT client from the broker
-    local_vars["mqtt_client"].loop_stop()
-    logger.info("MQTT client disconnect being called")
-    local_vars["mqtt_client"].disconnect()
+    local_vars['mqtt_client'].loop_stop()
+    logger.info(f"MQTT client disconnect being called")
+    local_vars['mqtt_client'].disconnect()
 
 
 #
@@ -85,18 +78,19 @@ def mqtt_exit():
 def publish(sensors):
     """Publish a dictionary of sensor keys amd values using MQTT."""
     # Check if MQTT is not connected to a broker or the sensor list is empty
-    if "mqtt_client" not in local_vars or not sensors:
+    if 'mqtt_client' not in local_vars or not sensors:
         return
 
     # Separate out the sensor dictionaries
-    for sensor in sensors:
-        if "topic" not in sensor:
-            logger.warning("'topic' not in sensor dictionary: %s", str(sensor))
+    for original_sensor in sensors:
+        sensor = original_sensor.copy()
+        if 'topic' not in sensor:
+            logger.warning(f"'topic' not in sensor dictionary: {str(sensor)}")
             continue
 
         # Extract the topic and precision from the dictionary
-        topic = sensor.pop("topic")
-        precision = sensor.pop("precision", None)
+        topic = sensor.pop('topic')
+        precision = sensor.pop('precision', None)
 
         # Limit floats to the requested precision
         for key, value in sensor.items():
@@ -108,14 +102,12 @@ def publish(sensors):
 
         # Encode each sensor in JSON and publish
         sensor_json = json.dumps(sensor)
-        message_info = local_vars["mqtt_client"].publish(
+        message_info = local_vars['mqtt_client'].publish(
             MQTT_CLIENT + "/" + topic, sensor_json
         )
         if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(
-                "MQTT message topic %s failed to publish: %s",
-                topic,
-                error_msg(message_info.rc),
+                f"MQTT message topic '{topic}'' failed to publish: {error_msg(message_info.rc)}",
             )
 
 
@@ -125,7 +117,7 @@ def start():
         return True
 
     # Create a unique client name
-    local_vars["clientname"] = (
+    local_vars['clientname'] = (
         MQTT_CLIENT
         + "_"
         + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
@@ -133,19 +125,15 @@ def start():
 
     # Check if MQTT is configured properly, create the connection
     port = (1883, MQTT_BROKER_PORT)[MQTT_BROKER_PORT > 0]
-    connection_type = ("authenticated", "anonymous")[len(MQTT_USERNAME) == 0]
+    connection_type = ('authenticated', 'anonymous')[len(MQTT_USERNAME) == 0]
     client = mqtt.Client(
-        local_vars["clientname"],
-        userdata={"IP": MQTT_BROKER_IPADDR, "Port": port, "Type": connection_type},
+        local_vars['clientname'],
+        userdata={'IP': MQTT_BROKER_IPADDR, 'Port': port, 'Type': connection_type},
     )
 
     # Setup and try to connect to the broker
     logger.info(
-        "Attempting %s MQTT client connection to %s:%d",
-        connection_type,
-        MQTT_BROKER_IPADDR,
-        port,
-    )
+        f"Attempting {connection_type} MQTT client connection to {MQTT_BROKER_IPADDR}:{port}")
 
     client.on_connect = on_connect
     client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
@@ -166,11 +154,11 @@ def start():
 
     except socket.gaierror:
         client.loop_stop()
-        logger.error("Connection failed: %s", sys.exc_info()[0])
+        logger.error(f"Connection failed: {sys.exc_info()[0]}")
 
     except ConnectionRefusedError:
         client.loop_stop()
-        logger.error("Connection refused: %s", sys.exc_info()[0])
+        logger.error(f"Connection refused: {sys.exc_info()[0]}")
 
     except KeyboardInterrupt:
         client.loop_stop()
@@ -178,14 +166,14 @@ def start():
 
     except Exception:
         client.loop_stop()
-        logger.error("MQTT connection failed with exception: %s", sys.exc_info()[0])
+        logger.error(f"MQTT connection failed with exception: {sys.exc_info()[0]}")
         raise
 
     # Close the connection and return success
     if client.connected:
         client.on_disconnect = on_disconnect
-        client.reconnect_delay_set(min_delay=1, max_delay=60 * 5)
-        local_vars["mqtt_client"] = client
+        client.reconnect_delay_set(min_delay=1, max_delay=120)
+        local_vars['mqtt_client'] = client
         atexit.register(mqtt_exit)
         return True
 
@@ -193,8 +181,8 @@ def start():
     return False
 
 
-if __name__ == "__main__":
-    test_msg = [{"Topic": "test", "Value": "Test message"}]
+if __name__ == '__main__':
+    test_msg = [{'Topic': 'test', 'Value': 'Test message'}]
     # Test connection and if successful publish a test message
     if start():
         publish(test_msg)

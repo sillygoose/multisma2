@@ -29,41 +29,41 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 # Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
-    "6100_0046C200": "production/current",
-    "6400_0046C300": "production/total",
-    "6100_40263F00": "ac_measurements/power",
-    "6100_00465700": "ac_measurements/frequency",
-    "6180_08465A00": "ac_measurements/excitation_type",
-    "6100_00464800": "ac_measurements/voltage/phase_l1",
-    "6100_00464900": "ac_measurements/voltage/phase_l2",
-    "6100_00464B00": "ac_measurements/voltage/phase_l1_l2",
-    "6380_40251E00": "dc_measurements/power",
-    "6380_40451F00": "dc_measurements/voltage",
-    "6380_40452100": "dc_measurements/current",
-    "6180_08416500": "status/reason_for_derating",
-    "6180_08412800": "status/general_operating_status",
-    "6180_08416400": "status/grid_relay",
-    "6180_08414C00": "status/condition",
-    # This key is the same as "production/total" but not aggregated
-    "6400_00260100": "total_production",
+    '6100_0046C200': 'production/current',
+    '6400_0046C300': 'production/total',
+    '6100_40263F00': 'ac_measurements/power',
+    '6100_00465700': 'ac_measurements/frequency',
+    '6180_08465A00': 'ac_measurements/excitation_type',
+    '6100_00464800': 'ac_measurements/voltage/phase_l1',
+    '6100_00464900': 'ac_measurements/voltage/phase_l2',
+    '6100_00464B00': 'ac_measurements/voltage/phase_l1_l2',
+    '6380_40251E00': 'dc_measurements/power',
+    '6380_40451F00': 'dc_measurements/voltage',
+    '6380_40452100': 'dc_measurements/current',
+    '6180_08416500': 'status/reason_for_derating',
+    '6180_08412800': 'status/general_operating_status',
+    '6180_08416400': 'status/grid_relay',
+    '6180_08414C00': 'status/condition',
+    # This key is the same as 'production/total' but not aggregated
+    '6400_00260100': 'total_production',
 }
 
 # These are keys that we calculate a total across all inverters
 AGGREGATE_KEYS = [
-    "6100_40263F00",    # AC grid power (current)
-    "6100_0046C200",    # PV generation power (current)
-    "6400_0046C300",    # Meter count and PV gen. meter (total power)
-    "6380_40251E00",    # DC power (1 per string)
+    '6100_40263F00',    # AC grid power (current)
+    '6100_0046C200',    # PV generation power (current)
+    '6400_0046C300',    # Meter count and PV gen. meter (total power)
+    '6380_40251E00',    # DC power (1 per string)
 ]
 
 SITE_SNAPSHOT = [
-    "6100_40263F00",    # AC grid power (current)
-    "6380_40251E00",    # DC power (current)
-    "6180_08416500",    # Status: Reason for derating
-    "6180_08412800",    # Status: General operating status
-    "6180_08416400",    # Status: Grid relay
-    "6180_08414C00",    # Status: Condition
-    "6400_0046C300",    # AC Total yield (aggregated)
+    '6100_40263F00',    # AC grid power (current)
+    '6380_40251E00',    # DC power (current)
+    '6180_08416500',    # Status: Reason for derating
+    '6180_08412800',    # Status: General operating status
+    '6180_08416400',    # Status: Grid relay
+    '6180_08414C00',    # Status: Condition
+    '6400_0046C300',    # AC Total yield (aggregated)
 ]
 
 
@@ -82,7 +82,7 @@ class PVSite():
         self._task_gather = None
 
         for inverter in INVERTERS:
-            self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
+            self._inverters.append(Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], session))
 
         self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
@@ -124,8 +124,10 @@ class PVSite():
 
     async def run(self):
         """Run the site and wait for an event to exit."""
-        await self.read_instantaneous()
-        await self.read_total_production()
+        await asyncio.gather(
+            self.read_instantaneous(),
+            self.read_total_production(),
+        )
 
         queues = {
             '5s': asyncio.Queue(),
@@ -145,7 +147,7 @@ class PVSite():
         await self._task_gather
 
     async def stop(self):
-        """Shutdown the PVSite object."""
+        """Shutdown the site."""
         if self._task_gather:
             self._task_gather.cancel()
 
@@ -155,8 +157,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {"scale": 60},     # night (5 minute samples)
-            {"scale": 1},      # day (5 second samples)
+            {'scale': 60},     # night (5 minute samples)
+            {'scale': 1},      # day (5 second samples)
         ]
         while True:
             now = astral.sun.now(tzinfo=self._tzinfo)
@@ -169,7 +171,8 @@ class PVSite():
             elif now > dusk:
                 self._daylight = False
                 tomorrow = now + datetime.timedelta(days=1)
-                dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
+                dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
+                dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
                 next_event = dawn - now
                 logger.info(f"Good evening, waiting for the sun to come up in the morning")
             else:
@@ -185,7 +188,7 @@ class PVSite():
             await asyncio.sleep(sleep)
 
     async def midnight(self) -> None:
-        """Task to wake up at midnight and update the solar data for the new day."""
+        """Task to wake up after midnight and update the solar data for the new day."""
         while True:
             logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
                         f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
@@ -194,10 +197,15 @@ class PVSite():
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
             sleep = midnight - now
             logger.info(f"midnight() sleeping for {sleep}")
-            await asyncio.sleep(sleep.total_seconds())
+            seconds = sleep.total_seconds()
+            #seconds = 10
+            await asyncio.sleep(seconds)
 
+            logger.info(f"midnight() woke up for action")
             await self.read_total_production()
             self.solar_data_update()
+            # Write previous day production to the database
+            ###
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -223,10 +231,20 @@ class PVSite():
         while True:
             await queue.get()
             queue.task_done()
-            mqtt.publish(await self.inverter_efficiency())
-            snapshot = await self.snapshot()
-            influxdb.write_points(snapshot)
-            mqtt.publish(snapshot)
+            results = await asyncio.gather(
+                self.inverter_efficiency(),
+                self.snapshot(),
+            )
+            for result in results:
+                mqtt.publish(result)
+                influxdb.write_points(result)
+
+            #efficiency = await self.inverter_efficiency()
+            #mqtt.publish(efficiency)
+            #influxdb.write_points(efficiency)
+            #snapshot = await self.snapshot()
+            #influxdb.write_points(snapshot)
+            #mqtt.publish(snapshot)
             #logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
