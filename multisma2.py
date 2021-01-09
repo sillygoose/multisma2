@@ -22,9 +22,10 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
-class Multisma2:
+class Multisma2():
 
     def __init__(self):
+        """Initialize the Multisma2 instance."""
         self._loop = asyncio.new_event_loop()
         self._session = None
         self._site = None
@@ -32,12 +33,13 @@ class Multisma2:
         signal.siginterrupt(signal.SIGTERM, False)
 
     def catch(self, signum, frame):
+        """Handler for SIGTERM signals."""
         logger.info("Received SIGTERM signal, forcing shutdown")
         raise TerminateSignal
 
     def run(self):
+        """Code to handle the start(), run(), and stop() interfaces."""
         try:
-            # Shield _start() from termination.
             try:
                 with DelayedKeyboardInterrupt():
                     self._start()
@@ -45,12 +47,10 @@ class Multisma2:
                 logger.info("Received KeyboardInterrupt during startup")
                 raise
 
-            # multisma2 is running, wait for completion.
-            self._wait()
+            self._run()
             raise NormalCompletion
 
         except (KeyboardInterrupt, NormalCompletion, AbnormalCompletion, FailedInitialization, TerminateSignal):
-            # The _stop() is also shielded from termination.
             try:
                 with DelayedKeyboardInterrupt():
                     self._stop()
@@ -58,31 +58,35 @@ class Multisma2:
                 logger.info("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
-        # Create the application log and welcome messages
+        """Asynchronous initialization code."""
         logfiles.start(logger)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
-        # Create the client session and initialize the inverters
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = PVSite(self._session)
         result = await self._site.start()
         if not result: raise FailedInitialization
 
-    async def _await(self):
+    async def _arun(self):
+        """Asynchronous run code."""
         await self._site.run()
 
     async def _astop(self):
+        """Asynchronous closing code."""
         logger.info("Closing multisma2 application")
         await self._site.stop()
         await self._session.close()
 
     def _start(self):
+        """Initialize everything prior to running."""
         self._loop.run_until_complete(self._astart())
 
-    def _wait(self):
-        self._loop.run_until_complete(self._await())
+    def _run(self):
+        """Run the application."""
+        self._loop.run_until_complete(self._arun())
 
     def _stop(self):
+        """Cleanup after running."""
         self._loop.run_until_complete(self._astop())
 
 

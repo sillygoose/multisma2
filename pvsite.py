@@ -70,7 +70,7 @@ SITE_SNAPSHOT = [
 influxdb = InfluxDB(INFLUXDB_ENABLE)
 
 
-class PVSite:
+class PVSite():
     """Class to describe a PV site with one or more inverters."""
     def __init__(self, session):
         """Create a new PVSite object."""
@@ -89,9 +89,10 @@ class PVSite:
         self.solar_data_update()
 
     def solar_data_update(self) -> None:
+        """Update the sun data used to sequence operaton."""
         now = datetime.datetime.now()
         local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
-        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, date=datetime.datetime.today(), tzinfo=self._tzinfo)
+        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._solar_time_diff = solar_noon - local_noon
 
         now = astral.sun.now(tzinfo=self._tzinfo)
@@ -114,15 +115,18 @@ class PVSite:
     async def start(self):
         """Initialize the PVSite object."""
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE): return False
-        #if not mqtt.start(): return False
+        if not mqtt.start(): return False
 
-        #cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-        #if None in cached_keys: return False
-        #self._cached_keys = cached_keys[0]
+        cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
+        if None in cached_keys: return False
+        self._cached_keys = cached_keys[0]
         return True
 
     async def run(self):
         """Run the site and wait for an event to exit."""
+        await self.read_instantaneous()
+        await self.read_total_production()
+
         queues = {
             '5s': asyncio.Queue(),
             '15s': asyncio.Queue(),
@@ -145,141 +149,108 @@ class PVSite:
         if self._task_gather:
             self._task_gather.cancel()
 
-        #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
+        await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         influxdb.stop()
  
     async def daylight(self) -> None:
-        #logger.info(f"'daylight' task has started")
+        """Task to determine when it is daylight and daylight changes."""
+        SAMPLE_PERIOD = [
+            {"scale": 60},     # night (5 minute samples)
+            {"scale": 1},      # day (5 second samples)
+        ]
         while True:
-            try:
-                now = astral.sun.now(tzinfo=self._tzinfo)
-                dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-                dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-                if now < dawn:
-                    self._daylight = False
-                    next_event = dawn - now
-                    logger.info(f"Good morning, waiting for the sun to come up")
-                elif now > dusk:
-                    self._daylight = False
-                    tomorrow = now + datetime.timedelta(days=1)
-                    dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
-                    next_event = dawn - now
-                    logger.info(f"Good evening, waiting for the sun to come up in the morning")
-                else:
-                    self._daylight = True
-                    next_event = dusk - now
-                    logger.info(f"Good day, enjoy the daylight")
+            now = astral.sun.now(tzinfo=self._tzinfo)
+            dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+            dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+            if now < dawn:
+                self._daylight = False
+                next_event = dawn - now
+                logger.info(f"Good morning, waiting for the sun to come up")
+            elif now > dusk:
+                self._daylight = False
+                tomorrow = now + datetime.timedelta(days=1)
+                dawn, dusk = astral.sun.daylight(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
+                next_event = dawn - now
+                logger.info(f"Good evening, waiting for the sun to come up in the morning")
+            else:
+                self._daylight = True
+                next_event = dusk - now
+                logger.info(f"Good day, enjoy the daylight")
 
-                self._scaling = PVSite.SAMPLE_PERIOD[self.is_daylight()].get("scale")
-                logger.info(f"daylight() sleeping for {next_event}")
+            self._scaling = SAMPLE_PERIOD[self.is_daylight()].get("scale")
+            logger.info(f"daylight() sleeping for {next_event}")
 
-                FUDGE = 60
-                sleep = next_event.total_seconds() + FUDGE
-                await asyncio.sleep(sleep)
-
-            except asyncio.CancelledError:
-                #logger.info(f"'daylight()' task has been cancelled")
-                raise
+            FUDGE = 60
+            sleep = next_event.total_seconds() + FUDGE
+            await asyncio.sleep(sleep)
 
     async def midnight(self) -> None:
-        #logger.info(f"'midnight' task has started")
+        """Task to wake up at midnight and update the solar data for the new day."""
         while True:
-            try:
-                logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
-                            f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
-                now = datetime.datetime.now()
-                tomorrow = now + datetime.timedelta(days=1)
-                midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 2))
-                sleep = midnight - now
-                logger.info(f"midnight() sleeping for {sleep}")
-                await asyncio.sleep(sleep.total_seconds())
-                self.solar_data_update()
+            logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
+                        f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
+            now = datetime.datetime.now()
+            tomorrow = now + datetime.timedelta(days=1)
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
+            sleep = midnight - now
+            logger.info(f"midnight() sleeping for {sleep}")
+            await asyncio.sleep(sleep.total_seconds())
 
-            except asyncio.CancelledError:
-                #logger.info(f"'midnight()' task has been cancelled")
-                raise
-
-    SAMPLE_PERIOD = [
-        {"scale": 100},     # night
-        {"scale": 1},       # day
-    ]
+            await self.read_total_production()
+            self.solar_data_update()
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
-        #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
         last_tick = int(time.time()) / self._scaling
-        #await self.read_instantaneous()
-        #await self.read_total_production()
         while True:
-            try:
-                tick = int(time.time()) / self._scaling
-                if tick != last_tick:
-                    last_tick = tick
-                    if tick % 5 == 0:
-                        #await self.read_instantaneous()
-                        queues.get('5s').put_nowait(tick)
-                    if tick % 15 == 0:
-                        queues.get('15s').put_nowait(tick)
-                    if tick % 30 == 0:
-                        queues.get('30s').put_nowait(tick)
-                    if tick % 60 == 0:
-                        queues.get('60s').put_nowait(tick)
-                await asyncio.sleep(SLEEP)
-
-            except asyncio.CancelledError:
-                #logger.info(f"'scheduler()' task has been cancelled")
-                raise
+            tick = int(time.time()) / self._scaling
+            if tick != last_tick:
+                last_tick = tick
+                if tick % 5 == 0:
+                    await self.read_instantaneous()
+                    queues.get('5s').put_nowait(tick)
+                if tick % 15 == 0:
+                    queues.get('15s').put_nowait(tick)
+                if tick % 30 == 0:
+                    queues.get('30s').put_nowait(tick)
+                if tick % 60 == 0:
+                    queues.get('60s').put_nowait(tick)
+            await asyncio.sleep(SLEEP)
 
     async def task_5s(self, queue):
         """Work done every 5 seconds."""
         while True:
-            try:
-                await queue.get()
-                queue.task_done()
-                #mqtt.publish(await self.inverter_efficiency())
-                #snapshot = await self.snapshot()
-                #influxdb.write_points(snapshot)
-                #mqtt.publish(snapshot)
-                logger.info(f"'task_5s()' is running")
-            except asyncio.CancelledError:
-                #logger.info(f"'task_5s()' task has been cancelled")
-                raise
+            await queue.get()
+            queue.task_done()
+            mqtt.publish(await self.inverter_efficiency())
+            snapshot = await self.snapshot()
+            influxdb.write_points(snapshot)
+            mqtt.publish(snapshot)
+            #logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
         while True:
-            try:
-                await queue.get()
-                queue.task_done()
-                #mqtt.publish(self.production_history())
-                logger.info(f"'task_15s()' is running")
-            except asyncio.CancelledError:
-                #logger.info(f"'task_15s()' task has been cancelled")
-                raise
+            await queue.get()
+            queue.task_done()
+            mqtt.publish(self.production_history())
+            #logger.info(f"'task_15s()' is running")
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
-            try:
-                await queue.get()
-                queue.task_done()
-                #mqtt.publish(self.co2_avoided())
-                #logger.info(f"'task_30s()' is running")
-            except asyncio.CancelledError:
-                #logger.info(f"'task_30s()' task has been cancelled")
-                raise
+            await queue.get()
+            queue.task_done()
+            mqtt.publish(self.co2_avoided())
+            #logger.info(f"'task_30s()' is running")
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
-            try:
-                await queue.get()
-                queue.task_done()
-                logger.info(f"'task_60s()' is running")
-            except asyncio.CancelledError:
-                #logger.info(f"'task_60s()' task has been cancelled")
-                raise
+            await queue.get()
+            queue.task_done()
+            #logger.info(f"'task_60s()' is running")
 
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
@@ -434,7 +405,7 @@ class PVSite:
         return cached
 
     def find_total_production(self, period):
-        """."""
+        """Find the total production for a given period."""
         for d_period in self._total_production:
             if d_period.get("period") is period:
                 return d_period.copy()
