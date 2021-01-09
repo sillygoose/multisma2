@@ -15,6 +15,7 @@ from delayedints import DelayedKeyboardInterrupt
 from pvsite import PVSite
 import version
 import logfiles
+from exceptions import TerminateSignal, NormalCompletion, AbnormalCompletion, FailedInitialization
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
@@ -22,12 +23,6 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
 
 class Multisma2:
-    class NormalCompletion(Exception):
-        pass
-    class FailedInitialization(Exception):
-        pass
-    class TerminateSignal(Exception):
-        pass
 
     def __init__(self):
         self._loop = asyncio.new_event_loop()
@@ -38,7 +33,7 @@ class Multisma2:
 
     def catch(self, signum, frame):
         logger.info("Received SIGTERM signal, forcing shutdown")
-        raise Multisma2.TerminateSignal
+        raise TerminateSignal
 
     def run(self):
         try:
@@ -52,9 +47,9 @@ class Multisma2:
 
             # multisma2 is running, wait for completion.
             self._wait()
-            raise Multisma2.NormalCompletion
+            raise NormalCompletion
 
-        except (KeyboardInterrupt, Multisma2.NormalCompletion, Multisma2.FailedInitialization, Multisma2.TerminateSignal):
+        except (KeyboardInterrupt, NormalCompletion, AbnormalCompletion, FailedInitialization, TerminateSignal):
             # The _stop() is also shielded from termination.
             try:
                 with DelayedKeyboardInterrupt():
@@ -71,7 +66,7 @@ class Multisma2:
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = PVSite(self._session)
         result = await self._site.start()
-        if not result: raise Multisma2.FailedInitialization
+        if not result: raise FailedInitialization
 
     async def _await(self):
         await self._site.run()

@@ -1,5 +1,6 @@
 """Code to interface with the SMA inverters and return the results."""
 
+import sys
 import asyncio
 import datetime
 import time
@@ -11,6 +12,7 @@ from dateutil import tz
 import astral
 from astral import sun
 
+from exceptions import AbnormalCompletion
 from inverter import Inverter
 from influx import InfluxDB
 import mqtt
@@ -77,6 +79,7 @@ class PVSite:
         self._total_production = None
         self._cached_keys = []
         self._scaling = 1
+        self._task_gather = None
 
         for inverter in INVERTERS:
             self._inverters.append(Inverter(inverter["name"], inverter["ip"], inverter["user"], inverter["password"], session))
@@ -126,20 +129,22 @@ class PVSite:
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
         }
-        await asyncio.gather(
-            self.daylight(),
-            self.midnight(),
-            self.scheduler(queues),
-            self.task_5s(queues.get('5s')),
-            self.task_15s(queues.get('15s')),
-            self.task_30s(queues.get('30s')),
-            self.task_60s(queues.get('60s')),
+        self._task_gather = asyncio.gather(
+                self.daylight(),
+                self.midnight(),
+                self.scheduler(queues),
+                self.task_5s(queues.get('5s')),
+                self.task_15s(queues.get('15s')),
+                self.task_30s(queues.get('30s')),
+                self.task_60s(queues.get('60s')),
         )
+        await self._task_gather
 
     async def stop(self):
         """Shutdown the PVSite object."""
-        #for task in self._tasks:
-        #    task.cancel()
+        if self._task_gather:
+            self._task_gather.cancel()
+
         #await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         influxdb.stop()
  
@@ -203,12 +208,12 @@ class PVSite:
         """Task to schedule actions at regular intervals."""
         #logger.info(f"'scheduler' task has started")
         SLEEP = 0.5
-        last_tick = int(time.time())
+        last_tick = int(time.time()) / self._scaling
         #await self.read_instantaneous()
         #await self.read_total_production()
         while True:
             try:
-                tick = int(time.time() / self._scaling)
+                tick = int(time.time()) / self._scaling
                 if tick != last_tick:
                     last_tick = tick
                     if tick % 5 == 0:
@@ -260,7 +265,7 @@ class PVSite:
                 await queue.get()
                 queue.task_done()
                 #mqtt.publish(self.co2_avoided())
-                logger.info(f"'task_30s()' is running")
+                #logger.info(f"'task_30s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_30s()' task has been cancelled")
                 raise
@@ -271,7 +276,7 @@ class PVSite:
             try:
                 await queue.get()
                 queue.task_done()
-                #logger.info(f"'task_60s()' is running")
+                logger.info(f"'task_60s()' is running")
             except asyncio.CancelledError:
                 #logger.info(f"'task_60s()' task has been cancelled")
                 raise
