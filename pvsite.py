@@ -63,7 +63,6 @@ SITE_SNAPSHOT = [
     '6180_08412800',    # Status: General operating status
     '6180_08416400',    # Status: Grid relay
     '6180_08414C00',    # Status: Condition
-    '6400_0046C300',    # AC Total yield (aggregated)
 ]
 
 influxdb = InfluxDB(INFLUXDB_ENABLE)
@@ -194,8 +193,10 @@ class PVSite():
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
             await asyncio.sleep((midnight - now).total_seconds())
 
+            # Update internal sun info and the daily production
             await self.read_total_production()
             self.solar_data_update()
+            influxdb.write_history(await self.get_yesterday_production())
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -252,6 +253,36 @@ class PVSite():
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
+
+    async def get_yesterday_production(self):
+        now = datetime.datetime.now()
+        day_before = now - datetime.timedelta(days=2)
+        yesterday = now - datetime.timedelta(days=1)
+        start = datetime.datetime.combine(day_before.date(), datetime.time(23, 0))
+        stop = datetime.datetime.combine(yesterday.date(), datetime.time(23, 0))
+        production = await self.get_production(int(start.timestamp()), int(stop.timestamp()))
+        return production
+
+    async def get_production(self, start, stop):
+        production = await asyncio.gather(*(inverter.read_history(start, stop) for inverter in self._inverters))
+        total = {}
+        for inverter in production:
+            for i in range(1, len(inverter)):
+                t = inverter[i]['t']
+                v = inverter[i]['v']
+                if v is None:
+                    continue
+                if t in total:
+                    total[t] += v
+                else:
+                    total[t] = v
+
+        site_total = []
+        for t, v in total.items():
+            site_total.append({'t': t, 'v': v})
+        site_total.insert(0, {'inverter': 'site'})
+        production.append(site_total)
+        return production
 
     async def read_total_production(self):
         """Get the daily, monthly, yearly, and lifetime production values."""

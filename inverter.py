@@ -52,7 +52,7 @@ class Inverter:
             self._tags = json.loads(await resp.text())
 
         # Read the initial set of history state data
-        await self.read_history()
+        await self.read_inverter_production()
         await self.read_instantaneous()
 
         # Return a list of cached keys
@@ -129,7 +129,12 @@ class Inverter:
         raw_result = await self._sma.read_values([key])
         return self.clean({key: raw_result.get(key)})
 
-    async def read_history(self):
+    async def read_history(self, start, stop):
+        history = await self._sma.read_history(start, stop)
+        history.insert(0, {'inverter': self._name})
+        return history
+
+    async def read_inverter_production(self):
         """Read the baseline inverter production for select periods."""
         one_hour = 60 * 60 * 1
         three_hours = 60 * 60 * 3
@@ -141,13 +146,13 @@ class Inverter:
             datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp()
         )
         results = await asyncio.gather(
-            self._sma.read_history(today_start - one_hour, today_start + three_hours),
-            self._sma.read_history(month_start - one_hour, today_start),
-            self._sma.read_history(year_start - one_hour, today_start),
+            self.read_history(today_start - one_hour, today_start + three_hours),
+            self.read_history(month_start - one_hour, today_start),
+            self.read_history(year_start - one_hour, today_start),
         )
-        self._history['today'] = results[0][0]
-        self._history['month'] = results[1][0]
-        self._history['year'] = results[2][0]
+        self._history['today'] = results[0][1]
+        self._history['month'] = results[1][1]
+        self._history['year'] = results[2][1]
         self._history['lifetime'] = {'t': 0, 'v': 0}
 
     def display_metadata(self, key):
