@@ -256,10 +256,9 @@ class PVSite():
 
     async def get_yesterday_production(self):
         now = datetime.datetime.now()
-        day_before = now - datetime.timedelta(days=2)
         yesterday = now - datetime.timedelta(days=1)
-        start = datetime.datetime.combine(day_before.date(), datetime.time(23, 0))
-        stop = datetime.datetime.combine(yesterday.date(), datetime.time(23, 0))
+        start = datetime.datetime.combine(yesterday.date(), datetime.time(0, 0))
+        stop = datetime.datetime.combine(now.date(), datetime.time(0, 0))
         production = await self.get_production(int(start.timestamp()), int(stop.timestamp()))
         return production
 

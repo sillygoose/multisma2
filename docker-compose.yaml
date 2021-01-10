@@ -5,8 +5,7 @@ services:
     image: multisma2:latest
     restart: unless-stopped
     volumes:
-    - ./volumes/multisma2/log:/solar/log
-    - ./volumes/multisma2/data:/solar/data
+    - ./volumes/multisma2/log:/multisma2/log
     depends_on:
     - mosquitto
     
