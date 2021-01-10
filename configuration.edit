@@ -5,10 +5,6 @@ TIMEZONE = 'America/New_York'
 SITE_LATITUDE = 42
 SITE_LONGITUDE = -76
 
-# Inverter daily production log file customizations
-ENABLE_PRODUCTION_LOGGING = False
-PRODUCTION_LOG_FILE_PREFIX = 'data/multisma2'
-
 # Application log file customization
 APPLICATION_LOG_FILE = 'log/multisma2'
 APPLICATION_LOG_FORMAT = '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
@@ -19,9 +15,19 @@ APPLICATION_LOG_LOGGER_NAME = 'multisma2'
 # or from https://www.carbonfootprint.com/international_electricity_factors.html
 CO2_AVOIDANCE = 0.44000
 
+# Influxdb configuration options:
+#  INFLUXDB_ENABLE            set to True to enable sending messages to the broker
+#  INFLUXDB_DATABASE          set to Influxdb database name
+#  INFLUXDB_IPADDR            set to to the Influxdb server address
+#  INFLUXDB_PORT              set to the Influxdb port
+INFLUXDB_ENABLE = False
+INFLUXDB_DATABASE = 'multisma2'
+INFLUXDB_IPADDR = '10.0.0.8'
+INFLUXDB_PORT = '8086'
+
 # MQTT configuration options:
 #  MQTT_ENABLE            set to True to enable sending messages to the broker
-#  MQTT_CLIENT            set to a unique broker client nane and used as top level topic
+#  MQTT_CLIENT            set to a unique broker client name and used as top level topic
 #  MQTT_BROKER_IPADDR     set to the fully qualified domain name or IP address of the broker
 #  MQTT_BROKER_PORT       set to port (default to 1883 if set to 0)
 #  MQTT_USERNAME          set to the username if authentication is used

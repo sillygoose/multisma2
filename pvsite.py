@@ -238,13 +238,6 @@ class PVSite():
             for result in results:
                 mqtt.publish(result)
                 influxdb.write_points(result)
-
-            #efficiency = await self.inverter_efficiency()
-            #mqtt.publish(efficiency)
-            #influxdb.write_points(efficiency)
-            #snapshot = await self.snapshot()
-            #influxdb.write_points(snapshot)
-            #mqtt.publish(snapshot)
             #logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
