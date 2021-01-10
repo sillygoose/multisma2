@@ -53,7 +53,7 @@ AGGREGATE_KEYS = [
     '6100_40263F00',    # AC grid power (current)
     '6100_0046C200',    # PV generation power (current)
     '6400_0046C300',    # Meter count and PV gen. meter (total power)
-    '6380_40251E00',    # DC power (1 per string)
+    '6380_40251E00',    # DC power (totals for site and each inverter)
 ]
 
 SITE_SNAPSHOT = [
@@ -65,7 +65,6 @@ SITE_SNAPSHOT = [
     '6180_08414C00',    # Status: Condition
     '6400_0046C300',    # AC Total yield (aggregated)
 ]
-
 
 influxdb = InfluxDB(INFLUXDB_ENABLE)
 
@@ -181,11 +180,9 @@ class PVSite():
                 logger.info(f"Good day, enjoy the daylight")
 
             self._scaling = SAMPLE_PERIOD[self.is_daylight()].get("scale")
-            logger.info(f"daylight() sleeping for {next_event}")
 
             FUDGE = 60
-            sleep = next_event.total_seconds() + FUDGE
-            await asyncio.sleep(sleep)
+            await asyncio.sleep(next_event.total_seconds() + FUDGE)
 
     async def midnight(self) -> None:
         """Task to wake up after midnight and update the solar data for the new day."""
@@ -195,17 +192,10 @@ class PVSite():
             now = datetime.datetime.now()
             tomorrow = now + datetime.timedelta(days=1)
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
-            sleep = midnight - now
-            logger.info(f"midnight() sleeping for {sleep}")
-            seconds = sleep.total_seconds()
-            #seconds = 10
-            await asyncio.sleep(seconds)
+            await asyncio.sleep((midnight - now).total_seconds())
 
-            logger.info(f"midnight() woke up for action")
             await self.read_total_production()
             self.solar_data_update()
-            # Write previous day production to the database
-            ###
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -238,7 +228,6 @@ class PVSite():
             for result in results:
                 mqtt.publish(result)
                 influxdb.write_points(result)
-            #logger.info(f"'task_5s()' is running")
 
     async def task_15s(self, queue):
         """Work done every 15 seconds."""
@@ -246,7 +235,6 @@ class PVSite():
             await queue.get()
             queue.task_done()
             mqtt.publish(self.production_history())
-            #logger.info(f"'task_15s()' is running")
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -254,14 +242,12 @@ class PVSite():
             await queue.get()
             queue.task_done()
             mqtt.publish(self.co2_avoided())
-            #logger.info(f"'task_30s()' is running")
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
             await queue.get()
             queue.task_done()
-            #logger.info(f"'task_60s()' is running")
 
     async def read_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
