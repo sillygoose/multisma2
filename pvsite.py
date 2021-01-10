@@ -317,8 +317,8 @@ class PVSite():
         PRODUCTION_SETTINGS = {
             "today": {"unit": "kWh", "scale": 0.001, "precision": 2},
             "month": {"unit": "kWh", "scale": 0.001, "precision": 0},
-            "year": {"unit": "MWh", "scale": 0.000001, "precision": 2},
-            "lifetime": {"unit": "MWh", "scale": 0.000001, "precision": 2},
+            "year": {"unit": "kWh", "scale": 0.001, "precision": 0},
+            "lifetime": {"unit": "kWh", "scale": 0.001, "precision": 0},
         }
 
         histories = []
@@ -345,8 +345,8 @@ class PVSite():
         CO2_SETTINGS = {
             "today": {"scale": 0.001, "unit": "kg", "precision": 2, "factor": CO2_AVOIDANCE_KG},
             "month": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
-            "year": {"scale": 0.001, "unit": "tons", "precision": 2, "factor": CO2_AVOIDANCE_TON},
-            "lifetime": {"scale": 0.001, "unit": "tons", "precision": 2, "factor": CO2_AVOIDANCE_TON},
+            "year": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
+            "lifetime": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
         }
 
         co2avoided = []
