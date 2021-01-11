@@ -123,8 +123,8 @@ class PVSite():
     async def run(self):
         """Run the site and wait for an event to exit."""
         await asyncio.gather(
-            self.read_instantaneous(),
-            self.read_total_production(),
+            self.update_instantaneous(),
+            self.update_total_production(),
         )
 
         queues = {
@@ -194,7 +194,7 @@ class PVSite():
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            await self.read_total_production()
+            await self.update_total_production()
             self.solar_data_update()
             influxdb.write_history(await self.get_yesterday_production())
 
@@ -207,7 +207,10 @@ class PVSite():
             if tick != last_tick:
                 last_tick = tick
                 if tick % 5 == 0:
-                    await self.read_instantaneous()
+                    await asyncio.gather(
+                        self.update_instantaneous(),
+                        self.update_total_production(),
+                    )
                     queues.get('5s').put_nowait(tick)
                 if tick % 15 == 0:
                     queues.get('15s').put_nowait(tick)
@@ -222,6 +225,7 @@ class PVSite():
         while True:
             await queue.get()
             queue.task_done()
+            continue
             results = await asyncio.gather(
                 self.snapshot(),
             )
@@ -250,7 +254,7 @@ class PVSite():
             await queue.get()
             queue.task_done()
 
-    async def read_instantaneous(self):
+    async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
 
@@ -283,7 +287,7 @@ class PVSite():
         production.append(site_total)
         return production
 
-    async def read_total_production(self):
+    async def update_total_production(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         total_production_list = await self.total_production()
         raw_stats = []
