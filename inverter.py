@@ -37,7 +37,7 @@ class Inverter:
         if self._sma.sma_sid is None:
             logger.info(f"{self._name} - no session ID")
             return None
-        logger.info(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        #logger.info(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
         # Grab the metadata dictionary
         metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
