@@ -223,7 +223,6 @@ class PVSite():
             await queue.get()
             queue.task_done()
             results = await asyncio.gather(
-                self.inverter_efficiency(),
                 self.snapshot(),
             )
             for result in results:
@@ -236,6 +235,7 @@ class PVSite():
             await queue.get()
             queue.task_done()
             mqtt.publish(self.production_history())
+            mqtt.publish(await self.inverter_efficiency())
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
