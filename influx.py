@@ -14,6 +14,7 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
+CACHED_ENABLED = False
 
 LP_LOOKUP = {
     'ac_measurements/power': {'measurement': 'ac_measurements', 'field': 'power'},
@@ -28,6 +29,18 @@ LP_LOOKUP = {
     'production/total': {'measurement': 'production', 'field': 'total'},
     'production/daily_total': {'measurement': 'production', 'field': 'daily_total'},
 }
+
+# Translate the tag strings to integers
+TAG_TRANSLATIONS = {
+    'Information not available':    0,
+    'Ok':                           1,
+    'MPP':                          2,
+    'not active':                   3,
+    'Open':                         4,
+    'Closed':                       5,
+    'Start':                        6,
+}
+
 
 class InfluxDB():
     def __init__(self, enabled):
@@ -101,8 +114,11 @@ class InfluxDB():
                 for k, v in point.items():
                     lp = f'{measurement}'
                     signature = f'{measurement}_{k}_{lookup.get("field")}'
-                    if isinstance(v, str): 
-                        lp += f',inverter={k} {lookup.get("field")}="{v}"'
+                    if isinstance(v, str):
+                        t_v = TAG_TRANSLATIONS.get(v, -1)
+                        if t_v == -1:
+                            logger.warn(f"Unanticipated tag string: '{v}'")
+                        lp += f',inverter={k} {lookup.get("field")}="{t_v}"'
                     elif isinstance(v, int) or isinstance(v, float):
                         lp += f',inverter={k} {lookup.get("field")}={v}'
                     elif isinstance(v, dict): 
@@ -116,10 +132,11 @@ class InfluxDB():
                                 lp += f',{lookup.get("field")}_{k1}={v1}'
 
                     # Check if in the cache, if not or different update cache and write
-                    cached_result = InfluxDB.cache.get(signature, None)
-                    if cached_result:
-                        if lp == cached_result:
-                            continue
+                    if CACHED_ENABLED:
+                        cached_result = InfluxDB.cache.get(signature, None)
+                        if cached_result:
+                            if lp == cached_result:
+                                continue
 
                     InfluxDB.cache[signature] = lp
                     lp += f' {ts}'

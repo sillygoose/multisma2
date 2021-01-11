@@ -165,18 +165,18 @@ class PVSite():
             if now < dawn:
                 self._daylight = False
                 next_event = dawn - now
-                logger.info(f"Good morning, waiting for the sun to come up")
+                #logger.info(f"Good morning, waiting for the sun to come up")
             elif now > dusk:
                 self._daylight = False
                 tomorrow = now + datetime.timedelta(days=1)
                 dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
                 dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
                 next_event = dawn - now
-                logger.info(f"Good evening, waiting for the sun to come up in the morning")
+                #logger.info(f"Good evening, waiting for the sun to come up in the morning")
             else:
                 self._daylight = True
                 next_event = dusk - now
-                logger.info(f"Good day, enjoy the daylight")
+                #logger.info(f"Good day, enjoy the daylight")
 
             self._scaling = SAMPLE_PERIOD[self.is_daylight()].get("scale")
 
