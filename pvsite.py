@@ -225,7 +225,6 @@ class PVSite():
         while True:
             await queue.get()
             queue.task_done()
-            continue
             results = await asyncio.gather(
                 self.snapshot(),
             )
@@ -238,15 +237,23 @@ class PVSite():
         while True:
             await queue.get()
             queue.task_done()
-            mqtt.publish(self.production_history())
-            mqtt.publish(await self.inverter_efficiency())
+            results = await asyncio.gather(
+                self.production_history(),
+                self.inverter_efficiency(),
+            )
+            for result in results:
+                mqtt.publish(result)
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
             await queue.get()
             queue.task_done()
-            mqtt.publish(self.co2_avoided())
+            results = await asyncio.gather(
+                self.co2_avoided(),
+            )
+            for result in results:
+                mqtt.publish(result)
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
@@ -315,7 +322,7 @@ class PVSite():
         self._total_production = raw_stats
         return raw_stats
 
-    def production_history(self):
+    async def production_history(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = {
             "today": {"unit": "kWh", "scale": 0.001, "precision": 2},
@@ -341,7 +348,7 @@ class PVSite():
 
         return histories
 
-    def co2_avoided(self):
+    async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
         CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
