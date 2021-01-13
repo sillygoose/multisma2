@@ -351,7 +351,7 @@ class PVSite():
     async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
-        CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
+        #CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
         CO2_SETTINGS = {
             "today": {"scale": 0.001, "unit": "kg", "precision": 2, "factor": CO2_AVOIDANCE_KG},
             "month": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},

@@ -54,7 +54,7 @@ class InfluxDB():
     def start(self, host, port, database, username, password):
         if not self._enabled:
             return True
-        self._client = InfluxDBClient(host=host, port=port, database=database)
+        self._client = InfluxDBClient(host=host, port=port, database=database, username=username, password=password)
         result = self._client if self._client else False
         logger.info(f"{'Opened' if result else 'Failed to open'} the InfluxDB database '{database}'")
         return result
