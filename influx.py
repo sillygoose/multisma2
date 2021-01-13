@@ -51,7 +51,7 @@ class InfluxDB():
         if self._client:
             self._client.close()
 
-    def start(self, host, port, database):
+    def start(self, host, port, database, username, password):
         if not self._enabled:
             return True
         self._client = InfluxDBClient(host=host, port=port, database=database)

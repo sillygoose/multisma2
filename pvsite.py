@@ -20,7 +20,7 @@ import mqtt
 from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
 from configuration import CO2_AVOIDANCE
 from configuration import INVERTERS
-from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT
+from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT, INFLUXDB_USERNAME, INFLUXDB_PASSWORD
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
 
@@ -112,7 +112,7 @@ class PVSite():
 
     async def start(self):
         """Initialize the PVSite object."""
-        if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE): return False
+        if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
 
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
