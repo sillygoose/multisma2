@@ -39,6 +39,7 @@ TAG_TRANSLATIONS = {
     'Open':                         4,
     'Closed':                       5,
     'Start':                        6,
+    'Warning':                      7,
 }
 
 
@@ -117,7 +118,7 @@ class InfluxDB():
                     if isinstance(v, str):
                         t_v = TAG_TRANSLATIONS.get(v, -1)
                         if t_v == -1:
-                            logger.warn(f"Unanticipated tag string: '{v}'")
+                            logger.warn(f"Unanticipated tag string: '{v}' in field '{lookup.get('field')}'")
                         lp += f',inverter={k} {lookup.get("field")}="{t_v}"'
                     elif isinstance(v, int) or isinstance(v, float):
                         lp += f',inverter={k} {lookup.get("field")}={v}'
