@@ -14,7 +14,7 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
-CACHED_ENABLED = False
+CACHE_ENABLED = False
 
 LP_LOOKUP = {
     'ac_measurements/power': {'measurement': 'ac_measurements', 'field': 'power'},
@@ -88,7 +88,6 @@ class InfluxDB():
 
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-            logger.info(f"Wrote {len(lps)} history points")
         except (InfluxDBClientError, InfluxDBServerError):
             logger.error(f"Database write_history() failed")
             result = False
@@ -113,27 +112,27 @@ class InfluxDB():
 
                 measurement = lookup.get('measurement')
                 for k, v in point.items():
+                    field = lookup.get('field')
                     lp = f'{measurement}'
-                    signature = f'{measurement}_{k}_{lookup.get("field")}'
+                    signature = f'{measurement}_{k}_{field}'
                     if isinstance(v, str):
                         t_v = TAG_TRANSLATIONS.get(v, -1)
                         if t_v == -1:
-                            logger.warn(f"Unanticipated tag string: '{v}' in field '{lookup.get('field')}'")
-                        lp += f',inverter={k} {lookup.get("field")}="{t_v}"'
+                            logger.warn(f"Unanticipated tag string: '{v}' in field '{field}'")
+                        lp += f',inverter={k} {field}="{t_v}"'
                     elif isinstance(v, int) or isinstance(v, float):
-                        lp += f',inverter={k} {lookup.get("field")}={v}'
+                        lp += f',inverter={k} {field}={v}'
                     elif isinstance(v, dict): 
                         lp += f',inverter={k} '
                         first = True
                         for k1, v1 in v.items():
-                            if first:
-                                first = False
-                                lp += f'{lookup.get("field")}_{k1}={v1}'
-                            else:
-                                lp += f',{lookup.get("field")}_{k1}={v1}'
+                            if not first:
+                                lp += f','
+                            lp += f'{k1}={v1}' if k1 != k else f'{field}={v1}'
+                            first = False
 
                     # Check if in the cache, if not or different update cache and write
-                    if CACHED_ENABLED:
+                    if CACHE_ENABLED:
                         cached_result = InfluxDB.cache.get(signature, None)
                         if cached_result:
                             if lp == cached_result:
@@ -143,6 +142,7 @@ class InfluxDB():
                     lp += f' {ts}'
                     lps.append(lp)
 
+        #pprint(lps)
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
         except (InfluxDBClientError, InfluxDBServerError):

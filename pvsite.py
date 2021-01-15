@@ -178,7 +178,7 @@ class PVSite():
                 next_event = dusk - now
                 #logger.info(f"Good day, enjoy the daylight")
 
-            self._scaling = SAMPLE_PERIOD[self.is_daylight()].get("scale")
+            self._scaling = SAMPLE_PERIOD[self.is_daylight()].get('scale')
 
             FUDGE = 60
             await asyncio.sleep(next_event.total_seconds() + FUDGE)
@@ -299,8 +299,8 @@ class PVSite():
         total_production_list = await self.total_production()
         raw_stats = []
         for total_production in total_production_list:
-            unit = total_production.pop("unit")
-            for period in ["today", "month", "year", "lifetime"]:
+            unit = total_production.pop('unit')
+            for period in ['today', 'month', 'year', 'lifetime']:
                 period_stats = {}
                 inverter_periods = await asyncio.gather(
                     *(inverter.start_production(period) for inverter in self._inverters)
@@ -313,9 +313,9 @@ class PVSite():
                         total += period_total
                         period_stats[inverter_name] = period_total
 
-                    period_stats["site"] = total
-                    period_stats["period"] = period
-                    period_stats["unit"] = unit
+                    period_stats['site'] = total
+                    period_stats['period'] = period
+                    period_stats['unit'] = unit
 
                 raw_stats.append(period_stats)
 
@@ -325,25 +325,25 @@ class PVSite():
     async def production_history(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = {
-            "today": {"unit": "kWh", "scale": 0.001, "precision": 2},
-            "month": {"unit": "kWh", "scale": 0.001, "precision": 0},
-            "year": {"unit": "kWh", "scale": 0.001, "precision": 0},
-            "lifetime": {"unit": "kWh", "scale": 0.001, "precision": 0},
+            'today': {'unit': 'kWh', 'scale': 0.001, 'precision': 2},
+            'month': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
+            'year': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
+            'lifetime': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
         }
 
         histories = []
-        for period in ["today", "month", "year", "lifetime"]:
+        for period in ['today', 'month', 'year', 'lifetime']:
             settings = PRODUCTION_SETTINGS.get(period)
             tp = self.find_total_production(period)
-            period = tp.pop("period")
-            tp.pop("unit")
+            period = tp.pop('period')
+            tp.pop('unit')
             history = {}
             for key, value in tp.items():
-                production = value * settings["scale"]
-                history[key] = round(production, settings["precision"]) if settings["precision"] else int(production)
+                production = value * settings['scale']
+                history[key] = round(production, settings['precision']) if settings['precision'] else int(production)
 
-            history["topic"] = "production/" + period
-            history["unit"] = settings["unit"]
+            history['topic'] = 'production/' + period
+            history['unit'] = settings['unit']
             histories.append(history)
 
         return histories
@@ -353,26 +353,26 @@ class PVSite():
         CO2_AVOIDANCE_KG = CO2_AVOIDANCE
         #CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
         CO2_SETTINGS = {
-            "today": {"scale": 0.001, "unit": "kg", "precision": 2, "factor": CO2_AVOIDANCE_KG},
-            "month": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
-            "year": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
-            "lifetime": {"scale": 0.001, "unit": "kg", "precision": 0, "factor": CO2_AVOIDANCE_KG},
+            'today': {'scale': 0.001, 'unit': 'kg', 'precision': 2, 'factor': CO2_AVOIDANCE_KG},
+            'month': {'scale': 0.001, 'unit': 'kg', 'precision': 0, 'factor': CO2_AVOIDANCE_KG},
+            'year': {'scale': 0.001, 'unit': 'kg', 'precision': 0, 'factor': CO2_AVOIDANCE_KG},
+            'lifetime': {'scale': 0.001, 'unit': 'kg', 'precision': 0, 'factor': CO2_AVOIDANCE_KG},
         }
 
         co2avoided = []
-        for period in ["today", "month", "year", "lifetime"]:
+        for period in ['today', 'month', 'year', 'lifetime']:
             settings = CO2_SETTINGS.get(period)
             tp = self.find_total_production(period)
-            period = tp.pop("period")
-            tp.pop("unit")
+            period = tp.pop('period')
+            tp.pop('unit')
             co2avoided_period = {}
             for key, value in tp.items():
-                co2 = value * settings["scale"] * settings["factor"]
-                co2avoided_period[key] = round(co2, settings["precision"]) if settings["precision"] else int(co2)
+                co2 = value * settings['scale'] * settings['factor']
+                co2avoided_period[key] = round(co2, settings['precision']) if settings['precision'] else int(co2)
 
-            co2avoided_period["topic"] = "co2avoided/" + period
-            co2avoided_period["unit"] = settings["unit"]
-            co2avoided_period["factor"] = settings["factor"]
+            co2avoided_period['topic'] = 'co2avoided/' + period
+            co2avoided_period['unit'] = settings['unit']
+            co2avoided_period['factor'] = settings['factor']
             co2avoided.append(co2avoided_period)
 
         return co2avoided
@@ -385,7 +385,7 @@ class PVSite():
         for k, v in ac_power.items():
             if k in ['unit', 'precision', 'topic']: continue
             dc = dc_power.get(k)
-            denom = dc.get('inverter') if isinstance(dc, dict) else dc
+            denom = dc.get(k) if isinstance(dc, dict) else dc
             efficiencies[k] = 0.0 if denom == 0 else round((float(v) / denom) * 100, 2)
         efficiencies['topic'] = 'ac_measurements/efficiency'
         return [efficiencies]
@@ -415,24 +415,25 @@ class PVSite():
             total = 0
             calculate_total = AGGREGATE_KEYS.count(key)
             for inverter in results:
+                name = inverter.get('name')
                 result = inverter.get(key)
-                val = result.get("val", None)
-                unit = result.get("unit", None)
-                precision = result.get("precision", None)
+                val = result.get('val', None)
+                unit = result.get('unit', None)
+                precision = result.get('precision', None)
                 if isinstance(val, dict):
                     if calculate_total:
-                        subtotal = val.get("inverter")
+                        subtotal = val.get(name)
                         total += subtotal
                 else:
                     if calculate_total:
                         total += val
 
-                if unit: composite["unit"] = unit
-                if precision is not None: composite["precision"] = precision
-                composite[inverter.get("name")] = val
+                if unit: composite['unit'] = unit
+                if precision is not None: composite['precision'] = precision
+                composite[name] = val
 
-            if calculate_total: composite["site"] = total
-            composite["topic"] = MQTT_TOPICS.get(key, key)
+            if calculate_total: composite['site'] = total
+            composite['topic'] = MQTT_TOPICS.get(key, key)
             sensors.append(composite)
 
         return sensors
@@ -445,6 +446,6 @@ class PVSite():
     def find_total_production(self, period):
         """Find the total production for a given period."""
         for d_period in self._total_production:
-            if d_period.get("period") is period:
+            if d_period.get('period') is period:
                 return d_period.copy()
         return None
