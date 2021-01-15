@@ -5,7 +5,8 @@ services:
     image: multisma2:latest
     restart: unless-stopped
     volumes:
-    - ./volumes/multisma2/log:/multisma2/log
+    - ./volumes/multisma2/log:/sillygoose/log
     depends_on:
     - mosquitto
+    - influxdb
     

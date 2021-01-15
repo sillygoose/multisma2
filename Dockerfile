@@ -1,32 +1,26 @@
-FROM python:3.9.1-buster
+FROM python:alpine
 
 # tzdata setup
 ENV TZ America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# for pysma
-RUN apt-get update
-RUN apt-get install -y apt-utils
-RUN apt-get install -y git
-RUN apt-get install -y nano
-RUN apt-get install -y tzdata
-RUN apt-get install -y python3
-RUN apt-get install -y python3-pip
+# extra packages
+RUN apk update
+RUN apk add git nano tzdata
+RUN apk --no-cache add gcc musl-dev
 
-# install other packages
+# install required python packages
 RUN pip3 install aiohttp astral python-dateutil
 RUN pip3 install paho-mqtt jmespath influxdb
 
 # clone the repo into the docker container
-WORKDIR /solar
+WORKDIR /sillygoose
 RUN git clone https://github.com/sillygoose/multisma2.git
 
 # add the site-specific configuration file
-WORKDIR /solar/multisma2
+WORKDIR /sillygoose/multisma2
 ADD configuration.py .
 
-# directory to start from
-WORKDIR /solar
-
-# run multisma2 python code
+# run the python code
+WORKDIR /sillygoose
 CMD ["python3", "multisma2/multisma2.py"]
