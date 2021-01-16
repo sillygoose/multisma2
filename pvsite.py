@@ -84,36 +84,12 @@ class PVSite():
 
         self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
-        self.solar_data_update()
-
-    def solar_data_update(self) -> None:
-        """Update the sun data used to sequence operaton."""
-        now = datetime.datetime.now()
-        local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
-        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._solar_time_diff = solar_noon - local_noon
-
-        now = astral.sun.now(tzinfo=self._tzinfo)
-        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._daylight = self._dawn < now < self._dusk
-
-    def is_daylight(self) -> bool:
-        return self._daylight
-        
-    def day_of_year(self, full_string: True):
-        now = datetime.datetime.now()
-        doy = int(now.strftime('%j'))
-        if not full_string:
-            return doy
-        year = now.strftime('%Y')
-        suffixes = ['st', 'nd', 'rd', 'th']
-        return str(doy) + suffixes[3 if doy >= 4 else doy-1] + ' day of ' + str(year)
 
     async def start(self):
         """Initialize the PVSite object."""
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
+        self.solar_data_update()
 
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         if None in cached_keys: return False
@@ -152,6 +128,33 @@ class PVSite():
         await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         influxdb.stop()
  
+    def solar_data_update(self) -> None:
+        """Update the sun data used to sequence operaton."""
+        now = datetime.datetime.now()
+        local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
+        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._solar_time_diff = solar_noon - local_noon
+
+        now = astral.sun.now(tzinfo=self._tzinfo)
+        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._daylight = self._dawn < now < self._dusk
+
+        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
+            f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
+
+    def is_daylight(self) -> bool:
+        return self._daylight
+        
+    def day_of_year(self, full_string: True):
+        now = datetime.datetime.now()
+        doy = int(now.strftime('%j'))
+        if not full_string:
+            return doy
+        year = now.strftime('%Y')
+        suffixes = ['st', 'nd', 'rd', 'th']
+        return str(doy) + suffixes[3 if doy >= 4 else doy-1] + ' day of ' + str(year)
+
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
@@ -186,16 +189,14 @@ class PVSite():
     async def midnight(self) -> None:
         """Task to wake up after midnight and update the solar data for the new day."""
         while True:
-            logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
-                        f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
             now = datetime.datetime.now()
             tomorrow = now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 2))
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            await self.update_total_production()
             self.solar_data_update()
+            await self.update_total_production()
             influxdb.write_history(await self.get_yesterday_production())
 
     async def scheduler(self, queues):
