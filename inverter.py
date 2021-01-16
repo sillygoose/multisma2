@@ -106,11 +106,10 @@ class Inverter:
                     val = sensors
                 cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
             elif sma_type == 1:
-                tag = 0
-                for index, state in enumerate(states):
+                for state in states:
                     tag_list = state.get('val')
-                    tag = self.lookup_tag(tag_list[0].get('tag'))
-                cleaned[key] = {'val': tag}
+                    cleaned[key] = {'val': tag_list[0].get('tag')}
+                    break
             else:
                 logger.warning(f"unexpected sma type: {sma_type}")
 

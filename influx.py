@@ -30,18 +30,6 @@ LP_LOOKUP = {
     'production/daily_total': {'measurement': 'production', 'field': 'daily_total'},
 }
 
-# Translate the tag strings to integers
-TAG_TRANSLATIONS = {
-    'Information not available':    0,
-    'Ok':                           1,
-    'MPP':                          2,
-    'not active':                   3,
-    'Open':                         4,
-    'Closed':                       5,
-    'Start':                        6,
-    'Warning':                      7,
-}
-
 
 class InfluxDB():
     def __init__(self, enabled):
@@ -89,7 +77,7 @@ class InfluxDB():
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
         except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_history() failed")
+            logger.error(f"Database write_history() call failed")
             result = False
         return result
 
@@ -115,12 +103,9 @@ class InfluxDB():
                     field = lookup.get('field')
                     lp = f'{measurement}'
                     signature = f'{measurement}_{k}_{field}'
-                    if isinstance(v, str):
-                        t_v = TAG_TRANSLATIONS.get(v, -1)
-                        if t_v == -1:
-                            logger.warn(f"Unanticipated tag string: '{v}' in field '{field}'")
-                        lp += f',inverter={k} {field}="{t_v}"'
-                    elif isinstance(v, int) or isinstance(v, float):
+                    if isinstance(v, int):
+                        lp += f',inverter={k} {field}={v}i'
+                    elif isinstance(v, float):
                         lp += f',inverter={k} {field}={v}'
                     elif isinstance(v, dict): 
                         lp += f',inverter={k} '
@@ -128,8 +113,14 @@ class InfluxDB():
                         for k1, v1 in v.items():
                             if not first:
                                 lp += f','
-                            lp += f'{k1}={v1}' if k1 != k else f'{field}={v1}'
+                            if isinstance(v1, int):
+                                lp += f'{k1}={v1}i' if k1 != k else f'{field}={v1}i'
+                            else:
+                                logger.error(f"Unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
                             first = False
+                    else:
+                        logger.error(f"Unanticipated type '{type(v)}' in field '{field}'")
+                        continue
 
                     # Check if in the cache, if not or different update cache and write
                     if CACHE_ENABLED:
@@ -142,10 +133,9 @@ class InfluxDB():
                     lp += f' {ts}'
                     lps.append(lp)
 
-        #pprint(lps)
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
         except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_history() failed")
+            logger.error(f"Database write_points() call failed")
             result = False
         return result
