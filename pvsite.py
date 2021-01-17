@@ -191,7 +191,7 @@ class PVSite():
         while True:
             now = datetime.datetime.now()
             tomorrow = now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 2))
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
@@ -267,14 +267,16 @@ class PVSite():
         await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
 
     async def get_yesterday_production(self):
+        """Get the total production meter values for the previous day."""
         now = datetime.datetime.now()
         yesterday = now - datetime.timedelta(days=1)
         start = datetime.datetime.combine(yesterday.date(), datetime.time(0, 0))
         stop = datetime.datetime.combine(now.date(), datetime.time(0, 0))
-        production = await self.get_production(int(start.timestamp()), int(stop.timestamp()))
+        production = await self.get_production_history(int(start.timestamp()), int(stop.timestamp()))
         return production
 
-    async def get_production(self, start, stop):
+    async def get_production_history(self, start, stop):
+        """Get the production totals for a given period and create a site total."""
         production = await asyncio.gather(*(inverter.read_history(start, stop) for inverter in self._inverters))
         total = {}
         for inverter in production:
