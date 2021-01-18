@@ -1,6 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-import sys
 import asyncio
 import datetime
 import time
@@ -9,8 +8,10 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-import astral
-from astral import sun
+#import astral
+#from astral import sun
+#from astral import sun, LocationInfo
+import astral as astral
 import clearsky
 
 from exceptions import AbnormalCompletion
