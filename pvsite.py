@@ -90,8 +90,8 @@ class PVSite():
 
     async def start(self):
         """Initialize the PVSite object."""
-        self.irradiance_today()
-        return False
+        #self.irradiance_today()
+        #return False
 
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
@@ -155,8 +155,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 2},     # night (5 minute samples)
-            {'scale': 1},      # day (5 second samples)
+            {'scale': 60},     # night (5 minute samples)
+            {'scale': 2},      # day (5 second samples)
         ]
         while True:
             now = astral.sun.now(tzinfo=self._tzinfo)
@@ -192,25 +192,34 @@ class PVSite():
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            self.solar_data_update()
-            await self.update_total_production()
+            await asyncio.gather(
+                self.solar_data_update(),
+                self.update_total_production(),
+            )
+            influxdb.write_points(self.irradiance_today())
             influxdb.write_history(await self.get_yesterday_production())
 
     def irradiance_today(self):
         # Create location object to store lat, lon, timezone
         site = clearsky.site_location(SITE_LATITUDE, SITE_LONGITUDE, tz=TIMEZONE)
-
-        #astral_now = astral.sun.now(tzinfo=self._tzinfo)
-        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        ### edit me
+        #self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        #self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         dawn = self._dawn
         dusk = self._dusk + datetime.timedelta(minutes=10)
         start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
         stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
 
-        # Get irradiance data for today
+        # Get irradiance data for today and convert to InfluxDB line protocol
         irradiance = clearsky.get_irradiance(site=site, start=start.strftime("%Y-%m-%d %H:%M:00"), end=stop.strftime("%Y-%m-%d %H:%M:00"), tilt=SITE_TILT, azimuth=SITE_AZIMUTH, freq='10min')
-        pprint(irradiance)
+        lp_points = []
+        for point in irradiance:
+            t = point['t']
+            v = point['v'] * SITE_PANEL_AREA * SITE_PANEL_EFFICIENCY
+            lp = f'prediction,inverter="site" production={round(v, 1)} {t}'
+            lp_points.append(lp)
+        #pprint(lp_points)
+        return lp_points
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
