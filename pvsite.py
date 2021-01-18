@@ -8,10 +8,8 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-#import astral
-#from astral import sun
-#from astral import sun, LocationInfo
-import astral as astral
+import astral
+from astral import sun
 import clearsky
 
 from exceptions import AbnormalCompletion
@@ -145,7 +143,7 @@ class PVSite():
         solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._solar_time_diff = solar_noon - local_noon
 
-        astral_now = astral.sun.now(tzinfo=self._tzinfo)
+        astral_now = astral.now(tzinfo=self._tzinfo)
         self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._daylight = self._dawn < astral_now < self._dusk
@@ -160,7 +158,7 @@ class PVSite():
             {'scale': 2},      # day (5 second samples)
         ]
         while True:
-            now = astral.sun.now(tzinfo=self._tzinfo)
+            now = astral.now(tzinfo=self._tzinfo)
             dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
             dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
             if now < dawn:
