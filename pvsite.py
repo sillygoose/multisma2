@@ -8,8 +8,9 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-import astral
-from astral import sun
+from astral.sun import midnight, sun
+from astral import LocationInfo, now
+
 import clearsky
 
 from exceptions import AbnormalCompletion
@@ -84,13 +85,16 @@ class PVSite():
         self._task_gather = None
         self._dawn = None
         self._dusk = None
-        self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
+        self._siteinfo = LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
 
     async def start(self):
         """Initialize the PVSite object."""
         #self.irradiance_today()
         #return False
+        #await self.solar_data_update()
+        #await self.midnight()
+        #await self.daylight()
 
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
@@ -138,18 +142,15 @@ class PVSite():
  
     async def solar_data_update(self) -> None:
         """Update the sun data used to sequence operaton."""
-        now = datetime.datetime.now()
-        local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
-        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._solar_time_diff = solar_noon - local_noon
-
-        astral_now = astral.now(tzinfo=self._tzinfo)
-        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        astral_now = now(tzinfo=self._tzinfo)
+        astral = sun(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._dawn = astral['dawn']
+        self._dusk = astral['dusk']
         self._daylight = self._dawn < astral_now < self._dusk
-
-        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
-            f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {day_of_year()} day of {now.year}")
+        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
+            f"noon is at {astral['noon'].strftime('%H:%M')}, "
+            f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
+            f"on this {day_of_year()} day of {astral_now.year}")
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
@@ -158,24 +159,17 @@ class PVSite():
             {'scale': 2},      # day (5 second samples)
         ]
         while True:
-            now = astral.now(tzinfo=self._tzinfo)
-            dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-            dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-            if now < dawn:
-                self._daylight = False
-                next_event = dawn - now
-                #logger.info(f"Good morning, waiting for the sun to come up")
-            elif now > dusk:
-                self._daylight = False
-                tomorrow = now + datetime.timedelta(days=1)
-                dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
-                dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
-                next_event = dawn - now
-                #logger.info(f"Good evening, waiting for the sun to come up in the morning")
+            astral_now = now(tzinfo=self._tzinfo)
+            self._daylight = False
+            if astral_now < self._dawn:
+                next_event = self._dawn - astral_now
+            elif astral_now > self._dusk:
+                tomorrow = astral_now + datetime.timedelta(days=1)
+                astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+                next_event = astral['dawn'] - astral_now
             else:
                 self._daylight = True
-                next_event = dusk - now
-                #logger.info(f"Good day, enjoy the daylight")
+                next_event = self._dusk - astral_now
 
             self._scaling = SAMPLE_PERIOD[self.is_daylight()].get('scale')
 
