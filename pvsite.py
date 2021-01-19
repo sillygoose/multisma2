@@ -1,6 +1,5 @@
 """Code to interface with the SMA inverters and return the results."""
 
-import sys
 import asyncio
 import datetime
 import time
@@ -420,6 +419,7 @@ class PVSite():
             for inverter in results:
                 name = inverter.get('name')
                 result = inverter.get(key)
+                if not result: continue
                 val = result.get('val', None)
                 unit = result.get('unit', None)
                 precision = result.get('precision', None)

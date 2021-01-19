@@ -80,6 +80,7 @@ class Inverter:
         """Clean the raw inverter data and return a dict with the key and result."""
         cleaned = {}
         for key, value in raw_results.items():
+            if not value: continue
             aggregate = Inverter.AGGREGATE_KEYS.count(key)
             sma_type = self.get_type(key)
             scale = self.get_scale(key)
@@ -170,6 +171,14 @@ class Inverter:
     def name(self):
         """Return the inverter name."""
         return self._name
+
+    async def keys_for_unit(self, unit_tag):
+        keys = []
+        for key, metadata in self._metadata.items():
+            unit = metadata.get('Unit', None)
+            if unit == unit_tag:
+                keys.append(key)
+        return keys
 
     def get_unit(self, key):
         """Return the unit used for a given key."""
