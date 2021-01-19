@@ -37,7 +37,7 @@ class Inverter:
         if self._sma.sma_sid is None:
             logger.info(f"{self._name} - no session ID")
             return None
-        #logger.info(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        #logger.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
         # Grab the metadata dictionary
         metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
@@ -84,8 +84,8 @@ class Inverter:
             aggregate = Inverter.AGGREGATE_KEYS.count(key)
             sma_type = self.get_type(key)
             scale = self.get_scale(key)
-            unit = self.get_unit(key)
-            precision = self.get_precision(key)
+            #unit = self.get_unit(key)
+            #precision = self.get_precision(key)
             states = value.pop('1', None)
             if sma_type == 0:
                 sensors = {}
@@ -105,7 +105,7 @@ class Inverter:
                     if aggregate:
                         sensors[self.name()] = total
                     val = sensors
-                cleaned[key] = {'val': val, 'unit': unit, 'precision': precision}
+                cleaned[key] = {'val': val} ###, 'unit': unit, 'precision': precision}
             elif sma_type == 1:
                 for state in states:
                     tag_list = state.get('val')
@@ -139,12 +139,8 @@ class Inverter:
         one_hour = 60 * 60 * 1
         three_hours = 60 * 60 * 3
         today_start = int(datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)).timestamp())
-        month_start = int(
-            datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp()
-        )
-        year_start = int(
-            datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp()
-        )
+        month_start = int(datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp())
+        year_start = int(datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp())
         results = await asyncio.gather(
             self.read_history(today_start - one_hour, today_start + three_hours),
             self.read_history(month_start - one_hour, today_start),
@@ -154,6 +150,11 @@ class Inverter:
         self._history['month'] = results[1][1]
         self._history['year'] = results[2][1]
         self._history['lifetime'] = {'t': 0, 'v': 0}
+        #{'today': {'t': 1611032400, 'v': 3121525},
+        # 'month': {'t': 1609477200, 'v': 3055878},
+        # 'year': {'t': 1609477200, 'v': 3055878},
+        # 'lifetime': {'t': 0, 'v': 0}}
+        logger.debug(f"{self._name}/read_inverter_production()/_history: {self._history}")
 
     def display_metadata(self, key):
         """Display the inverter metadata for a key."""

@@ -195,6 +195,7 @@ class PVSite():
 
             # Update internal sun info and the daily production
             self.solar_data_update()
+            await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
             influxdb.write_history(await self.get_yesterday_production())
 
@@ -296,12 +297,14 @@ class PVSite():
         production.append(site_total)
         return production
 
-    async def update_total_production(self):
+    async def update_total_production(self) -> None:
         """Get the daily, monthly, yearly, and lifetime production values."""
-        total_production_list = await self.total_production()
-        raw_stats = []
-        for total_production in total_production_list:
-            unit = total_production.pop('unit')
+        total_productions = await self.total_production()
+        #[{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total'}]
+        #logger.debug(f"total_productions: {total_productions}")
+        updated_total_production = []
+        for total_production in total_productions:
+            #unit = total_production.pop('unit', None)
             for period in ['today', 'month', 'year', 'lifetime']:
                 period_stats = {}
                 inverter_periods = await asyncio.gather(
@@ -317,12 +320,16 @@ class PVSite():
 
                     period_stats['site'] = total
                     period_stats['period'] = period
-                    period_stats['unit'] = unit
+                    #period_stats['unit'] = unit ###
 
-                raw_stats.append(period_stats)
+                updated_total_production.append(period_stats)
 
-        self._total_production = raw_stats
-        return raw_stats
+        logger.debug(f"update_total_production()/updated_total_production: {updated_total_production}")
+        #[{'sb71': 157, 'site': 442, 'period': 'today', 'sb72': 176, 'sb51': 109},
+        # {'sb71': 97028, 'site': 260611, 'period': 'month', 'sb72': 97827, 'sb51': 65756},
+        # {'sb71': 97028, 'site': 260611, 'period': 'year', 'sb72': 97827, 'sb51': 65756},
+        # {'sb71': 4376363, 'site': 11864551, 'period': 'lifetime', 'sb72': 4366554, 'sb51': 3121634}]
+        self._total_production = updated_total_production
 
     async def production_history(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
@@ -338,16 +345,21 @@ class PVSite():
             settings = PRODUCTION_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop('period')
-            tp.pop('unit')
+            tp.pop('unit', None)    ###
             history = {}
             for key, value in tp.items():
                 production = value * settings['scale']
                 history[key] = round(production, settings['precision']) if settings['precision'] else int(production)
 
             history['topic'] = 'production/' + period
-            history['unit'] = settings['unit']
+            #history['unit'] = settings['unit']
             histories.append(history)
 
+        logger.debug(f"production_history()/histories: {histories}")
+        #[{'sb71': 0.21, 'site': 0.6, 'sb72': 0.24, 'sb51': 0.15, 'topic': 'production/today'},
+        # {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/month'},
+        # {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},
+        # {'sb71': 4376, 'site': 11864, 'sb72': 4366, 'sb51': 3121, 'topic': 'production/lifetime'}]
         return histories
 
     async def co2_avoided(self):
@@ -366,14 +378,14 @@ class PVSite():
             settings = CO2_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop('period')
-            tp.pop('unit')
+            tp.pop('unit', None)
             co2avoided_period = {}
             for key, value in tp.items():
                 co2 = value * settings['scale'] * settings['factor']
                 co2avoided_period[key] = round(co2, settings['precision']) if settings['precision'] else int(co2)
 
             co2avoided_period['topic'] = 'co2avoided/' + period
-            co2avoided_period['unit'] = settings['unit']
+            #co2avoided_period['unit'] = settings['unit']
             co2avoided_period['factor'] = settings['factor']
             co2avoided.append(co2avoided_period)
 
@@ -431,7 +443,7 @@ class PVSite():
                     if calculate_total:
                         total += val
 
-                if unit: composite['unit'] = unit
+                if unit: composite['unit'] = unit   ###
                 if precision is not None: composite['precision'] = precision
                 composite[name] = val
 
