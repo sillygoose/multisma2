@@ -27,7 +27,7 @@ LP_LOOKUP = {
     'status/grid_relay': {'measurement': 'status', 'field': 'grid_relay'},
     'status/condition': {'measurement': 'status', 'field': 'condition'},
     'production/total': {'measurement': 'production', 'field': 'total'},
-    'production/daily_total': {'measurement': 'production', 'field': 'daily_total'},
+    'production/today': {'measurement': 'production', 'field': 'today'},
 }
 
 
@@ -66,11 +66,11 @@ class InfluxDB():
             result = False
         return result
 
-    def write_history(self, site):
+    def write_history(self, site, topic):
         if not self._client:
             return False
 
-        lookup = LP_LOOKUP.get('production/daily_total')
+        lookup = LP_LOOKUP.get('topic')
         measurement = lookup.get('measurement')
         field = lookup.get('field')
         lps = []

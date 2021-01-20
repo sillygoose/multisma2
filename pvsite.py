@@ -149,7 +149,7 @@ class PVSite():
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
             {'scale': 60},     # night (60 is 5 minute samples)
-            {'scale': 2},      # day (1 is 5 second samples)
+            {'scale': 1},      # day (1 is 5 second samples)
         ]
         while True:
             astral_now = now(tzinfo=self._tzinfo)
@@ -183,7 +183,7 @@ class PVSite():
                 self.update_total_production(),
             )
             influxdb.write_points(self.irradiance_today())
-            influxdb.write_history(await self.get_yesterday_production())
+            influxdb.write_history(await self.get_yesterday_production(), 'production/today')
 
     def irradiance_today(self):
         # Create location object to store lat, lon, timezone
@@ -243,7 +243,6 @@ class PVSite():
             await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
-                self.production_history(),
                 self.inverter_efficiency(),
             )
             for sensor in sensors:
@@ -255,6 +254,7 @@ class PVSite():
             await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
+                self.production_history(),
                 self.co2_avoided(),
             )
             for sensor in sensors:
@@ -265,6 +265,12 @@ class PVSite():
         while True:
             await queue.get()
             queue.task_done()
+            sensors = await asyncio.gather(
+                self.total_production(),
+            )
+            for sensor in sensors:
+                mqtt.publish(sensor)
+                influxdb.write_sma_sensors(sensor)
 
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
