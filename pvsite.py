@@ -8,12 +8,11 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-from astral.sun import midnight, sun
+from astral.sun import sun
 from astral import LocationInfo, now
 
 import clearsky
 
-from exceptions import AbnormalCompletion
 from inverter import Inverter
 from influx import InfluxDB
 import mqtt
@@ -90,12 +89,6 @@ class PVSite():
 
     async def start(self):
         """Initialize the PVSite object."""
-        #self.irradiance_today()
-        #return False
-        #await self.solar_data_update()
-        #await self.midnight()
-        #await self.daylight()
-
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
 
@@ -155,8 +148,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 60},     # night (5 minute samples)
-            {'scale': 2},      # day (5 second samples)
+            {'scale': 60},     # night (60 is 5 minute samples)
+            {'scale': 2},      # day (1 is 5 second samples)
         ]
         while True:
             astral_now = now(tzinfo=self._tzinfo)
@@ -195,9 +188,6 @@ class PVSite():
     def irradiance_today(self):
         # Create location object to store lat, lon, timezone
         site = clearsky.site_location(SITE_LATITUDE, SITE_LONGITUDE, tz=TIMEZONE)
-        ### edit me
-        #self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        #self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         dawn = self._dawn
         dusk = self._dusk + datetime.timedelta(minutes=10)
         start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
@@ -211,7 +201,6 @@ class PVSite():
             v = point['v'] * SITE_PANEL_AREA * SITE_PANEL_EFFICIENCY
             lp = f'prediction,inverter="site" production={round(v, 1)} {t}'
             lp_points.append(lp)
-        #pprint(lp_points)
         return lp_points
 
     async def scheduler(self, queues):

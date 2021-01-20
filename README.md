@@ -33,6 +33,7 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - python-dateutil
     - jmespath
     - influxdb
+    - pvlib (which requires pandas, numpy. scipy, and tables)
 - SMA Sunny Boy inverter(s) supporting WebConnect
 - Docker (a Dockerfile is supplied to allow running in a Docker container)
 
@@ -76,3 +77,4 @@ At night these updates based on the settings in `pvsite.py`:
     ]
 ```
 
+![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb-dashboard.jpg)
