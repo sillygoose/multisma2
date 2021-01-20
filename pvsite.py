@@ -157,7 +157,7 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 2},     # night (5 minute samples)
+            {'scale': 30},     # night (5 minute samples)
             {'scale': 2},      # day (5 second samples)
         ]
         while True:
