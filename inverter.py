@@ -105,7 +105,7 @@ class Inverter:
                     if aggregate:
                         sensors[self.name()] = total
                     val = sensors
-                cleaned[key] = {'val': val} ###, 'unit': unit, 'precision': precision}
+                cleaned[key] = {'val': val}
             elif sma_type == 1:
                 for state in states:
                     tag_list = state.get('val')

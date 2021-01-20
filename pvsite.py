@@ -157,8 +157,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 60},     # night (5 minute samples)
-            {'scale': 1},      # day (5 second samples)
+            {'scale': 2},     # night (5 minute samples)
+            {'scale': 2},      # day (5 second samples)
         ]
         while True:
             now = astral.sun.now(tzinfo=self._tzinfo)
@@ -167,18 +167,15 @@ class PVSite():
             if now < dawn:
                 self._daylight = False
                 next_event = dawn - now
-                #logger.info(f"Good morning, waiting for the sun to come up")
             elif now > dusk:
                 self._daylight = False
                 tomorrow = now + datetime.timedelta(days=1)
                 dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
                 dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
                 next_event = dawn - now
-                #logger.info(f"Good evening, waiting for the sun to come up in the morning")
             else:
                 self._daylight = True
                 next_event = dusk - now
-                #logger.info(f"Good day, enjoy the daylight")
 
             self._scaling = SAMPLE_PERIOD[self.is_daylight()].get('scale')
 
@@ -198,6 +195,7 @@ class PVSite():
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
             influxdb.write_history(await self.get_yesterday_production())
+            mqtt.publish(await self.production_history())
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -304,7 +302,6 @@ class PVSite():
         #logger.debug(f"total_productions: {total_productions}")
         updated_total_production = []
         for total_production in total_productions:
-            #unit = total_production.pop('unit', None)
             for period in ['today', 'month', 'year', 'lifetime']:
                 period_stats = {}
                 inverter_periods = await asyncio.gather(
@@ -320,7 +317,6 @@ class PVSite():
 
                     period_stats['site'] = total
                     period_stats['period'] = period
-                    #period_stats['unit'] = unit ###
 
                 updated_total_production.append(period_stats)
 
@@ -345,14 +341,12 @@ class PVSite():
             settings = PRODUCTION_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop('period')
-            tp.pop('unit', None)    ###
             history = {}
             for key, value in tp.items():
                 production = value * settings['scale']
                 history[key] = round(production, settings['precision']) if settings['precision'] else int(production)
 
             history['topic'] = 'production/' + period
-            #history['unit'] = settings['unit']
             histories.append(history)
 
         logger.debug(f"production_history()/histories: {histories}")
@@ -378,14 +372,12 @@ class PVSite():
             settings = CO2_SETTINGS.get(period)
             tp = self.find_total_production(period)
             period = tp.pop('period')
-            tp.pop('unit', None)
             co2avoided_period = {}
             for key, value in tp.items():
                 co2 = value * settings['scale'] * settings['factor']
                 co2avoided_period[key] = round(co2, settings['precision']) if settings['precision'] else int(co2)
 
             co2avoided_period['topic'] = 'co2avoided/' + period
-            #co2avoided_period['unit'] = settings['unit']
             co2avoided_period['factor'] = settings['factor']
             co2avoided.append(co2avoided_period)
 
@@ -397,7 +389,7 @@ class PVSite():
         ac_power = (await self.get_composite(["6100_40263F00"]))[0]
         efficiencies = {}
         for k, v in ac_power.items():
-            if k in ['unit', 'precision', 'topic']: continue
+            if k in ['precision', 'topic']: continue
             dc = dc_power.get(k)
             denom = dc.get(k) if isinstance(dc, dict) else dc
             efficiencies[k] = 0.0 if denom == 0 else round((float(v) / denom) * 100, 2)
@@ -433,7 +425,6 @@ class PVSite():
                 result = inverter.get(key)
                 if not result: continue
                 val = result.get('val', None)
-                unit = result.get('unit', None)
                 precision = result.get('precision', None)
                 if isinstance(val, dict):
                     if calculate_total:
@@ -443,7 +434,6 @@ class PVSite():
                     if calculate_total:
                         total += val
 
-                if unit: composite['unit'] = unit   ###
                 if precision is not None: composite['precision'] = precision
                 composite[name] = val
 

@@ -90,7 +90,6 @@ class InfluxDB():
         for old_point in sensors:
             point = old_point.copy()
             topic = point.pop('topic', None)
-            point.pop('unit', None)
             point.pop('precision', None)
             if topic:
                 lookup = LP_LOOKUP.get(topic, None)
