@@ -109,19 +109,19 @@ class PVSite():
         )
 
         queues = {
-            '5s': asyncio.Queue(),
-            '15s': asyncio.Queue(),
+            '10s': asyncio.Queue(),
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
+            '300s': asyncio.Queue(),
         }
         self._task_gather = asyncio.gather(
                 self.daylight(),
                 self.midnight(),
                 self.scheduler(queues),
-                self.task_5s(queues.get('5s')),
-                self.task_15s(queues.get('15s')),
+                self.task_10s(queues.get('10s')),
                 self.task_30s(queues.get('30s')),
                 self.task_60s(queues.get('60s')),
+                self.task_300s(queues.get('300s')),
         )
         await self._task_gather
 
@@ -148,8 +148,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 60},     # night (60 is 5 minute samples)
-            {'scale': 1},      # day (1 is 5 second samples)
+            {'scale': 30},     # night (30 is 5 minute samples)
+            {'scale': 1},      # day (1 is 10 second samples)
         ]
         while True:
             astral_now = now(tzinfo=self._tzinfo)
@@ -211,22 +211,22 @@ class PVSite():
             tick = int(time.time()) / self._scaling
             if tick != last_tick:
                 last_tick = tick
-                if tick % 5 == 0:
+                if tick % 10 == 0:
                     await asyncio.gather(
                         self.update_instantaneous(),
                         self.update_total_production(),
                     )
-                    queues.get('5s').put_nowait(tick)
-                if tick % 15 == 0:
-                    queues.get('15s').put_nowait(tick)
+                    queues.get('10s').put_nowait(tick)
                 if tick % 30 == 0:
                     queues.get('30s').put_nowait(tick)
                 if tick % 60 == 0:
                     queues.get('60s').put_nowait(tick)
+                if tick % 300 == 0:
+                    queues.get('300s').put_nowait(tick)
             await asyncio.sleep(SLEEP)
 
-    async def task_5s(self, queue):
-        """Work done every 5 seconds."""
+    async def task_10s(self, queue):
+        """Work done every 10 seconds."""
         while True:
             await queue.get()
             queue.task_done()
@@ -237,25 +237,13 @@ class PVSite():
                 mqtt.publish(sensor)
                 influxdb.write_sma_sensors(sensor)
 
-    async def task_15s(self, queue):
-        """Work done every 15 seconds."""
-        while True:
-            await queue.get()
-            queue.task_done()
-            sensors = await asyncio.gather(
-                self.inverter_efficiency(),
-            )
-            for sensor in sensors:
-                mqtt.publish(sensor)
-
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
             await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
-                self.production_history(),
-                self.co2_avoided(),
+                self.inverter_efficiency(),
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
@@ -266,10 +254,21 @@ class PVSite():
             await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
-                self.total_production(),
+                self.production_history(),
+                self.co2_avoided(),
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
+
+    async def task_300s(self, queue):
+        """Work done every 300 seconds (5 minutes)."""
+        while True:
+            await queue.get()
+            queue.task_done()
+            sensors = await asyncio.gather(
+                self.total_production(),
+            )
+            for sensor in sensors:
                 influxdb.write_sma_sensors(sensor)
 
     async def update_instantaneous(self):
