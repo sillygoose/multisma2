@@ -8,15 +8,18 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-import astral
-from astral import sun
+from astral.sun import sun
+from astral import LocationInfo, now
 
-from exceptions import AbnormalCompletion
+import clearsky
+
 from inverter import Inverter
 from influx import InfluxDB
 import mqtt
 
 from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
+from configuration import SITE_PANEL_AREA, SITE_PANEL_EFFICIENCY, SITE_AZIMUTH, SITE_TILT
+
 from configuration import CO2_AVOIDANCE
 from configuration import INVERTERS
 from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT, INFLUXDB_USERNAME, INFLUXDB_PASSWORD
@@ -24,6 +27,8 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+
+influxdb = InfluxDB(INFLUXDB_ENABLE)
 
 
 # Unlisted topics will use the key as the MQTT topic name
@@ -64,31 +69,31 @@ SITE_SNAPSHOT = [
     '6180_08414C00',    # Status: Condition
 ]
 
-influxdb = InfluxDB(INFLUXDB_ENABLE)
-
 
 class PVSite():
     """Class to describe a PV site with one or more inverters."""
     def __init__(self, session):
         """Create a new PVSite object."""
         self._inverters = []
+        self._session = session
         self._tasks = None
         self._total_production = None
         self._cached_keys = []
         self._scaling = 1
+        self._daylight = None
         self._task_gather = None
-
-        for inverter in INVERTERS:
-            self._inverters.append(Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], session))
-
-        self._siteinfo = astral.LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
+        self._dawn = None
+        self._dusk = None
+        self._siteinfo = LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
         self._tzinfo = tz.gettz(TIMEZONE)
 
     async def start(self):
         """Initialize the PVSite object."""
         if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
         if not mqtt.start(): return False
-        self.solar_data_update()
+
+        for inverter in INVERTERS:
+            self._inverters.append(Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], self._session))
 
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         if None in cached_keys: return False
@@ -98,24 +103,25 @@ class PVSite():
     async def run(self):
         """Run the site and wait for an event to exit."""
         await asyncio.gather(
+            self.solar_data_update(),
             self.update_instantaneous(),
             self.update_total_production(),
         )
 
         queues = {
-            '5s': asyncio.Queue(),
-            '15s': asyncio.Queue(),
+            '10s': asyncio.Queue(),
             '30s': asyncio.Queue(),
             '60s': asyncio.Queue(),
+            '300s': asyncio.Queue(),
         }
         self._task_gather = asyncio.gather(
                 self.daylight(),
                 self.midnight(),
                 self.scheduler(queues),
-                self.task_5s(queues.get('5s')),
-                self.task_15s(queues.get('15s')),
+                self.task_10s(queues.get('10s')),
                 self.task_30s(queues.get('30s')),
                 self.task_60s(queues.get('60s')),
+                self.task_300s(queues.get('300s')),
         )
         await self._task_gather
 
@@ -127,55 +133,36 @@ class PVSite():
         await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
         influxdb.stop()
  
-    def solar_data_update(self) -> None:
+    async def solar_data_update(self) -> None:
         """Update the sun data used to sequence operaton."""
-        now = datetime.datetime.now()
-        local_noon = datetime.datetime.combine(now.date(), datetime.time(12, 0), tzinfo=self._tzinfo)
-        solar_noon = astral.sun.noon(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._solar_time_diff = solar_noon - local_noon
-
-        now = astral.sun.now(tzinfo=self._tzinfo)
-        self._dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-        self._daylight = self._dawn < now < self._dusk
-
-        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')} "
-            f"and dusk occurs at {self._dusk.strftime('%H:%M')} on this {self.day_of_year(True)}")
-
-    def is_daylight(self) -> bool:
-        return self._daylight
-        
-    def day_of_year(self, full_string: True):
-        now = datetime.datetime.now()
-        doy = int(now.strftime('%j'))
-        if not full_string:
-            return doy
-        year = now.strftime('%Y')
-        suffixes = ['st', 'nd', 'rd', 'th']
-        return str(doy) + suffixes[3 if doy >= 4 else doy-1] + ' day of ' + str(year)
+        astral_now = now(tzinfo=self._tzinfo)
+        astral = sun(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+        self._dawn = astral['dawn']
+        self._dusk = astral['dusk']
+        self._daylight = self._dawn < astral_now < self._dusk
+        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
+            f"noon is at {astral['noon'].strftime('%H:%M')}, "
+            f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
+            f"on this {day_of_year()} day of {astral_now.year}")
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 30},     # night (5 minute samples)
-            {'scale': 2},      # day (5 second samples)
+            {'scale': 30},     # night (30 is 5 minute samples)
+            {'scale': 1},      # day (1 is 10 second samples)
         ]
         while True:
-            now = astral.sun.now(tzinfo=self._tzinfo)
-            dawn = astral.sun.dawn(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-            dusk = astral.sun.dusk(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
-            if now < dawn:
-                self._daylight = False
-                next_event = dawn - now
-            elif now > dusk:
-                self._daylight = False
-                tomorrow = now + datetime.timedelta(days=1)
-                dawn = astral.sun.dawn(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
-                dusk = astral.sun.dusk(observer=self._siteinfo.observer, date=tomorrow.date(), tzinfo=self._tzinfo)
-                next_event = dawn - now
+            astral_now = now(tzinfo=self._tzinfo)
+            self._daylight = False
+            if astral_now < self._dawn:
+                next_event = self._dawn - astral_now
+            elif astral_now > self._dusk:
+                tomorrow = astral_now + datetime.timedelta(days=1)
+                astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
+                next_event = astral['dawn'] - astral_now
             else:
                 self._daylight = True
-                next_event = dusk - now
+                next_event = self._dusk - astral_now
 
             self._scaling = SAMPLE_PERIOD[self.is_daylight()].get('scale')
 
@@ -191,11 +178,29 @@ class PVSite():
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            self.solar_data_update()
+            await self.solar_data_update(),
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            await self.update_total_production()
-            influxdb.write_history(await self.get_yesterday_production())
-            mqtt.publish(await self.production_history())
+            await self.update_total_production(),
+            influxdb.write_points(self.irradiance_today())
+            influxdb.write_history(await self.get_yesterday_production(), 'production/today')
+
+    def irradiance_today(self):
+        # Create location object to store lat, lon, timezone
+        site = clearsky.site_location(SITE_LATITUDE, SITE_LONGITUDE, tz=TIMEZONE)
+        dawn = self._dawn
+        dusk = self._dusk + datetime.timedelta(minutes=10)
+        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
+        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
+
+        # Get irradiance data for today and convert to InfluxDB line protocol
+        irradiance = clearsky.get_irradiance(site=site, start=start.strftime("%Y-%m-%d %H:%M:00"), end=stop.strftime("%Y-%m-%d %H:%M:00"), tilt=SITE_TILT, azimuth=SITE_AZIMUTH, freq='10min')
+        lp_points = []
+        for point in irradiance:
+            t = point['t']
+            v = point['v'] * SITE_PANEL_AREA * SITE_PANEL_EFFICIENCY
+            lp = f'production,inverter="site" irradiance={round(v, 1)} {t}'
+            lp_points.append(lp)
+        return lp_points
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -205,60 +210,65 @@ class PVSite():
             tick = int(time.time()) / self._scaling
             if tick != last_tick:
                 last_tick = tick
-                if tick % 5 == 0:
+                if tick % 10 == 0:
                     await asyncio.gather(
                         self.update_instantaneous(),
                         self.update_total_production(),
                     )
-                    queues.get('5s').put_nowait(tick)
-                if tick % 15 == 0:
-                    queues.get('15s').put_nowait(tick)
+                    queues.get('10s').put_nowait(tick)
                 if tick % 30 == 0:
                     queues.get('30s').put_nowait(tick)
                 if tick % 60 == 0:
                     queues.get('60s').put_nowait(tick)
+                if tick % 300 == 0:
+                    queues.get('300s').put_nowait(tick)
             await asyncio.sleep(SLEEP)
 
-    async def task_5s(self, queue):
-        """Work done every 5 seconds."""
+    async def task_10s(self, queue):
+        """Work done every 10 seconds."""
         while True:
             await queue.get()
             queue.task_done()
-            results = await asyncio.gather(
+            sensors = await asyncio.gather(
                 self.snapshot(),
             )
-            for result in results:
-                mqtt.publish(result)
-                influxdb.write_points(result)
-
-    async def task_15s(self, queue):
-        """Work done every 15 seconds."""
-        while True:
-            await queue.get()
-            queue.task_done()
-            results = await asyncio.gather(
-                self.production_history(),
-                self.inverter_efficiency(),
-            )
-            for result in results:
-                mqtt.publish(result)
+            for sensor in sensors:
+                mqtt.publish(sensor)
+                influxdb.write_sma_sensors(sensor)
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
         while True:
             await queue.get()
             queue.task_done()
-            results = await asyncio.gather(
-                self.co2_avoided(),
+            sensors = await asyncio.gather(
+                self.inverter_efficiency(),
             )
-            for result in results:
-                mqtt.publish(result)
+            for sensor in sensors:
+                mqtt.publish(sensor)
 
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
             await queue.get()
             queue.task_done()
+            sensors = await asyncio.gather(
+                self.production_history(),
+                self.co2_avoided(),
+            )
+            for sensor in sensors:
+                mqtt.publish(sensor)
+
+    async def task_300s(self, queue):
+        """Work done every 300 seconds (5 minutes)."""
+        while True:
+            await queue.get()
+            queue.task_done()
+            sensors = await asyncio.gather(
+                self.total_production(),
+            )
+            for sensor in sensors:
+                influxdb.write_sma_sensors(sensor)
 
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
@@ -454,3 +464,14 @@ class PVSite():
             if d_period.get('period') is period:
                 return d_period.copy()
         return None
+
+    def is_daylight(self) -> bool:
+        """FCurrent if currently in daylight conditions."""
+        return self._daylight
+
+
+def day_of_year() -> str:
+    """Return the DOY in a pretty form for logging."""
+    doy = int(datetime.datetime.now().strftime('%j'))
+    suffixes = ['st', 'nd', 'rd', 'th']
+    return f"{doy}{suffixes[3 if doy >= 4 else doy-1]}"

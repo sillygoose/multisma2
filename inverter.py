@@ -12,6 +12,11 @@ from configuration import APPLICATION_LOG_LOGGER_NAME
 
 logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 
+# Inverter keys that contain aggregates
+AGGREGATE_KEYS = [
+    '6380_40251E00',  # DC Power (current power)
+]
+
 
 class Inverter:
     """Class to encapsulate a single inverter."""
@@ -69,23 +74,17 @@ class Inverter:
         async with self._lock:
             self._instantaneous = await self._sma.read_instantaneous()
             if self._instantaneous is None:
-                logger.info(f"Retrying 'read_instantaneous()' to create a new session")
+                #logger.info(f"Retrying 'read_instantaneous()' to create a new session")
                 self._instantaneous = await self._sma.read_instantaneous()
-
-    AGGREGATE_KEYS = [
-        '6380_40251E00',  # DC Power (current power)
-    ]
 
     def clean(self, raw_results):
         """Clean the raw inverter data and return a dict with the key and result."""
         cleaned = {}
         for key, value in raw_results.items():
             if not value: continue
-            aggregate = Inverter.AGGREGATE_KEYS.count(key)
+            aggregate = AGGREGATE_KEYS.count(key)
             sma_type = self.get_type(key)
             scale = self.get_scale(key)
-            #unit = self.get_unit(key)
-            #precision = self.get_precision(key)
             states = value.pop('1', None)
             if sma_type == 0:
                 sensors = {}

@@ -27,7 +27,7 @@ LP_LOOKUP = {
     'status/grid_relay': {'measurement': 'status', 'field': 'grid_relay'},
     'status/condition': {'measurement': 'status', 'field': 'condition'},
     'production/total': {'measurement': 'production', 'field': 'total'},
-    'production/daily_total': {'measurement': 'production', 'field': 'daily_total'},
+    'production/today': {'measurement': 'production', 'field': 'today'},
 }
 
 
@@ -56,11 +56,22 @@ class InfluxDB():
 
     cache = {}
 
-    def write_history(self, site):
+    def write_points(self, points):
+        if not self._client:
+            return False
+        try:
+            result = self._client.write_points(points=points, time_precision='s', protocol='line')
+        except (InfluxDBClientError, InfluxDBServerError):
+            logger.error(f"Database write_points() call failed in write_points()")
+            result = False
+        return result
+
+    def write_history(self, site, topic):
         if not self._client:
             return False
 
-        lookup = LP_LOOKUP.get('production/daily_total')
+        lookup = LP_LOOKUP.get(topic, None)
+        if not lookup: return False
         measurement = lookup.get('measurement')
         field = lookup.get('field')
         lps = []
@@ -77,11 +88,11 @@ class InfluxDB():
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
         except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_history() call failed")
+            logger.error(f"Database write_points() call failed in write_history()")
             result = False
         return result
 
-    def write_points(self, sensors):
+    def write_sma_sensors(self, sensors):
         if not self._client:
             return False
 
@@ -135,6 +146,6 @@ class InfluxDB():
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
         except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_points() call failed")
+            logger.error(f"Database write_points() call failed in write_sma_sensors()")
             result = False
         return result
