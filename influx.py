@@ -82,8 +82,11 @@ class InfluxDB():
                 t = history['t']
                 v = history['v']
                 if isinstance(v, int):
-                    lp = f'{measurement},inverter={name} {field}={v} {t}'
+                    lp = f'{measurement},inverter={name} {field}={v}i {t}'
                     lps.append(lp)
+                else:
+                    logger.error(f"write_history(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
+                    continue
 
         try:
             result = self._client.write_points(points=lps, time_precision='s', protocol='line')
@@ -126,10 +129,10 @@ class InfluxDB():
                             if isinstance(v1, int):
                                 lp += f'{k1}={v1}i' if k1 != k else f'{field}={v1}i'
                             else:
-                                logger.error(f"Unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
+                                logger.error(f"rite_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
                             first = False
                     else:
-                        logger.error(f"Unanticipated type '{type(v)}' in field '{field}'")
+                        logger.error(f"write_sma_sensors(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
                         continue
 
                     # Check if in the cache, if not or different update cache and write
