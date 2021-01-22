@@ -19,7 +19,7 @@ multisma2 is driven by my desire to see what is happening in my ground mount sol
 
 I wanted a real-time dashboard in Home Assistant that displays both the site totals and the individual inverters so multisma2 is the result, building on the pysma project to log into each inverter and pull **ALL** the data in the *Instantaneous values* menu every 5 seconds from each inverter.  This is cached and you display selected outputs at various intervals (5s, 15s, 30s, and 60s) depending on your needs.  For example, I report the AC production, DC production (by inverter and string), and inverter status every five seconds.  Slower changing outputs such as total production occurs every 15 seconds, and reporting of the CO2 avoided occurs every 30 seconds.
 
-multisma2 is pretty complete for my purposes but there could be small improvements (right now I am thinking solar modelling so I can overlay the solar potential over my production graphs) and of course the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
+multisma2 is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
 
 ## Using multisma2
 A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup multisma2 to connect to your SMA inverters and MQTT broker. 
@@ -64,15 +64,15 @@ It maybe helpful to understand these quirks about multisma2:
 
 | Interval | Outputs |
 | --- | --------- |
-| 5s | AC production, DC production, inverter status |
-| 15s | Total production (today, month, year, lifetime) |
-| 30s | CO2 avoided |
-| 60s | Nothing for now |
+| 10s | AC production, DC production, inverter status |
+| 30s | Total production (today, month, year, lifetime) |
+| 60s | CO2 avoided |
+| 300s | Production total (Wh) |
 
 At night these updates based on the settings in `pvsite.py`: 
 ```
       SAMPLE_PERIOD = [
-        {"scale": 60},  # night
+        {"scale": 30},  # night
         {"scale": 1},   # day
     ]
 ```
