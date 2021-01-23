@@ -198,7 +198,7 @@ class PVSite():
         for point in irradiance:
             t = point['t']
             v = point['v'] * SITE_PANEL_AREA * SITE_PANEL_EFFICIENCY
-            lp = f'production,inverter="site" irradiance={round(v, 1)} {t}'
+            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
             lp_points.append(lp)
         return lp_points
 
