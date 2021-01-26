@@ -1816,7 +1816,7 @@
 				"name": "",
 				"queries": [
 					{
-						"query": "from(bucket: \"multisma2/autogen\")",
+						"query": "//from(bucket: \"multisma2/autogen\")",
 						"queryConfig": {
 							"database": "",
 							"measurement": "",
@@ -1828,7 +1828,7 @@
 								"tags": []
 							},
 							"areTagsAccepted": false,
-							"rawText": "from(bucket: \"multisma2/autogen\")",
+							"rawText": "//from(bucket: \"multisma2/autogen\")",
 							"range": null,
 							"shifts": null
 						},
@@ -2177,7 +2177,7 @@
 				"name": "Last 12 Months",
 				"queries": [
 					{
-						"query": "import \"system\"\nimport \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and (r._field == \"today\"))\n  |> filter(fn: (r) => r.inverter == \"site\")\n  |> filter(fn: (r) => (\n      (date.monthDay(t: r._time) == 1)\n    )\n  )\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      r with _value: float(v: r._value) / 1000.0\n    })\n  )",
+						"query": "import \"date\"\n\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\") and\n                        (date.monthDay(t: r._time) == 1)\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"past\")\n  \nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\" and date.monthDay(t: r._time) == 1))\n     \t\t)\n  |> last()\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"today\")\n  ",
 						"queryConfig": {
 							"database": "",
 							"measurement": "",
@@ -2189,7 +2189,7 @@
 								"tags": []
 							},
 							"areTagsAccepted": false,
-							"rawText": "import \"system\"\nimport \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and (r._field == \"today\"))\n  |> filter(fn: (r) => r.inverter == \"site\")\n  |> filter(fn: (r) => (\n      (date.monthDay(t: r._time) == 1)\n    )\n  )\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      r with _value: float(v: r._value) / 1000.0\n    })\n  )",
+							"rawText": "import \"date\"\n\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\") and\n                        (date.monthDay(t: r._time) == 1)\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"past\")\n  \nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\" and date.monthDay(t: r._time) == 1))\n     \t\t)\n  |> last()\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"today\")\n  ",
 							"range": null,
 							"shifts": null
 						},
@@ -2235,24 +2235,24 @@
 				"type": "bar",
 				"colors": [
 					{
-						"id": "3ba20ea5-0983-47c4-9ff4-c494f7d9ba60",
+						"id": "360f6cdc-65cc-4941-84b1-2999b6ca99b5",
 						"type": "scale",
-						"hex": "#DA6FF1",
-						"name": "Ectoplasm",
+						"hex": "#FD7A5D",
+						"name": "Delorean",
 						"value": "0"
 					},
 					{
-						"id": "40ce7adf-ebdf-4a9c-9775-4eb1bc6c2228",
+						"id": "06d4498d-8957-4deb-bc72-e89859875b71",
 						"type": "scale",
-						"hex": "#00717A",
-						"name": "Ectoplasm",
+						"hex": "#5F1CF2",
+						"name": "Delorean",
 						"value": "0"
 					},
 					{
-						"id": "831d2030-e8ac-403e-8d44-f943c4d60166",
+						"id": "66130e4d-9d4b-4bd0-8437-23e4073f162d",
 						"type": "scale",
-						"hex": "#ACFF76",
-						"name": "Ectoplasm",
+						"hex": "#4CE09A",
+						"name": "Delorean",
 						"value": "0"
 					}
 				],
@@ -2566,7 +2566,7 @@
 				"name": "Last 30 Days",
 				"queries": [
 					{
-						"query": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._field == \"today\")\n  |> filter(fn: (r) => r.inverter == \"site\")\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n  \tr with _value: float(v: r._value) / 1000.0\n   })\n  )",
+						"query": "import \"date\"\n\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\")\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"past\")\n  \nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\"))\n     \t\t)\n  |> last()\n    |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"today\")",
 						"queryConfig": {
 							"database": "",
 							"measurement": "",
@@ -2578,7 +2578,7 @@
 								"tags": []
 							},
 							"areTagsAccepted": false,
-							"rawText": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -30d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._field == \"today\")\n  |> filter(fn: (r) => r.inverter == \"site\")\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n  \tr with _value: float(v: r._value) / 1000.0\n   })\n  )",
+							"rawText": "import \"date\"\n\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\")\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"past\")\n  \nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\"))\n     \t\t)\n  |> last()\n    |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"today\")",
 							"range": null,
 							"shifts": null
 						},
@@ -3317,7 +3317,7 @@
 				"name": "This Month",
 				"queries": [
 					{
-						"query": "import \"date\"\nimport \"system\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or (r._field == \"today\" and (date.monthDay(t: r._time) == 1)))\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n",
+						"query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or (r._field == \"today\" and (date.monthDay(t: r._time) == 1)))\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n",
 						"queryConfig": {
 							"database": "",
 							"measurement": "",
@@ -3329,7 +3329,7 @@
 								"tags": []
 							},
 							"areTagsAccepted": false,
-							"rawText": "import \"date\"\nimport \"system\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or (r._field == \"today\" and (date.monthDay(t: r._time) == 1)))\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n",
+							"rawText": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or (r._field == \"today\" and (date.monthDay(t: r._time) == 1)))\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n",
 							"range": null,
 							"shifts": null
 						},
