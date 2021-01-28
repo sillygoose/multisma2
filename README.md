@@ -78,11 +78,11 @@ At night these updates based on the settings in `pvsite.py`:
 ```
 
 ## Example Dashboards
-Still sorting this out but the folowing example dashboards show some ideas on how the inverter data might be displayed:
+Still sorting this out but the following example dashboards show some ideas on how the inverter data might be displayed.  I especially like being able to pull the production data from InfluxDB to see the daily, monthly, and annual totals:
 
 ![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb-production.jpg)
 
-InfluxDB doesn't really handle state outputs like the inverter status very well so just state is displayed, Grafana on the other hand has a Status Map visualization that looks more promising.  I expect to migrate to a full Grafana solution once I am settled with the database queries and management.
+InfluxDB doesn't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a Status Map visualization that looks more promising.
 
 ![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
