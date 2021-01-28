@@ -77,14 +77,14 @@ At night these updates based on the settings in `pvsite.py`:
     ]
 ```
 
-#l# Example Dashboards
+## Example Dashboards
 Still sorting this out but the folowing example dashboards show some ideas on how the inverter data might be displayed:
 
-![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/production-dashboard.jpg)
+![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb-production.jpg)
 
 InfluxDB doesn't really handle state outputs like the inverter status very well so just state is displayed, Grafana on the other hand has a Status Map visualization that looks more promising.  I expect to migrate to a full Grafana solution once I am settled with the database queries and management.
 
-![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-statusmap.jpg)
+![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
 This last example is a dashboard made in Home Assistant driven by the MQTT output of multisma2, this was done first since MQTT support was completed before the InfluxDB support.
 
