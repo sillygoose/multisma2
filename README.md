@@ -50,12 +50,18 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
 
 4.  Test that multisma2 connects to your inverters, MQTT broker, or InfluxDB database:
 
-    `python3 multisma2`
+    `python3 multisma2.py`
 
 5.  Docker setup
-Once you have a working `configuration.py` file you can build a Docker container that is setup to run multisma2 once a day using a cron table entry:
+Once you have a working `configuration.py` file you can build a Docker container that runs multisma2:
 
-    `docker build -t multisma2 .`
+    `sudo docker build --no-cache -t multisma2:your-tag .`
+    `sudo docker image tag multisma2:your-tag multisma2:latest`
+    `sudo docker-compose up -d`    
+
+where 'your-tag' is a name of your choosing.  Since the docker-compose.yaml file assumes the image to be 'multisma2:latest', the second command adds this tag so I can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+
+Sorry about the size and time to build the Docker image, adding the clear sky irradiance support in pvlib  pulled in pandas, scipy, numpy, and other scientific packages that are built from source code.  Building on a Raspberry Pi 4B running 64-bit Ubuntu takes about 15 minutes to complete and is not very slim in size.  If I can figure out how to get the Alpine version to build perhaps it can slim down in the future.
 
 ### Some Interesting Facts
 It maybe helpful to understand these quirks about multisma2:

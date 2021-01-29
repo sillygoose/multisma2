@@ -130,7 +130,10 @@ class Inverter:
 
     async def read_history(self, start, stop):
         history = await self._sma.read_history(start, stop)
-        history.insert(0, {'inverter': self._name})
+        if not history:
+            logger.error(f"{self._name}:read_history({start}, {stop}) returned 'None'")
+        else:
+            history.insert(0, {'inverter': self._name})
         return history
 
     async def read_inverter_production(self):
