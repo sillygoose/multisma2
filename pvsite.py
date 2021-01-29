@@ -1,5 +1,6 @@
 """Code to interface with the SMA inverters and return the results."""
 
+import os
 import asyncio
 import datetime
 import time
@@ -12,6 +13,7 @@ from astral.sun import sun
 from astral import LocationInfo, now
 
 import clearsky
+import version
 
 from inverter import Inverter
 from influx import InfluxDB
@@ -178,9 +180,10 @@ class PVSite():
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            await self.solar_data_update(),
+            logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+            await self.solar_data_update()
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            await self.update_total_production(),
+            await self.update_total_production()
             influxdb.write_points(self.irradiance_today())
             influxdb.write_history(await self.get_yesterday_production(), 'production/today')
 

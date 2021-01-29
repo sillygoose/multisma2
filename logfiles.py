@@ -3,7 +3,7 @@
 import os
 import sys
 import logging
-from datetime import datetime
+from logging.handlers import TimedRotatingFileHandler
 
 from configuration import (
     APPLICATION_LOG_LOGGER_NAME,
@@ -31,20 +31,21 @@ def start(app_logger):
     filename_parts = os.path.split(filename)
     if filename_parts[0] and not os.path.isdir(filename_parts[0]):
         os.mkdir(filename_parts[0])
-    filename = os.path.abspath(filename)
-    logging.basicConfig(
-        filename=filename,
-        filemode="w+",
-        format=APPLICATION_LOG_FORMAT,
-        level=APPLICATION_LOG_LEVEL,
-    )
+    logname = os.path.abspath(filename)
+
+    handler = TimedRotatingFileHandler(logname, when='midnight', interval=1)
+    handler.suffix = "%Y-%m-%d"
+    handler.setLevel(APPLICATION_LOG_LEVEL)
+    formatter = logging.Formatter(APPLICATION_LOG_FORMAT)
+    handler.setFormatter(formatter)
+    app_logger.addHandler(handler)
 
     # Add some console output for anyone watching
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level=APPLICATION_LOG_LEVEL)
     console_handler.setFormatter(logging.Formatter(APPLICATION_LOG_FORMAT))
-    app_logger.addHandler(console_handler)
     app_logger.setLevel(level=APPLICATION_LOG_LEVEL)
+    app_logger.addHandler(console_handler)
 
     # First entry
     app_logger.info("Created application log %s", filename)

@@ -73,14 +73,14 @@ class SMA:
         # On the first error we close the session which will re-login
         err = body.get('err')
         if err is not None:
-            logger.warning(
+            logger.error(
                 f"{self._url}: error detected, closing session to force another login attempt, got: {body}",
             )
             await self.close_session()
             return None
 
         if not isinstance(body, dict) or "result" not in body:
-            logger.warning("No 'result' in reply from SMA, got: %s", body)
+            logger.error("No 'result' in reply from SMA, got: %s", body)
             return None
 
         if self.sma_uid is None:
@@ -89,7 +89,7 @@ class SMA:
 
         result_body = body['result'].pop(self.sma_uid, None)
         if body != {'result': {}}:
-            logger.warning(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
+            logger.error(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
 
         return result_body
 
