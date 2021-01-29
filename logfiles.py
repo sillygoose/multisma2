@@ -33,7 +33,7 @@ def start(app_logger):
         os.mkdir(filename_parts[0])
     logname = os.path.abspath(filename)
 
-    handler = TimedRotatingFileHandler(logname, when='midnight', interval=1)
+    handler = TimedRotatingFileHandler(logname, when='midnight', interval=1, backupCount=10)
     handler.suffix = "%Y-%m-%d"
     handler.setLevel(APPLICATION_LOG_LEVEL)
     formatter = logging.Formatter(APPLICATION_LOG_FORMAT)
