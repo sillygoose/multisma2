@@ -211,7 +211,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": "12h",
+      "timeFrom": "3d",
       "timeRegions": [],
       "timeShift": null,
       "title": "Inverters",
@@ -230,6 +230,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:306",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -238,6 +239,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:307",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2161,12 +2163,6 @@
             "value": "307"
           },
           {
-            "$$hashKey": "object:192",
-            "color": "#FFB357",
-            "tooltip": "Start",
-            "value": "1467"
-          },
-          {
             "$$hashKey": "object:111",
             "color": "#8F3BB8",
             "tooltip": "No data",
@@ -2177,6 +2173,12 @@
             "color": "#CA95E5",
             "tooltip": "Unavailable",
             "value": "16777213"
+          },
+          {
+            "$$hashKey": "object:390",
+            "color": "#FFB357",
+            "tooltip": "Warning",
+            "value": "455"
           }
         ]
       },
@@ -2532,7 +2534,7 @@
       "yAxisSort": "metrics"
     }
   ],
-  "refresh": false,
+  "refresh": "10s",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [],
@@ -2540,7 +2542,7 @@
     "list": []
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-5d",
     "to": "now"
   },
   "timepicker": {
@@ -2552,5 +2554,5 @@
   "timezone": "",
   "title": "Production",
   "uid": "eM8UF8BGk",
-  "version": 3
+  "version": 5
 }
