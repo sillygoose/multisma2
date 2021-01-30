@@ -84,14 +84,24 @@ At night these updates based on the settings in `pvsite.py`:
 ```
 
 ## Example Dashboards
-Still sorting this out but the following example dashboards show some ideas on how the inverter data might be displayed.  I especially like being able to pull the production data from InfluxDB to see the daily, monthly, and annual totals:
+Still sorting these out but the following sample dashboards show some ideas on how the inverter data might be displayed.  I especially like being able to pull the production data from InfluxDB to see the daily, monthly, and annual totals.
+
+### InfluxDB
+All InfluxDB queries are done in Flux, looked more powerful to me and since I didn't know SQL seemed like a better choice.
 
 ![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb-production.jpg)
 
+### Grafana
 InfluxDB doesn't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a Status Map visualization that looks more promising.
 
 ![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
+This dashboard uses the following panel plug-ins:
+
+    `grafana-cli plugins install flant-statusmap-panel`
+    `grafana-cli plugins install mxswat-separator-panel`
+
+### Home Assistant
 This last example is a dashboard made in Home Assistant driven by the MQTT output of multisma2, this was done first since MQTT support was completed before the InfluxDB support.
 
 ![Home Assistant dashboard using MQTT:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/home-assistant-production.jpg)
