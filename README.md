@@ -12,7 +12,7 @@ Now features a wider range of outputs, basically anything you see in your browse
 - add any SMA sensors or setting for which you know the 'key'
 - MQTT messaging
 - InfluxDB interface (writes production data and status direct to InfluxDB)
-- utility to write the inverter production data to InfluxDB
+- utility available to extract historical inverter production data to InfluxDB
 
 ## Rationale for multisma2
 multisma2 is driven by my desire to see what is happening in my ground mount solar array which uses three Sunny Boy inverters tied to eight strings of nine panels each (total 24.84 kWp).  SMA offers Sunny Portal which is a non-real time window of the AC production and this quickly proved to be inadequate.  It also uses an unknown and less than robust averaging algorithm which guarantees that I never see my peak production where there is the chance of the inverter limiting the output.  There is more data available using the WebConnect interface but you need to log into each inverter to get it, with three inverters to check, multisma2 fixes this by working with one or many Sunny Boy inverters and combines the data intelligently for easy display or analysis.
