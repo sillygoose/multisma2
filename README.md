@@ -53,11 +53,14 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     `python3 multisma2.py`
 
 5.  Docker setup
+
 Once you have a working `configuration.py` file you can build a Docker container that runs multisma2:
 
-    `sudo docker build --no-cache -t multisma2:your-tag .`
-    `sudo docker image tag multisma2:your-tag multisma2:latest`
-    `sudo docker-compose up -d`    
+```
+    sudo docker build --no-cache -t multisma2:your-tag .
+    sudo docker image tag multisma2:your-tag multisma2:latest
+    sudo docker-compose up -d
+```
 
 where 'your-tag' is a name of your choosing.  Since the docker-compose.yaml file assumes the image to be 'multisma2:latest', the second command adds this tag so I can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
 
