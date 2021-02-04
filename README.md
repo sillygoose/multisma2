@@ -100,9 +100,10 @@ InfluxDB doesn't really handle state outputs like the inverter status very well 
 ![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
 This dashboard uses the following panel plug-ins:
-
-    `grafana-cli plugins install flant-statusmap-panel`
-    `grafana-cli plugins install mxswat-separator-panel`
+```
+    grafana-cli plugins install flant-statusmap-panel
+    grafana-cli plugins install mxswat-separator-panel
+```
 
 ### Home Assistant
 This last example is a dashboard made in Home Assistant driven by the MQTT output of multisma2, this was done first since MQTT support was completed before the InfluxDB support.
