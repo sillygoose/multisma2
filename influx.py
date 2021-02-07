@@ -17,17 +17,18 @@ logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
 CACHE_ENABLED = False
 
 LP_LOOKUP = {
-    'ac_measurements/power': {'measurement': 'ac_measurements', 'field': 'power'},
-    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'field': 'voltage'},
-    'ac_measurements/current': {'measurement': 'ac_measurements', 'field': 'current'},
-    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'field': 'efficiency'},
-    'dc_measurements/power': {'measurement': 'dc_measurements', 'field': 'power'},
-    'status/reason_for_derating': {'measurement': 'status', 'field': 'derating'},
-    'status/general_operating_status': {'measurement': 'status', 'field': 'operating_status'},
-    'status/grid_relay': {'measurement': 'status', 'field': 'grid_relay'},
-    'status/condition': {'measurement': 'status', 'field': 'condition'},
-    'production/total': {'measurement': 'production', 'field': 'total'},
-    'production/today': {'measurement': 'production', 'field': 'today'},
+    'ac_measurements/power': {'measurement': 'ac_measurements', 'tag': 'inverter', 'field': 'power'},
+    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tag': 'inverter', 'field': 'voltage'},
+    'ac_measurements/current': {'measurement': 'ac_measurements', 'tag': 'inverter', 'field': 'current'},
+    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tag': 'inverter', 'field': 'efficiency'},
+    'dc_measurements/power': {'measurement': 'dc_measurements', 'tag': 'inverter', 'field': 'power'},
+    'status/reason_for_derating': {'measurement': 'status', 'tag': 'inverter', 'field': 'derating'},
+    'status/general_operating_status': {'measurement': 'status', 'tag': 'inverter', 'field': 'operating_status'},
+    'status/grid_relay': {'measurement': 'status', 'tag': 'inverter', 'field': 'grid_relay'},
+    'status/condition': {'measurement': 'status', 'tag': 'inverter', 'field': 'condition'},
+    'production/total': {'measurement': 'production', 'tag': 'inverter', 'field': 'total'},
+    'production/today': {'measurement': 'production', 'tag': 'inverter', 'field': 'today'},
+    'sun/position': {'measurement': 'sun', 'tag': None, 'field': None},
 }
 
 
@@ -71,7 +72,10 @@ class InfluxDB():
             return False
 
         lookup = LP_LOOKUP.get(topic, None)
-        if not lookup: return False
+        if not lookup:
+            logger.error(f"write_history(): unknown topic '{topic}'")
+            return False
+
         measurement = lookup.get('measurement')
         field = lookup.get('field')
         lps = []
@@ -108,20 +112,25 @@ class InfluxDB():
             if topic:
                 lookup = LP_LOOKUP.get(topic, None)
                 if not lookup:
-                    logger.error(f"Unknown topic '{topic}'")
+                    logger.error(f"write_sma_sensors(): unknown topic '{topic}'")
                     continue
 
                 measurement = lookup.get('measurement')
+                tag = lookup.get('tag')
                 for k, v in point.items():
                     field = lookup.get('field')
-                    lp = f'{measurement}'
                     signature = f'{measurement}_{k}_{field}'
+                    lp = f'{measurement}'
+                    if tag:
+                        lp += f',{tag}={k}'
+                    lp += f' '
+                    if not field:
+                        field = k
                     if isinstance(v, int):
-                        lp += f',inverter={k} {field}={v}i'
+                        lp += f'{field}={v}i'
                     elif isinstance(v, float):
-                        lp += f',inverter={k} {field}={v}'
+                        lp += f'{field}={v}'
                     elif isinstance(v, dict): 
-                        lp += f',inverter={k} '
                         first = True
                         for k1, v1 in v.items():
                             if not first:
@@ -129,7 +138,7 @@ class InfluxDB():
                             if isinstance(v1, int):
                                 lp += f'{k1}={v1}i' if k1 != k else f'{field}={v1}i'
                             else:
-                                logger.error(f"rite_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
+                                logger.error(f"write_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
                             first = False
                     else:
                         logger.error(f"write_sma_sensors(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")

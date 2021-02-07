@@ -9,7 +9,7 @@ import logging
 from pprint import pprint
 from dateutil import tz
 
-from astral.sun import sun
+from astral.sun import sun, elevation, azimuth
 from astral import LocationInfo, now
 
 import clearsky
@@ -150,8 +150,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 30},     # night (30 is 5 minute samples)
-            {'scale': 1},      # day (1 is 10 second samples)
+            {'scale': 18},     # night (18 is 3 minute sample intervals)
+            {'scale': 1},      # day (1 is 10 second sample intervals)
         ]
         while True:
             astral_now = now(tzinfo=self._tzinfo)
@@ -261,6 +261,12 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
+            sensors = await asyncio.gather(
+                self.sun_position(),
+            )
+            for sensor in sensors:
+                mqtt.publish(sensor)
+                influxdb.write_sma_sensors(sensor)
 
     async def task_300s(self, queue):
         """Work done every 300 seconds (5 minutes)."""
@@ -368,6 +374,14 @@ class PVSite():
         # {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},
         # {'sb71': 4376, 'site': 11864, 'sb72': 4366, 'sb51': 3121, 'topic': 'production/lifetime'}]
         return histories
+
+    async def sun_position(self):
+        """Calculate where the sun is in the sky."""
+        astral_now = now(tzinfo=self._tzinfo)
+        sun_elevation = elevation(observer=self._siteinfo.observer, dateandtime=astral_now)
+        sun_azimuth = azimuth(observer=self._siteinfo.observer, dateandtime=astral_now)
+        results = [{'topic': 'sun/position', 'elevation': round(sun_elevation, 1), 'azimuth': round(sun_azimuth, 1)}]
+        return results
 
     async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
