@@ -9,6 +9,7 @@ Now features a wider range of outputs, basically anything you see in your browse
 - inverter efficiency
 - inverter status
 - co2 avoided due to PV production
+- sun elevation and azimuth
 - add any SMA sensors or setting for which you know the 'key'
 - MQTT messaging
 - InfluxDB interface (writes production data and status direct to InfluxDB)
@@ -17,7 +18,7 @@ Now features a wider range of outputs, basically anything you see in your browse
 ## Rationale for multisma2
 multisma2 is driven by my desire to see what is happening in my ground mount solar array which uses three Sunny Boy inverters tied to eight strings of nine panels each (total 24.84 kWp).  SMA offers Sunny Portal which is a non-real time window of the AC production and this quickly proved to be inadequate.  It also uses an unknown and less than robust averaging algorithm which guarantees that I never see my peak production where there is the chance of the inverter limiting the output.  There is more data available using the WebConnect interface but you need to log into each inverter to get it, with three inverters to check, multisma2 fixes this by working with one or many Sunny Boy inverters and combines the data intelligently for easy display or analysis.
 
-I wanted a real-time dashboard in Home Assistant that displays both the site totals and the individual inverters so multisma2 is the result, building on the pysma project to log into each inverter and pull **ALL** the data in the *Instantaneous values* menu every 5 seconds from each inverter.  This is cached and you display selected outputs at various intervals (5s, 15s, 30s, and 60s) depending on your needs.  For example, I report the AC production, DC production (by inverter and string), and inverter status every five seconds.  Slower changing outputs such as total production occurs every 15 seconds, and reporting of the CO2 avoided occurs every 30 seconds.
+I wanted a real-time dashboard in Home Assistant that displays both the site totals and the individual inverters so multisma2 is the result, building on the pysma project to log into each inverter and pull **ALL** the data in the *Instantaneous values* menu every 10 seconds from each inverter.  This is cached and you display selected outputs at various intervals depending on your needs.  For example, I report the AC production, DC production (by inverter and string), and inverter status every ten seconds.  Slower changing outputs such as total production and sun elevation/azimuth occurs every 30 or 60 seconds.
 
 multisma2 is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
 
@@ -80,9 +81,9 @@ It maybe helpful to understand these quirks about multisma2:
 
 At night these updates based on the settings in `pvsite.py`: 
 ```
-      SAMPLE_PERIOD = [
-        {"scale": 30},  # night
-        {"scale": 1},   # day
+    SAMPLE_PERIOD = [
+        {'scale': 18},     # night (18 is 3 minute sample intervals)
+        {'scale': 1},      # day (1 is 10 second sample intervals)
     ]
 ```
 
