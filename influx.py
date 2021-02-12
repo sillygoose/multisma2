@@ -7,8 +7,9 @@ import time
 import logging
 from pprint import pprint
 
-from influxdb import InfluxDBClient
-from influxdb.exceptions import InfluxDBServerError, InfluxDBClientError
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write.point import DEFAULT_WRITE_PRECISION
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
@@ -41,12 +42,15 @@ class InfluxDB():
         if self._client:
             self._client.close()
 
-    def start(self, host, port, database, username, password):
+    def start(self, url, bucket, org, token):
         if not self._enabled:
             return True
-        self._client = InfluxDBClient(host=host, port=port, database=database, username=username, password=password)
+        self._client = InfluxDBClient(url=url, token=token, org=org)
+        self._bucket = bucket
+        self._org = org
+        self._write_api = self._client.write_api(write_options=SYNCHRONOUS) if self._client else None
         result = self._client if self._client else False
-        logger.info(f"{'Opened' if result else 'Failed to open'} the InfluxDB database '{database}'")
+        logger.info(f"{'Opened' if result else 'Failed to open'} the InfluxDB database '{self._bucket}'")
         return result
 
     def stop(self):
@@ -58,17 +62,18 @@ class InfluxDB():
     cache = {}
 
     def write_points(self, points):
-        if not self._client:
+        if not self._write_api:
             return False
-        try:
-            result = self._client.write_points(points=points, time_precision='s', protocol='line')
-        except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_points() call failed in write_points()")
-            result = False
+        result = self._write_api.write(bucket=self._bucket, org=self._org, record=points, write_precision=WritePrecision.US)
+        #try:
+        #    result = self._client.write_points(points=points, time_precision='s', protocol='line')
+        #except (InfluxDBClientError, InfluxDBServerError):
+        #    logger.error(f"Database write_points() call failed in write_points()")
+        #    result = False
         return result
 
     def write_history(self, site, topic):
-        if not self._client:
+        if not self._write_api:
             return False
 
         lookup = LP_LOOKUP.get(topic, None)
@@ -92,10 +97,15 @@ class InfluxDB():
                     logger.error(f"write_history(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
                     continue
 
+        #try:
+        #    result = self._client.write_points(points=lps, time_precision='s', protocol='line')
+        #except (InfluxDBClientError, InfluxDBServerError):
+        #    logger.error(f"Database write_points() call failed in write_history()")
+        #    result = False
         try:
-            result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-        except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_points() call failed in write_history()")
+            result = self._write_api.write(bucket=self._bucket, org=self._org, record=lps, write_precision=WritePrecision.US)
+        except Exception as e:
+            print(e)
             result = False
         return result
 
@@ -155,9 +165,17 @@ class InfluxDB():
                     lp += f' {ts}'
                     lps.append(lp)
 
-        try:
-            result = self._client.write_points(points=lps, time_precision='s', protocol='line')
-        except (InfluxDBClientError, InfluxDBServerError):
-            logger.error(f"Database write_points() call failed in write_sma_sensors()")
-            result = False
+        #try:
+        #    result = self._client.write_points(points=lps, time_precision='s', protocol='line')
+        #except (InfluxDBClientError, InfluxDBServerError):
+        #    logger.error(f"Database write_points() call failed in write_sma_sensors()")
+        #    result = False
+        result = self._write_api.write(bucket=self._bucket, org=self._org, record=lps, write_precision=WritePrecision.US)
         return result
+
+
+if __name__ == "__main__":
+    influxdb = InfluxDB(True)
+    if influxdb.start(url='http://192.168.1.80:8088', bucket='test', org='Parker Lane', token='P1UzFa14Qm7oUAdPe3EzYr3jUd15703mzRfay1AmqW5zgOiWloLeIxhWZIF5u-3Jy5T85LdXPQdQimYFqlyddQ=='):
+        influxdb.write_points('xxxx')
+        influxdb.stop()

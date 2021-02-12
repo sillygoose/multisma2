@@ -24,7 +24,7 @@ from configuration import SITE_PANEL_AREA, SITE_PANEL_EFFICIENCY, SITE_AZIMUTH, 
 
 from configuration import CO2_AVOIDANCE
 from configuration import INVERTERS
-from configuration import INFLUXDB_ENABLE, INFLUXDB_DATABASE, INFLUXDB_IPADDR, INFLUXDB_PORT, INFLUXDB_USERNAME, INFLUXDB_PASSWORD
+from configuration import INFLUXDB_ENABLE, INFLUXDB_BUCKET, INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG
 from configuration import APPLICATION_LOG_LOGGER_NAME
 
 
@@ -91,7 +91,7 @@ class PVSite():
 
     async def start(self):
         """Initialize the PVSite object."""
-        if not influxdb.start(host=INFLUXDB_IPADDR, port=INFLUXDB_PORT, database=INFLUXDB_DATABASE, username=INFLUXDB_USERNAME, password=INFLUXDB_PASSWORD): return False
+        if not influxdb.start(url=INFLUXDB_URL, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN): return False
         if not mqtt.start(): return False
 
         for inverter in INVERTERS:
