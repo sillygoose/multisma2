@@ -1151,8 +1151,67 @@
       },
       "gridPos": {
         "h": 1,
-        "w": 12,
+        "w": 6,
         "x": 12,
+        "y": 10
+      },
+      "id": 77,
+      "pluginVersion": "7.3.7",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Sun Position",
+      "type": "mxswat-separator-panel"
+    },
+    {
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 6,
+        "x": 18,
         "y": 10
       },
       "id": 59,
@@ -1201,6 +1260,178 @@
     },
     {
       "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "degree"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 12,
+        "y": 11
+      },
+      "id": 74,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "7.3.6",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Elevation",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "degree"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
+        "y": 11
+      },
+      "id": 75,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": true
+        },
+        "textMode": "value"
+      },
+      "pluginVersion": "7.3.6",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Azimuth",
+      "type": "stat"
+    },
+    {
+      "datasource": null,
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1224,7 +1455,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 12,
+        "x": 18,
         "y": 11
       },
       "id": 71,
@@ -1284,180 +1515,6 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Today",
-      "type": "stat"
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 0,
-          "mappings": [],
-          "min": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kg"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 15,
-        "y": 11
-      },
-      "id": 75,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "textMode": "value"
-      },
-      "pluginVersion": "7.3.6",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or (r._field == \"today\" and (date.monthDay(t: r._time) == 1)))\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n  |> map(fn: (r) => ({\n      r with _value: float(v: r._value) * 0.18991\n    })\n  )\n  |> yield(name: \"month\")",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "This Month",
-      "type": "stat"
-    },
-    {
-      "datasource": null,
-      "fieldConfig": {
-        "defaults": {
-          "custom": {},
-          "decimals": 2,
-          "mappings": [],
-          "min": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "mt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 18,
-        "y": 11
-      },
-      "id": 74,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "textMode": "value"
-      },
-      "pluginVersion": "7.3.6",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r.inverter== \"site\")\n  |> filter(fn: (r) => r._field == \"total\" or\n  \t\t\t\t\t\t(r._field == \"today\" and (date.monthDay(t: r._time) == 1) and (date.month(t: r._time) == 1))\n      \t\t)\n  |> last()\n  |> pivot(rowKey:[\"_measurement\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({\n      r with _value: float(v: (r.total - r.today)) / 1000000.0\n    })\n  )\n  |> drop(columns: [\"today\", \"total\"])\n  |> map(fn: (r) => ({\n      r with _value: float(v: r._value) * 0.18991\n    })\n  )\n  |> yield(name: \"year\")",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "This Year",
       "type": "stat"
     },
     {
@@ -1826,7 +1883,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
@@ -1883,7 +1941,7 @@
           "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\") and\n                        (date.monthDay(t: r._time) == 1)\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n//  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"past\")\n",
+          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and (r.inverter == \"site\") and (r._field == \"today\") and (date.monthDay(t: r._time) == 1) )\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({ _time: r._time, _value: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: -15d, columns: [\"_time\"])\n  |> yield(name: \"past\")\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1920,7 +1978,7 @@
           "hide": true,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\" and date.monthDay(t: r._time) == 1))\n     \t\t)\n  |> last()\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n//  |> timeShift(duration: 15d, columns: [\"_time\"])\n  |> yield(name: \"today\")",
+          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => (r._measurement == \"production\") and (r.inverter == \"site\") and ((r._field == \"total\") or (r._field == \"today\" and date.monthDay(t: r._time) == 1)) )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _value: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: -15d, columns: [\"_time\"])\n  |> yield(name: \"today\")",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1950,12 +2008,7 @@
         "sort": 0,
         "value_type": "individual"
       },
-      "transformations": [
-        {
-          "id": "seriesToRows",
-          "options": {}
-        }
-      ],
+      "transformations": [],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -1968,7 +2021,7 @@
         {
           "$$hashKey": "object:291",
           "decimals": 0,
-          "format": "kWh",
+          "format": "none",
           "label": "",
           "logBase": 1,
           "max": null,
@@ -2013,7 +2066,8 @@
                 "value": 80
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
@@ -2070,7 +2124,7 @@
           "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        (r._field == \"today\")\n     \t\t)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"past\")",
+          "query": "import \"date\"\nfrom(bucket: \"multisma2/autogen\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\t(r.inverter == \"site\") and (r._field == \"today\"))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> map(fn: (r) => ({ _time: r._time, _value: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: -8h, columns: [\"_time\"])\n  |> yield(name: \"past\")",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2107,7 +2161,7 @@
           "hide": true,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and\n  \t\t\t\t\t\t(r.inverter == \"site\") and\n                        ((r._field == \"total\") or (r._field == \"today\"))\n     \t\t)\n  |> last()\n    |> map(fn: (r) => ({\n      _time: r._time,\n      _value: float(v: r._value) / -1000.0,\n    }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: 12h, columns: [\"_time\"])\n  |> yield(name: \"today\")",
+          "query": "from(bucket: \"multisma2/autogen\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => (r._measurement == \"production\") and (r.inverter == \"site\") and ((r._field == \"total\") or (r._field == \"today\")))\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _value: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_value\"])\n  |> timeShift(duration: -8h, columns: [\"_time\"])\n  |> yield(name: \"today\")",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2133,16 +2187,11 @@
       "timeShift": null,
       "title": "30 Day",
       "tooltip": {
-        "shared": true,
+        "shared": false,
         "sort": 0,
         "value_type": "individual"
       },
-      "transformations": [
-        {
-          "id": "seriesToRows",
-          "options": {}
-        }
-      ],
+      "transformations": [],
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -2155,7 +2204,7 @@
         {
           "$$hashKey": "object:291",
           "decimals": 0,
-          "format": "kWh",
+          "format": "none",
           "label": "",
           "logBase": 1,
           "max": null,
