@@ -22,19 +22,20 @@ APPLICATION_LOG_LOGGER_NAME = 'multisma2'
 # or from https://www.carbonfootprint.com/international_electricity_factors.html
 CO2_AVOIDANCE = 0.44000
 
+# The InfluxDB interface uses the newer 2.0 client which supports both the 2.0 and 1.8.x InfluxDB versions
+# with just minor changes in the configuration making a future upgrade to v2 a simple change of options.
+#
 # Influxdb configuration options:
 #  INFLUXDB_ENABLE            set to True to enable InfluxDB usage
-#  INFLUXDB_DATABASE          set to InfluxDB database name
-#  INFLUXDB_IPADDR            set to to the InfluxDB server address
-#  INFLUXDB_PORT              set to the InfluxDB port
-#  INFLUXDB_USERNAME          set to a valid user name
-#  INFLUXDB_PASSWORD          set to a valid user password
-INFLUXDB_ENABLE = False
-INFLUXDB_DATABASE = 'multisma2'
-INFLUXDB_IPADDR = '10.0.0.8'
-INFLUXDB_PORT = '8086'
-INFLUXDB_USERNAME = 'username'
-INFLUXDB_PASSWORD = 'password'
+#  INFLUXDB_BUCKET            set to the InfluxDB bucket (v2) or 'database/retention_policy' (v1.8)
+#  INFLUXDB_URL               set to the InfluxDB server URL and port
+#  INFLUXDB_ORG               set to the v2 organization or '-' if using v1.8
+#  INFLUXDB_TOKEN             set to a valid v2 token or v1.8 'username:password'
+INFLUXDB_ENABLE = True
+INFLUXDB_BUCKET = 'multisma2/autogen'
+INFLUXDB_URL = 'http://10.0.0.80:8086'
+INFLUXDB_ORG = '-'
+INFLUXDB_TOKEN = 'username:password'
 
 # MQTT configuration options:
 #  MQTT_ENABLE            set to True to enable sending messages to the broker
