@@ -6,37 +6,27 @@ import datetime
 import time
 import logging
 
-from pprint import pprint
+# from pprint import pprint
 from dateutil import tz
 
 from astral.sun import sun, elevation, azimuth
 from astral import LocationInfo, now
 
-import clearsky
+# import clearsky
 import version
 
 from inverter import Inverter
 from influx import InfluxDB
 import mqtt
 
-from configuration import SITE_LATITUDE, SITE_LONGITUDE, SITE_NAME, SITE_REGION, TIMEZONE
-from configuration import SITE_PANEL_AREA, SITE_PANEL_EFFICIENCY, SITE_AZIMUTH, SITE_TILT
 
-from configuration import CO2_AVOIDANCE
-from configuration import INVERTERS
-from configuration import INFLUXDB_ENABLE, INFLUXDB_BUCKET, INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG
-from configuration import APPLICATION_LOG_LOGGER_NAME
-
-
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
-
-influxdb = InfluxDB(INFLUXDB_ENABLE)
+logger = logging.getLogger('multisma2')
 
 
 # Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
     '6100_0046C200': 'production/current',
-    '6400_0046C300': 'production/total',
+    '6400_0046C300': 'production/total_wh',
     '6100_40263F00': 'ac_measurements/power',
     '6100_00465700': 'ac_measurements/frequency',
     '6180_08465A00': 'ac_measurements/excitation_type',
@@ -50,15 +40,15 @@ MQTT_TOPICS = {
     '6180_08412800': 'status/general_operating_status',
     '6180_08416400': 'status/grid_relay',
     '6180_08414C00': 'status/condition',
-    # This key is the same as 'production/total' but not aggregated
-    '6400_00260100': 'total_production',
+    # This key is the same as 'production/total_wh' but is not aggregated
+    '6400_00260100': 'production/totalwh2',
 }
 
-# These are keys that we calculate a total across all inverters
+# These are keys that we calculate a total across all inverters (if multiple inverters)
 AGGREGATE_KEYS = [
     '6100_40263F00',    # AC grid power (current)
     '6100_0046C200',    # PV generation power (current)
-    '6400_0046C300',    # Meter count and PV gen. meter (total power)
+    '6400_0046C300',    # Meter count and PV gen. meter (total Wh meter)
     '6380_40251E00',    # DC power (totals for site and each inverter)
 ]
 
@@ -74,8 +64,9 @@ SITE_SNAPSHOT = [
 
 class PVSite():
     """Class to describe a PV site with one or more inverters."""
-    def __init__(self, session):
+    def __init__(self, session, config):
         """Create a new PVSite object."""
+        cfg = self._config = config
         self._inverters = []
         self._session = session
         self._tasks = None
@@ -86,19 +77,24 @@ class PVSite():
         self._task_gather = None
         self._dawn = None
         self._dusk = None
-        self._siteinfo = LocationInfo(SITE_NAME, SITE_REGION, TIMEZONE, SITE_LATITUDE, SITE_LONGITUDE)
-        self._tzinfo = tz.gettz(TIMEZONE)
+        self._influx = InfluxDB()
+        self._siteinfo = LocationInfo(cfg.multisma2.site.name, cfg.multisma2.site.region, cfg.multisma2.site.tz, cfg.multisma2.site.latitude, cfg.multisma2.site.longitude)
+        self._tzinfo = tz.gettz(cfg.multisma2.site.tz)
 
     async def start(self):
         """Initialize the PVSite object."""
-        if not influxdb.start(url=INFLUXDB_URL, bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, token=INFLUXDB_TOKEN): return False
-        if not mqtt.start(): return False
+        if not self._influx.start(self._config):
+            return False
+        if not mqtt.start(self._config):
+            return False
 
-        for inverter in INVERTERS:
-            self._inverters.append(Inverter(inverter['name'], inverter['ip'], inverter['user'], inverter['password'], self._session))
+        for inverter in self._config.multisma2.inverters:
+            inv = inverter.get('inverter', None)
+            self._inverters.append(Inverter(inv['name'], inv['url'], inv['user'], inv['password'], self._session))
 
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-        if None in cached_keys: return False
+        if None in cached_keys:
+            return False
         self._cached_keys = cached_keys[0]
         return True
 
@@ -117,13 +113,13 @@ class PVSite():
             '300s': asyncio.Queue(),
         }
         self._task_gather = asyncio.gather(
-                self.daylight(),
-                self.midnight(),
-                self.scheduler(queues),
-                self.task_10s(queues.get('10s')),
-                self.task_30s(queues.get('30s')),
-                self.task_60s(queues.get('60s')),
-                self.task_300s(queues.get('300s')),
+            self.daylight(),
+            self.midnight(),
+            self.scheduler(queues),
+            self.task_10s(queues.get('10s')),
+            self.task_30s(queues.get('30s')),
+            self.task_60s(queues.get('60s')),
+            self.task_300s(queues.get('300s')),
         )
         await self._task_gather
 
@@ -133,8 +129,8 @@ class PVSite():
             self._task_gather.cancel()
 
         await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        influxdb.stop()
- 
+        self._influx.stop()
+
     async def solar_data_update(self) -> None:
         """Update the sun data used to sequence operaton."""
         astral_now = now(tzinfo=self._tzinfo)
@@ -143,9 +139,9 @@ class PVSite():
         self._dusk = astral['dusk']
         self._daylight = self._dawn < astral_now < self._dusk
         logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
-            f"noon is at {astral['noon'].strftime('%H:%M')}, "
-            f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
-            f"on this {day_of_year()} day of {astral_now.year}")
+                    f"noon is at {astral['noon'].strftime('%H:%M')}, "
+                    f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
+                    f"on this {day_of_year()} day of {astral_now.year}")
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
@@ -184,26 +180,27 @@ class PVSite():
             await self.solar_data_update()
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
-            influxdb.write_points(self.irradiance_today())
-            influxdb.write_history(await self.get_yesterday_production(), 'production/today')
+            self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
+#            self._influx.write_points(self.irradiance_today())
 
-    def irradiance_today(self):
-        # Create location object to store lat, lon, timezone
-        site = clearsky.site_location(SITE_LATITUDE, SITE_LONGITUDE, tz=TIMEZONE)
-        dawn = self._dawn
-        dusk = self._dusk + datetime.timedelta(minutes=10)
-        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
-        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
-
-        # Get irradiance data for today and convert to InfluxDB line protocol
-        irradiance = clearsky.get_irradiance(site=site, start=start.strftime("%Y-%m-%d %H:%M:00"), end=stop.strftime("%Y-%m-%d %H:%M:00"), tilt=SITE_TILT, azimuth=SITE_AZIMUTH, freq='10min')
-        lp_points = []
-        for point in irradiance:
-            t = point['t']
-            v = point['v'] * SITE_PANEL_AREA * SITE_PANEL_EFFICIENCY
-            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
-            lp_points.append(lp)
-        return lp_points
+#    def irradiance_today(self):
+#        # Create location object to store lat, lon, timezone
+#        cfg = self._cfg
+#        site = clearsky.site_location(cfg.multisma2.site.latitude, cfg.multisma2.site.longitude, tz=cfg.multisma2.site.tz)
+#        dawn = self._dawn
+#        dusk = self._dusk + datetime.timedelta(minutes=10)
+#        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
+#        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
+#
+#        # Get irradiance data for today and convert to InfluxDB line protocol
+#        irradiance = clearsky.get_irradiance(site=site, start=start.strftime("%Y-%m-%d %H:%M:00"), end=stop.strftime("%Y-%m-%d %H:%M:00"), tilt=cfg.multisma2.solar_properties.tilt, azimuth=cfg.multisma2.solar_properties.azimuth, freq='10min')
+#        lp_points = []
+#        for point in irradiance:
+#            t = point['t']
+#            v = point['v'] * cfg.multisma2.solar_properties.area * cfg.multisma2.solar_properties.efficiency
+#            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
+#            lp_points.append(lp)
+#        return lp_points
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -237,7 +234,7 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                influxdb.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor)
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -266,7 +263,7 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                influxdb.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor)
 
     async def task_300s(self, queue):
         """Work done every 300 seconds (5 minutes)."""
@@ -277,7 +274,7 @@ class PVSite():
                 self.total_production(),
             )
             for sensor in sensors:
-                influxdb.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor)
 
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
@@ -317,8 +314,8 @@ class PVSite():
     async def update_total_production(self) -> None:
         """Get the daily, monthly, yearly, and lifetime production values."""
         total_productions = await self.total_production()
-        #[{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total'}]
-        #logger.debug(f"total_productions: {total_productions}")
+        # [{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total_wh'}]
+        # logger.debug(f"total_productions: {total_productions}")
         updated_total_production = []
         for total_production in total_productions:
             for period in ['today', 'month', 'year', 'lifetime']:
@@ -340,10 +337,10 @@ class PVSite():
                 updated_total_production.append(period_stats)
 
         logger.debug(f"update_total_production()/updated_total_production: {updated_total_production}")
-        #[{'sb71': 157, 'site': 442, 'period': 'today', 'sb72': 176, 'sb51': 109},
-        # {'sb71': 97028, 'site': 260611, 'period': 'month', 'sb72': 97827, 'sb51': 65756},
-        # {'sb71': 97028, 'site': 260611, 'period': 'year', 'sb72': 97827, 'sb51': 65756},
-        # {'sb71': 4376363, 'site': 11864551, 'period': 'lifetime', 'sb72': 4366554, 'sb51': 3121634}]
+        # [{'sb71': 157, 'site': 442, 'period': 'today', 'sb72': 176, 'sb51': 109},
+        #  {'sb71': 97028, 'site': 260611, 'period': 'month', 'sb72': 97827, 'sb51': 65756},
+        #  {'sb71': 97028, 'site': 260611, 'period': 'year', 'sb72': 97827, 'sb51': 65756},
+        #  {'sb71': 4376363, 'site': 11864551, 'period': 'lifetime', 'sb72': 4366554, 'sb51': 3121634}]
         self._total_production = updated_total_production
 
     async def production_history(self):
@@ -369,10 +366,10 @@ class PVSite():
             histories.append(history)
 
         logger.debug(f"production_history()/histories: {histories}")
-        #[{'sb71': 0.21, 'site': 0.6, 'sb72': 0.24, 'sb51': 0.15, 'topic': 'production/today'},
-        # {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/month'},
-        # {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},
-        # {'sb71': 4376, 'site': 11864, 'sb72': 4366, 'sb51': 3121, 'topic': 'production/lifetime'}]
+        # [{'sb71': 0.21, 'site': 0.6, 'sb72': 0.24, 'sb51': 0.15, 'topic': 'production/today'},
+        #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/month'},
+        #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},
+        #  {'sb71': 4376, 'site': 11864, 'sb72': 4366, 'sb51': 3121, 'topic': 'production/lifetime'}]
         return histories
 
     async def sun_position(self):
@@ -385,8 +382,7 @@ class PVSite():
 
     async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
-        CO2_AVOIDANCE_KG = CO2_AVOIDANCE
-        #CO2_AVOIDANCE_TON = CO2_AVOIDANCE_KG / 1000
+        CO2_AVOIDANCE_KG = self._config.multisma2.site.co2_avoided
         CO2_SETTINGS = {
             'today': {'scale': 0.001, 'unit': 'kg', 'precision': 2, 'factor': CO2_AVOIDANCE_KG},
             'month': {'scale': 0.001, 'unit': 'kg', 'precision': 0, 'factor': CO2_AVOIDANCE_KG},
@@ -416,7 +412,8 @@ class PVSite():
         ac_power = (await self.get_composite(["6100_40263F00"]))[0]
         efficiencies = {}
         for k, v in ac_power.items():
-            if k in ['precision', 'topic']: continue
+            if k in ['precision', 'topic']:
+                continue
             dc = dc_power.get(k)
             denom = dc.get(k) if isinstance(dc, dict) else dc
             efficiencies[k] = 0.0 if denom == 0 else round((float(v) / denom) * 100, 2)
@@ -440,17 +437,18 @@ class PVSite():
         sensors = []
         for key in keys:
             if self.cached_key(key):
-                results = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
+                inverters = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
             else:
-                results = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
+                inverters = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
 
             composite = {}
             total = 0
-            calculate_total = AGGREGATE_KEYS.count(key)
-            for inverter in results:
+            calculate_total = AGGREGATE_KEYS.count(key) and (len(inverters) > 1)
+            for inverter in inverters:
                 name = inverter.get('name')
                 result = inverter.get(key)
-                if not result: continue
+                if not result:
+                    continue
                 val = result.get('val', None)
                 precision = result.get('precision', None)
                 if isinstance(val, dict):
@@ -461,10 +459,12 @@ class PVSite():
                     if calculate_total:
                         total += val
 
-                if precision is not None: composite['precision'] = precision
+                if precision is not None:
+                    composite['precision'] = precision
                 composite[name] = val
 
-            if calculate_total: composite['site'] = total
+            if calculate_total:
+                composite['site'] = total
             composite['topic'] = MQTT_TOPICS.get(key, key)
             sensors.append(composite)
 

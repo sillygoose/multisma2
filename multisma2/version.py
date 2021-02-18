@@ -16,6 +16,7 @@ and use the results of get_version() as your package version:
 __all__ = "get_version"
 
 from os.path import dirname, isdir, join
+from pathlib import Path
 import os
 import re
 import subprocess
@@ -26,13 +27,13 @@ version_re = re.compile("^Version: (.+)$", re.M)
 def get_version():
     """Get a version number for a tag."""
     # Assume we find no tags
-    version = "unknown"
+    version = "unknown build"
 
-    # Save current directory and switch to the file directory
-    current = os.getcwd()
-    directory = dirname(__file__)
-    os.chdir(directory)
-    if isdir(join(directory, ".git")):
+    # Save current directory and switch to the git project root directory
+    current_dir = os.getcwd()
+    app_path = Path(dirname(__file__))
+    os.chdir(app_path)
+    if isdir(join(app_path.parent, ".git")):
         # Get the version using "git describe".
         cmd = "git describe --tags --match [0-9]*".split()
         try:
@@ -61,7 +62,7 @@ def get_version():
             version += ".dev"
 
     # Restore the original directory
-    os.chdir(current)
+    os.chdir(current_dir)
     return version
 
 

@@ -5,27 +5,18 @@ import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from configuration import (
-    APPLICATION_LOG_LOGGER_NAME,
-    APPLICATION_LOG_FILE,
-    APPLICATION_LOG_FORMAT,
-)
 
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 
 
 #
 # Public
 #
 
-def start(app_logger):
+def start(app_logger, config):
     """Create the application log."""
-    filename = os.path.expanduser(APPLICATION_LOG_FILE + ".log")
-
-    try:
-        from configuration import APPLICATION_LOG_LEVEL
-    except ImportError:
-        APPLICATION_LOG_LEVEL = 'INFO'
+    filename = os.path.expanduser(config.multisma2.log.file + ".log")
+    APPLICATION_LOG_LEVEL = config.multisma2.log.level
 
     # Create the directory if needed
     filename_parts = os.path.split(filename)
@@ -36,14 +27,14 @@ def start(app_logger):
     handler = TimedRotatingFileHandler(logname, when='midnight', interval=1, backupCount=10)
     handler.suffix = "%Y-%m-%d"
     handler.setLevel(APPLICATION_LOG_LEVEL)
-    formatter = logging.Formatter(APPLICATION_LOG_FORMAT)
+    formatter = logging.Formatter(config.multisma2.log.format)
     handler.setFormatter(formatter)
     app_logger.addHandler(handler)
 
     # Add some console output for anyone watching
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level=APPLICATION_LOG_LEVEL)
-    console_handler.setFormatter(logging.Formatter(APPLICATION_LOG_FORMAT))
+    console_handler.setFormatter(logging.Formatter(config.multisma2.log.format))
     app_logger.setLevel(level=APPLICATION_LOG_LEVEL)
     app_logger.addHandler(console_handler)
 

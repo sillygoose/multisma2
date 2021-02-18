@@ -11,9 +11,8 @@ import async_timeout
 import jmespath
 from aiohttp import client_exceptions
 
-from configuration import APPLICATION_LOG_LOGGER_NAME
 
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 
 USERS = {"user": "usr", "installer": "istl"}
 
@@ -36,7 +35,7 @@ class SMA:
         if group not in USERS:
             raise KeyError("Invalid user type: {}".format(group))
         if len(password) > 12:
-            logger.warning(f"Password should not exceed 12 characters")
+            logger.warning("Password should not exceed 12 characters")
         self._new_session_data = {'right': USERS[group], 'pass': password}
         self._url = url.rstrip("/")
         if not url.startswith("http"):
@@ -67,7 +66,6 @@ class SMA:
             if self.sma_sid is None:
                 logger.error(f"Unable to create new session with inverter {self._url}")
                 return None
-
         body = await self._fetch_json(url, payload=payload)
 
         # On the first error we close the session which will re-login
@@ -79,13 +77,13 @@ class SMA:
             await self.close_session()
             return None
 
-        if not isinstance(body, dict) or "result" not in body:
-            logger.error("No 'result' in reply from SMA, got: %s", body)
+        if not isinstance(body, dict) or 'result' not in body:
+            logger.error(f"No 'result' in reply from SMA, got: {body}")
             return None
 
         if self.sma_uid is None:
             # Get the unique ID
-            self.sma_uid = next(iter(body["result"].keys()), None)
+            self.sma_uid = next(iter(body['result'].keys()), None)
 
         result_body = body['result'].pop(self.sma_uid, None)
         if body != {'result': {}}:
@@ -135,6 +133,14 @@ class SMA:
 
     async def read_history(self, start, end):
         """Read the history for the specified period."""
+        # {"destDev":[],"key":28704,"tStart":1601521200,"tEnd":1604217600}.
         payload = {"destDev": [], "key": 28704, "tStart": start, "tEnd": end}
+        result_body = await self._read_body(URL_LOGGER, payload)
+        return result_body
+
+    async def read_fine_history(self, start, end):
+        """Read the fine history for the specified period."""
+        # {"destDev":[],"key":28672,"tStart":1601521200,"tEnd":1604217600}.
+        payload = {"destDev": [], "key": 28672, "tStart": start, "tEnd": end}
         result_body = await self._read_body(URL_LOGGER, payload)
         return result_body

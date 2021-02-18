@@ -1,5 +1,7 @@
 # ignore the configuration file
-configuration.py
+multisma2.yaml
+
+# Python files
 tox.ini
 pyproject.toml
 .pylintrc

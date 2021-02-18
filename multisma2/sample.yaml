@@ -1,0 +1,69 @@
+# Copy this file to 'sbhistory.yaml' and complete with your site details.
+
+sbhistory:
+  # Starting date to pull history from inverters
+  # Set the date to start the collection, make sure your database retention policy covers
+  # this start date, collection is up the current day.
+  start_year: 2021
+  start_month: 1
+  start_day: 1
+  
+  # Select the outputs you want to populate in the database
+  fine_history: True
+  daily_history: True
+
+# Application log file customization, logging levels are 'Info', 'Warn', and 'Error'
+log:
+  file: 'log/sbhistory'
+  format: '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
+  level: 'Info'
+
+# Site location details for solar time calculations (elevation is in meters)
+site:
+  name: 'My Site'
+  region: 'My Region'
+  tz: 'America/New_York'
+  latitude: 41.0
+  longitude: -76.0
+  elevation: 0
+
+# Solar array properties for predicting potential solar radiation, azimuth and tilt are degrees,
+# area is in square meters, efficiency can be found from your solar panel data sheet and does
+# account for shading, soiling, and other local effects.
+solar_properties:
+  azimuth: 180
+  tilt: 30
+  area: 72
+  efficiency: 0.15
+
+# InfluxDB setup
+# These values assume use of InfluxDB 2.0 or later, for InfluxDB 1.8.x the format of the bucket,
+# org, and token fields are:
+#   bucket  'database/retention_policy'
+#   org     '-'
+#   token   'username:password'
+influxdb2:
+  enable: True
+  url: 'http://10.0.0.80:8086'
+  bucket: 'multisma2'
+  org: 'My Org'
+  token: 'P1Uz.....ddQ=='
+
+# Inverter setup
+# One inverter entry for each Sunny Boy inverter at your site.
+inverters:
+  - inverter:
+      name: 'inv1'
+      url: 'https://10.0.0.4'
+      user: 'user'
+      password: 'FSX...qu'
+  - inverter:
+      name: 'inv2'
+      url: 'https://10.0.0.5'
+      user: 'user'
+      password: 'FSX...qu'
+  - inverter:
+      name: 'inv3'
+      url: 'https://10.0.0.6'
+      user: 'user'
+      password: 'FSX...qu'

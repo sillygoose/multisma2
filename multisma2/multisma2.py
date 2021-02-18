@@ -1,12 +1,12 @@
 """Code to interface with the SMA inverters and return the results."""
-# Robust initialization and shutdown code courtesy of 
+# Robust initialization and shutdown code courtesy of
 # https://github.com/wbenny/python-graceful-shutdown.git
 
 import logging
 import sys
 import os
 import signal
-from typing import Dict, Any, NoReturn
+from config import config_from_yaml
 
 import asyncio
 import aiohttp
@@ -17,9 +17,8 @@ import version
 import logfiles
 from exceptions import TerminateSignal, NormalCompletion, AbnormalCompletion, FailedInitialization
 
-from configuration import APPLICATION_LOG_LOGGER_NAME
 
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 
 
 class Multisma2():
@@ -31,10 +30,12 @@ class Multisma2():
         self._site = None
         signal.signal(signal.SIGTERM, self.catch)
         signal.siginterrupt(signal.SIGTERM, False)
+        yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
+        self._config = config_from_yaml(data=yaml_file, read_from_file=True)
 
     def catch(self, signum, frame):
         """Handler for SIGTERM signals."""
-        logger.info("Received SIGTERM signal, forcing shutdown")
+        logger.critical("Received SIGTERM signal, forcing shutdown")
         raise TerminateSignal
 
     def run(self):
@@ -44,7 +45,7 @@ class Multisma2():
                 with DelayedKeyboardInterrupt():
                     self._start()
             except KeyboardInterrupt:
-                logger.info("Received KeyboardInterrupt during startup")
+                logger.critical("Received KeyboardInterrupt during startup")
                 raise
 
             self._run()
@@ -55,17 +56,18 @@ class Multisma2():
                 with DelayedKeyboardInterrupt():
                     self._stop()
             except KeyboardInterrupt:
-                logger.info("Received KeyboardInterrupt during shutdown")
+                logger.critical("Received KeyboardInterrupt during shutdown")
 
     async def _astart(self):
         """Asynchronous initialization code."""
-        logfiles.start(logger)
+        logfiles.start(logger, self._config)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = PVSite(self._session)
+        self._site = PVSite(self._session, self._config)
         result = await self._site.start()
-        if not result: raise FailedInitialization
+        if not result:
+            raise FailedInitialization
 
     async def _arun(self):
         """Asynchronous run code."""

@@ -1,6 +1,7 @@
 """Interface with SMA inverters using JSON."""
 
 import atexit
+import os
 import sys
 import socket
 import random
@@ -11,18 +12,8 @@ import logging
 import json
 import paho.mqtt.client as mqtt
 
-from configuration import (
-    APPLICATION_LOG_LOGGER_NAME,
-    MQTT_ENABLE,
-    MQTT_CLIENT,
-    MQTT_BROKER_IPADDR,
-    MQTT_BROKER_PORT,
-    MQTT_USERNAME,
-    MQTT_PASSWORD,
-)
 
-
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 local_vars = {}
 
 
@@ -45,7 +36,7 @@ def on_disconnect(client, userdata, result_code):
     client.connected = False
     client.disconnect_failed = False
     if result_code == mqtt.MQTT_ERR_SUCCESS:
-        logger.info(f"MQTT client successfully disconnected")
+        logger.info("MQTT client successfully disconnected")
     else:
         client.disconnect_failed = True
         logger.info(
@@ -57,7 +48,7 @@ def on_connect(client, userdata, flags, result_code):
     # pylint: disable=unused-argument
     if result_code == mqtt.MQTT_ERR_SUCCESS:
         client.connected = True
-        logger.info(f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']}")
+        logger.info(f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']} using topics '{local_vars['client']}/#'")
     else:
         client.connection_failed = True
         logger.info(f"MQTT client connection failed: {error_msg(result_code)}")
@@ -67,7 +58,7 @@ def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
     # Disconnect the MQTT client from the broker
     local_vars['mqtt_client'].loop_stop()
-    logger.info(f"MQTT client disconnect being called")
+    logger.info("MQTT client disconnect being called")
     local_vars['mqtt_client'].disconnect()
 
 
@@ -103,7 +94,7 @@ def publish(sensors):
         # Encode each sensor in JSON and publish
         sensor_json = json.dumps(sensor)
         message_info = local_vars['mqtt_client'].publish(
-            MQTT_CLIENT + "/" + topic, sensor_json
+            local_vars['client'] + "/" + topic, sensor_json
         )
         if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
             logger.warning(
@@ -111,39 +102,38 @@ def publish(sensors):
             )
 
 
-def start():
+def start(config):
     """Tests and caches the client MQTT broker connection."""
-    if not MQTT_ENABLE:
+    if not config.multisma2.mqtt.enable:
         return True
+    local_vars['client'] = config.multisma2.mqtt.client
 
     # Create a unique client name
     local_vars['clientname'] = (
-        MQTT_CLIENT
+        config.multisma2.mqtt.client
         + "_"
         + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
     )
 
     # Check if MQTT is configured properly, create the connection
-    port = (1883, MQTT_BROKER_PORT)[MQTT_BROKER_PORT > 0]
-    connection_type = ('authenticated', 'anonymous')[len(MQTT_USERNAME) == 0]
+    connection_type = ('authenticated', 'anonymous')[len(config.multisma2.mqtt.username) == 0]
     client = mqtt.Client(
         local_vars['clientname'],
-        userdata={'IP': MQTT_BROKER_IPADDR, 'Port': port, 'Type': connection_type},
+        userdata={'IP': config.multisma2.mqtt.ip, 'Port': config.multisma2.mqtt.port, 'Type': connection_type},
     )
 
     # Setup and try to connect to the broker
-    logger.info(
-        f"Attempting {connection_type} MQTT client connection to {MQTT_BROKER_IPADDR}:{port}")
+    logger.info(f"Attempting {connection_type} MQTT client connection to {config.multisma2.mqtt.ip}:{config.multisma2.mqtt.port}")
 
     client.on_connect = on_connect
-    client.username_pw_set(username=MQTT_USERNAME, password=MQTT_PASSWORD)
+    client.username_pw_set(username=config.multisma2.mqtt.username, password=config.multisma2.mqtt.password)
     try:
         # Initialize flags for connection status
         client.connected = client.connection_failed = False
         time_limit = 4.0
         sleep_time = 0.1
         client.loop_start()
-        client.connect(MQTT_BROKER_IPADDR, port=port)
+        client.connect(config.multisma2.mqtt.ip, port=config.multisma2.mqtt.port)
 
         # Wait for the connection to occur or timeout
         while not client.connected and not client.connection_failed and time_limit > 0:
@@ -182,7 +172,10 @@ def start():
 
 
 if __name__ == '__main__':
+    from config import config_from_yaml
+    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
+    config = config_from_yaml(data=yaml_file, read_from_file=True)
     test_msg = [{'Topic': 'test', 'Value': 'Test message'}]
     # Test connection and if successful publish a test message
-    if start():
+    if start(config):
         publish(test_msg)

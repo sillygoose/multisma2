@@ -8,9 +8,8 @@ from pprint import pprint
 
 import sma
 
-from configuration import APPLICATION_LOG_LOGGER_NAME
 
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 
 # Inverter keys that contain aggregates
 AGGREGATE_KEYS = [
@@ -42,7 +41,7 @@ class Inverter:
         if self._sma.sma_sid is None:
             logger.info(f"{self._name} - no session ID")
             return None
-        #logger.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        # logger.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
         # Grab the metadata dictionary
         metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
@@ -57,8 +56,12 @@ class Inverter:
             self._tags = json.loads(await resp.text())
 
         # Read the initial set of history state data
-        await self.read_inverter_production()
-        await self.read_instantaneous()
+        success = await self.read_inverter_production()
+        if not success:
+            return None
+        success = await self.read_instantaneous()
+        if not success:
+            return None
 
         # Return a list of cached keys
         return self._instantaneous.keys()
@@ -74,14 +77,18 @@ class Inverter:
         async with self._lock:
             self._instantaneous = await self._sma.read_instantaneous()
             if self._instantaneous is None:
-                #logger.info(f"Retrying 'read_instantaneous()' to create a new session")
+                # logger.info(f"Retrying 'read_instantaneous()' to create a new session")
                 self._instantaneous = await self._sma.read_instantaneous()
+                if self._instantaneous is None:
+                    return False
+        return True
 
     def clean(self, raw_results):
         """Clean the raw inverter data and return a dict with the key and result."""
         cleaned = {}
         for key, value in raw_results.items():
-            if not value: continue
+            if not value:
+                continue
             aggregate = AGGREGATE_KEYS.count(key)
             sma_type = self.get_type(key)
             scale = self.get_scale(key)
@@ -131,9 +138,9 @@ class Inverter:
     async def read_history(self, start, stop):
         history = await self._sma.read_history(start, stop)
         if not history:
-            logger.error(f"{self._name}:read_history({start}, {stop}) returned 'None'")
-        else:
-            history.insert(0, {'inverter': self._name})
+            logger.error(f"{self._name}:read_history({start}, {stop}) returned 'None' (check your local time)")
+            return None
+        history.insert(0, {'inverter': self._name})
         return history
 
     async def read_inverter_production(self):
@@ -148,15 +155,18 @@ class Inverter:
             self.read_history(month_start - one_hour, today_start),
             self.read_history(year_start - one_hour, today_start),
         )
+        if None in results:
+            return False
         self._history['today'] = results[0][1]
         self._history['month'] = results[1][1]
         self._history['year'] = results[2][1]
         self._history['lifetime'] = {'t': 0, 'v': 0}
-        #{'today': {'t': 1611032400, 'v': 3121525},
-        # 'month': {'t': 1609477200, 'v': 3055878},
-        # 'year': {'t': 1609477200, 'v': 3055878},
-        # 'lifetime': {'t': 0, 'v': 0}}
+        # {'today': {'t': 1611032400, 'v': 3121525},
+        #  'month': {'t': 1609477200, 'v': 3055878},
+        #  'year': {'t': 1609477200, 'v': 3055878},
+        #  'lifetime': {'t': 0, 'v': 0}}
         logger.debug(f"{self._name}/read_inverter_production()/_history: {self._history}")
+        return True
 
     def display_metadata(self, key):
         """Display the inverter metadata for a key."""
@@ -165,7 +175,7 @@ class Inverter:
 
     async def get_state(self, key):
         """Return the state for a given key."""
-        assert self._instantaneous != None
+        assert self._instantaneous is not None
         async with self._lock:
             state = self._instantaneous.get(key, None).copy()
         cleaned = self.clean({key: state})
@@ -222,10 +232,9 @@ class Inverter:
         """Return production value for the start of the specified period."""
         history = self._history.get(period)
         return {self.name(): history['v']}
-        
+
     async def read_inverter_history(self, start, stop):
         """Read the baseline inverter production."""
         history = await self._sma.read_history(start, stop)
         history.insert(0, {'inverter': self._name})
         return history
-        

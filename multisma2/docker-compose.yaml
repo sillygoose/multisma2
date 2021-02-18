@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
     volumes:
     - ./volumes/multisma2/log:/sillygoose/log
-    depends_on:
-    - mosquitto
-    - influxdb
-    
+#    depends_on:
+#    - mosquitto
+#    - influxdb
+

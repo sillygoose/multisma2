@@ -7,9 +7,8 @@ import os
 import signal
 import logging
 
-from configuration import APPLICATION_LOG_LOGGER_NAME
 
-logger = logging.getLogger(APPLICATION_LOG_LOGGER_NAME)
+logger = logging.getLogger('multisma2')
 
 
 __all__ = [
