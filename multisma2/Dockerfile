@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 # tzdata setup
 ENV TZ America/New_York
@@ -10,17 +10,21 @@ RUN apt-get install -y git nano tzdata
 RUN apt-get install -y python3 python3-pip
 
 # install required python packages
-RUN pip3 install aiohttp asyncio astral python-dateutil python-configuration
+RUN pip3 install aiohttp asyncio astral python-dateutil
 RUN pip3 install paho-mqtt async_timeout jmespath influxdb-client
+RUN pip3 install python-configuration[yaml]
 
 # clone the repo into the docker container
 WORKDIR /sillygoose
-RUN git clone https://github.com/sillygoose/multisma2.git
+RUN git clone https://github.com/sillygoose/multisma2
 
 # add the site-specific configuration file
 WORKDIR /sillygoose/multisma2
-ADD multisma2.py .
+RUN git checkout bigone
+
+WORKDIR /sillygoose/multisma2/multisma2
+ADD multisma2.yaml .
 
 # run multisma2
 WORKDIR /sillygoose
-CMD ["python3", "multisma2/multisma2.py"]
+CMD ["python3", "multisma2/multisma2/multisma2.py"]
