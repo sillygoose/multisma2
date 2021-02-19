@@ -19,9 +19,6 @@ WORKDIR /sillygoose
 RUN git clone https://github.com/sillygoose/multisma2
 
 # add the site-specific configuration file
-WORKDIR /sillygoose/multisma2
-RUN git checkout bigone
-
 WORKDIR /sillygoose/multisma2/multisma2
 ADD multisma2.yaml .
 
