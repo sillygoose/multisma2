@@ -4,7 +4,7 @@
 from pathlib import Path
 from setuptools import setup
 
-VERSION = "6.0.0"
+VERSION = "0.9.3"
 URL = "https://github.com/sillygoose/multisma2"
 
 setup(
