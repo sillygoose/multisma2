@@ -23,7 +23,7 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
 multisma2 is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
 
 ## Using multisma2
-A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker.
+A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker (now that the setup has migrated to a YAML configuration file).
 ### Requirements
 - Python 3.7 or later
 - Python packages used
@@ -34,7 +34,9 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - python-dateutil
     - jmespath
     - influxdb-client
-    - pvlib (which requires pandas, numpy. scipy, and tables)
+    - python-configuration
+    - pyyaml
+
 - SMA Sunny Boy inverter(s) supporting WebConnect
 - Docker (a Dockerfile is supplied to allow running in a Docker container as an option)
 
@@ -61,7 +63,9 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
 
     `python3 multisma2.py`
 
-5.  Docker setup
+5.  Save your `multisma2.yaml` file, because it contains sensitive information it is listed in `.gitignore` and will not become part of the project.
+
+6.  Docker setup
 
 Once you have a working `multisma2.yaml` file you can build a Docker container that runs **multisma2**:
 
@@ -71,7 +75,38 @@ Once you have a working `multisma2.yaml` file you can build a Docker container t
     sudo docker-compose up -d
 ```
 
-where `your-tag` is a name of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2**).  Since the docker-compose.yaml file assumes the image to be `multisma2:latest`, the second command adds this tag so I can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+where `your-tag` is a name of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2**).  The `docker-compose.yaml` file assumes the image to be `multisma2:latest`, the second command adds this tag so you can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+
+### Sunny Boy History Utility (sbhistory)
+There is a useful utility that complements **multisma2** in the **sbhistory** repo:
+
+```
+    git clone https://github.com/sillygoose/sbhistory
+```
+
+If you are just starting out with **multisma2**, you are collecting data but you have no past data to work with.  **sbhistory** fixes ths by allowing you to download the past history from your inverter(s) and import it into your InfluxDB database.
+
+**sbhistory** will use the settings in your **multisma2** YAML file, you can just append it to sample **sbhistory** YAML file, pick the few **sbhistory** options and transfer the history in one pass.  Now your dashboards can display the past 30 day and yearly solar production from your SMA inverter(s) and look really good.
+
+```
+    sbhistory:
+        # Starting date to pull history from inverters
+        start:
+            # Set the date to start the collection, make sure your database retention policy covers
+            # this start date, collection is up the current day.
+            year: 2020
+            month: 1
+            day: 1
+
+        # Select the outputs you want to populate the database
+        outputs:
+            fine_history: True
+            daily_history: True
+            ...
+
+    multisma2:
+        ...
+```
 
 ### Some Interesting Facts
 It maybe helpful to understand these quirks about **multisma2**:
@@ -94,7 +129,7 @@ At night these updates based on the settings in `pvsite.py`:
 ```
 
 ## Example Dashboards
-Still sorting these out but the following sample dashboards show some ideas on how the inverter data might be displayed.  I especially like being able to pull the production data from InfluxDB to see the daily, monthly, and annual totals.
+Example dashboards are provided for Grafana and InfluxDB and InfluxDB2.  These contain the Flux scripts used to query InfluxDB so be sure to examine them.
 
 ### InfluxDB
 All InfluxDB queries are done in Flux, looked more powerful to me and since I didn't know SQL it seemed like a better choice.  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x, only the settings in `multisma2.yaml` need to change.

@@ -1,69 +1,81 @@
-# Copy this file to 'sbhistory.yaml' and complete with your site details.
+# Copy this file to 'multisma2.yaml' and complete with your site details.
+multisma2:
+  # Application log file customization, logging levels are 'INFO', 'WARN', and 'ERROR'
+  log:
+    file: 'log/multisma2'
+    format: '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
+    level: 'INFO'
 
-sbhistory:
-  # Starting date to pull history from inverters
-  # Set the date to start the collection, make sure your database retention policy covers
-  # this start date, collection is up the current day.
-  start_year: 2021
-  start_month: 1
-  start_day: 1
-  
-  # Select the outputs you want to populate in the database
-  fine_history: True
-  daily_history: True
+  # Site location details for solar time calculations (elevation is in meters)
+  site:
+    name: 'My Site'
+    region: 'My Region'
+    tz: 'America/New_York'
+    latitude: 40.0
+    longitude: -75.0
+    elevation: 0
+    # Production fuel mix factor (kgCO2e per kWh) which is an estimate of local utility KgCO2e/kWh
+    # You can get these estimates from the EPA, your utility company
+    # or from https://www.carbonfootprint.com/international_electricity_factors.html
+    co2_avoided: 0.4400
 
-# Application log file customization, logging levels are 'Info', 'Warn', and 'Error'
-log:
-  file: 'log/sbhistory'
-  format: '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
-  level: 'Info'
+  # Solar array properties for predicting potential solar radiation, azimuth and tilt are degrees,
+  # area is in square meters, efficiency can be found from your solar panel data sheet and does
+  # account for shading, soiling, and other local effects.
+  solar_properties:
+    azimuth: 180
+    tilt: 30
+    area: 72
+    efficiency: 0.15
 
-# Site location details for solar time calculations (elevation is in meters)
-site:
-  name: 'My Site'
-  region: 'My Region'
-  tz: 'America/New_York'
-  latitude: 41.0
-  longitude: -76.0
-  elevation: 0
+  # InfluxDB setup
+  # The InfluxDB interface uses the newer 2.0 client which supports both the 2.0 and 1.8.x InfluxDB versions
+  # with just minor changes in the configuration making a future upgrade to v2 a simple change of options.
+  #
+  # Influxdb configuration options:
+  #   influxdb2.enable        set to True to enable InfluxDB output, False to disable output
+  #   influxdb2.bucket        set to the InfluxDB bucket (v2) or 'database/retention_policy' (v1.8)
+  #   influxdb2.url           set to the InfluxDB server URL and port
+  #   influxdb2.org           set to the v2 organization or '-' if using v1.8.x
+  #   influxdb2.token         set to a valid v2 token or v1.8.x 'username:password'
+  influxdb2:
+    enable: True
+    url: 'http://10.0.0.81:8086'
+    bucket: 'multisma2'
+    org: 'My Org'
+    token: 'P1Uz.....ddQ=='
 
-# Solar array properties for predicting potential solar radiation, azimuth and tilt are degrees,
-# area is in square meters, efficiency can be found from your solar panel data sheet and does
-# account for shading, soiling, and other local effects.
-solar_properties:
-  azimuth: 180
-  tilt: 30
-  area: 72
-  efficiency: 0.15
+    # MQTT setup
+    # The MQTT interface uses the following options to configure the interface:
+    #   mqtt.enable            set to True to enable sending messages to the broker or False to disable MQTT output
+    #   mqtt.client            used as top level topic and random broker name
+    #   mqtt.ip                set to the fully qualified domain name or IP address of the broker
+    #   mqtt.port              set to MQTT broker port
+    #   mqtt.username          set to the username if authentication is used, otherwise an empty string
+    #   mqtt.password          set to the password port if authentication is used, otherwise an empty string
+    mqtt:
+      enable: True
+      client: 'multisma2'
+      ip: '10.0.0.80'
+      port: 1883
+      username: ''
+      password: ''
 
-# InfluxDB setup
-# These values assume use of InfluxDB 2.0 or later, for InfluxDB 1.8.x the format of the bucket,
-# org, and token fields are:
-#   bucket  'database/retention_policy'
-#   org     '-'
-#   token   'username:password'
-influxdb2:
-  enable: True
-  url: 'http://10.0.0.80:8086'
-  bucket: 'multisma2'
-  org: 'My Org'
-  token: 'P1Uz.....ddQ=='
-
-# Inverter setup
-# One inverter entry for each Sunny Boy inverter at your site.
-inverters:
-  - inverter:
-      name: 'inv1'
-      url: 'https://10.0.0.4'
-      user: 'user'
-      password: 'FSX...qu'
-  - inverter:
-      name: 'inv2'
-      url: 'https://10.0.0.5'
-      user: 'user'
-      password: 'FSX...qu'
-  - inverter:
-      name: 'inv3'
-      url: 'https://10.0.0.6'
-      user: 'user'
-      password: 'FSX...qu'
+  # Inverter setup
+  # One inverter entry for each Sunny Boy inverter at your site.
+  inverters:
+    - inverter:
+        name: 'inv1'
+        url: 'https://10.0.0.4'
+        user: 'user'
+        password: 'FSX...qu'
+    - inverter:
+        name: 'inv2'
+        url: 'https://10.0.0.5'
+        user: 'user'
+        password: 'FSX...qu'
+    - inverter:
+        name: 'inv3'
+        url: 'https://10.0.0.6'
+        user: 'user'
+        password: 'FSX...qu'
