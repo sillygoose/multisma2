@@ -12,7 +12,7 @@ from dateutil import tz
 from astral.sun import sun, elevation, azimuth
 from astral import LocationInfo, now
 
-# import clearsky
+import clearsky
 import version
 
 from inverter import Inverter
@@ -181,26 +181,26 @@ class PVSite():
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
-#            self._influx.write_points(self.irradiance_today())
+            self._influx.write_points(self.irradiance_today())
 
-#    def irradiance_today(self):
-#        # Create location object to store lat, lon, timezone
-#        cfg = self._cfg
-#        site = clearsky.site_location(cfg.multisma2.site.latitude, cfg.multisma2.site.longitude, tz=cfg.multisma2.site.tz)
-#        dawn = self._dawn
-#        dusk = self._dusk + datetime.timedelta(minutes=10)
-#        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
-#        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
-#
-#        # Get irradiance data for today and convert to InfluxDB line protocol
-#        irradiance = clearsky.get_irradiance(site=site, start=start.strftime("%Y-%m-%d %H:%M:00"), end=stop.strftime("%Y-%m-%d %H:%M:00"), tilt=cfg.multisma2.solar_properties.tilt, azimuth=cfg.multisma2.solar_properties.azimuth, freq='10min')
-#        lp_points = []
-#        for point in irradiance:
-#            t = point['t']
-#            v = point['v'] * cfg.multisma2.solar_properties.area * cfg.multisma2.solar_properties.efficiency
-#            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
-#            lp_points.append(lp)
-#        return lp_points
+    def irradiance_today(self):
+        # Create location object to store lat, lon, timezone
+        cfg = self._cfg
+        #site = clearsky.site_location(cfg.multisma2.site.latitude, cfg.multisma2.site.longitude, tz=cfg.multisma2.site.tz)
+        dawn = self._dawn
+        dusk = self._dusk + datetime.timedelta(minutes=10)
+        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
+        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
+
+        # Get irradiance data for today and convert to InfluxDB line protocol
+        irradiance = clearsky.global_irradiance()
+        lp_points = []
+        for point in irradiance:
+            t = point['t']
+            v = point['v'] * cfg.multisma2.solar_properties.area * cfg.multisma2.solar_properties.efficiency
+            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
+            lp_points.append(lp)
+        return lp_points
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""

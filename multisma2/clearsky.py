@@ -9,10 +9,8 @@ import math
 from pprint import pprint
 
 from pysolar.solar import get_altitude, get_azimuth
-# from pysolar.solar import radiation
-# from pysolar.solar import *
-
 from pysolar.radiation import get_radiation_direct
+
 from astral import LocationInfo
 from astral.sun import sun, elevation, azimuth
 
@@ -46,7 +44,7 @@ class Site():
         return self._tz
 
 
-def global_irradiance(site, date):
+def global_irradiance(site, date, sigma, phi_c, rho):
     """Calculate the clear-sky POA (plane of array) irradiance."""
     irradiance = []
 
@@ -56,11 +54,25 @@ def global_irradiance(site, date):
 
     t = datetime.datetime(year=dawn.year, month=dawn.month, day=dawn.day, hour=dawn.hour, minute=int(int(dawn.minute/10)*10), tzinfo=site.tz())
     stop = datetime.datetime(year=dusk.year, month=dusk.month, day=dusk.day, hour=dusk.hour, minute=int(int(dusk.minute/10)*10), tzinfo=site.tz())
-    print(f"Start is {t}, end is {stop}")
+    n = date.timetuple().tm_yday
+    #print(f"Start is {t}, end is {stop}")
     while t < stop:
-        elevation = get_altitude(site.latitude(), site.longitude(), t)
-        clearsky = get_radiation_direct(t, elevation)
-        irradiance.append({'t': int(t.timestamp()), 'v': clearsky})
+        altitude = get_altitude(latitude_deg=site.latitude(), longitude_deg=site.longitude(), when=t)
+        beta = math.radians(altitude)
+        azimuth = math.radians(get_azimuth(site.latitude(), site.longitude(), astral['noon']))
+        phi_s = math.radians(azimuth)
+
+        cos_theta = math.cos(beta) * math.cos(phi_s - phi_c) * math.sin(sigma) + math.sin(beta) * math.cos(sigma)
+        ib = get_radiation_direct(when=t, altitude_deg=altitude)
+        ibc = ib * cos_theta
+
+        C = 0.095 + 0.04 * math.sin(math.radians((n - 100) / 365))
+        idc = C * ib * (1 + math.cos(sigma)) / 2
+
+        irc = rho * ib * (math.sin(beta) + C) * ((1 - math.cos(sigma)) / 2)
+
+        igc = ibc + idc + irc
+        irradiance.append({'t': int(t.timestamp()), 'v': igc})
         t += datetime.timedelta(minutes=10)
 
     return irradiance
@@ -70,9 +82,8 @@ if __name__ == "__main__":
     config = config_from_yaml(data=yaml_file, read_from_file=True)
 
     site = Site(config.multisma2.site)
-
     tzinfo = tz.gettz(config.multisma2.site.tz)
-    #test_date = datetime.datetime(year=2021, month=6, day=21, hour=13, minute=8, tzinfo=tzinfo)
+
     #global_irradiance = global_irradiance(site=site, date=test_date)
     #elevation = get_altitude(site.latitude(), site.longitude(), test_date)
     #azimuth = get_azimuth(site.latitude(), site.longitude(), test_date)
@@ -80,10 +91,24 @@ if __name__ == "__main__":
     #clearsky = get_radiation_direct(test_date, elevation)
     #print(f"estimated solar radiation is {clearsky}")
 
+    test_date = datetime.datetime(year=2021, month=2, day=21, tzinfo=tzinfo)
     tilt = config.multisma2.solar_properties.tilt
     sigma = math.radians(tilt)
     orientation = 180 - config.multisma2.solar_properties.azimuth
     phi_c = math.radians(orientation)
+    rho = 0.1
+
+    ghc = global_irradiance(site, test_date, sigma, phi_c, rho)
+    lp_points = []
+    for point in ghc:
+        t = point.get('t')
+        v = point.get('v')
+        kw = v * config.multisma2.solar_properties.area * config.multisma2.solar_properties.efficiency
+        point['v'] = kw
+        lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
+        lp_points.append(lp)
+        #print(f"{datetime.datetime.fromtimestamp(t)}  {kw:.0f}")
+
 
     daily_radiation = []
     date = datetime.date(year=2021, month=1, day=1)
@@ -94,16 +119,16 @@ if __name__ == "__main__":
 
         altitude = get_altitude(site.latitude(), site.longitude(), astral['noon'])
         beta = math.radians(altitude)
-        #azimuth = math.radians(get_azimuth(site.latitude(), site.longitude(), astral['noon']))
+        azimuth = math.radians(get_azimuth(site.latitude(), site.longitude(), astral['noon']))
+        phi_s = math.radians(azimuth)
 
-        cos_theta = math.cos(beta) * math.cos(phi_c) * math.sin(sigma) + math.sin(beta) * math.cos(sigma)
+        cos_theta = math.cos(beta) * math.cos(phi_s - phi_c) * math.sin(sigma) + math.sin(beta) * math.cos(sigma)
         ib = get_radiation_direct(when=astral['noon'], altitude_deg=altitude)
         ibc = ib * cos_theta
 
         C = 0.095 + 0.04 * math.sin(math.radians((n - 100) / 365))
-        idc = C * ib * (1 + math.cos(sigma) / 2)
+        idc = C * ib * (1 + math.cos(sigma)) / 2
 
-        rho = 0.2
         irc = rho * ib * (math.sin(beta) + C) * ((1 - math.cos(sigma)) / 2)
 
         igc = ibc + idc + irc
