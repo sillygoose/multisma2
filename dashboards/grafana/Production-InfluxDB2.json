@@ -51,7 +51,7 @@
       },
       "lines": true,
       "linewidth": 1,
-      "nullPointMode": "null",
+      "nullPointMode": "null as zero",
       "options": {
         "alertThreshold": false
       },
@@ -82,8 +82,116 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> sample(n: 10, pos: 1)",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
           "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        },
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "refId": "D",
           "resultFormat": "time_series",
           "select": [
             [
@@ -526,7 +634,7 @@
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "decimals": 2,
+          "decimals": 1,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -931,7 +1039,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "days_to_visualize = -5d     // Visualize the last 5 days of site total production\n\n// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: days_to_visualize)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
+          "query": "days_to_visualize = -5d     // Visualize the last 5 days of site total production\n\n// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: days_to_visualize)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, site: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1831,7 +1939,7 @@
           "hide": true,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -7d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) / -1000.0 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_month\")",
+          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -7d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) / -1000.0 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_month\")",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2487,5 +2595,5 @@
   "timezone": "",
   "title": "Production",
   "uid": "eM8UF8BGj",
-  "version": 14
+  "version": 17
 }
