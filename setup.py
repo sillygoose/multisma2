@@ -4,7 +4,7 @@
 from pathlib import Path
 from setuptools import setup
 
-VERSION = "0.9.3"
+VERSION = "0.9.4"
 URL = "https://github.com/sillygoose/multisma2"
 
 setup(
@@ -29,6 +29,7 @@ setup(
         "influxdb-client",
         "paho-mqtt",
         "astral",
+        "pysolar",
         "python-dateutil",
         "pyyaml",
         "python-configuration",

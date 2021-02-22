@@ -21,12 +21,15 @@ multisma2:
 
   # Solar array properties for predicting potential solar radiation, azimuth and tilt are degrees,
   # area is in square meters, efficiency can be found from your solar panel data sheet and does
-  # account for shading, soiling, and other local effects.
+  # account for shading, soiling, and other local effects.  rho is the ground reflectance, values
+  # might range from 0.1 for a dark roof and as high as 0.8 for fresh snow (serious modeling might
+  # replace this with a function to vary by month).
   solar_properties:
     azimuth: 180
     tilt: 30
     area: 72
     efficiency: 0.15
+    rho: 0.1
 
   # InfluxDB setup
   # The InfluxDB interface uses the newer 2.0 client which supports both the 2.0 and 1.8.x InfluxDB versions

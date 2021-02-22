@@ -5,6 +5,7 @@ import asyncio
 import datetime
 import time
 import logging
+import math
 
 # from pprint import pprint
 from dateutil import tz
@@ -184,21 +185,28 @@ class PVSite():
             self._influx.write_points(self.irradiance_today())
 
     def irradiance_today(self):
-        # Create location object to store lat, lon, timezone
-        cfg = self._cfg
-        #site = clearsky.site_location(cfg.multisma2.site.latitude, cfg.multisma2.site.longitude, tz=cfg.multisma2.site.tz)
-        dawn = self._dawn
-        dusk = self._dusk + datetime.timedelta(minutes=10)
-        start = datetime.datetime(dawn.year, dawn.month, dawn.day, dawn.hour, int(int(dawn.minute/10)*10))
-        stop = datetime.datetime(dusk.year, dusk.month, dusk.day, dusk.hour, int(int(dusk.minute/10)*10))
+        site = self._config.multisma2.site
+        solar_properties = self._config.multisma2.solar_properties
+
+        doy = self._dawn.timetuple().tm_yday
+        sigma = math.radians(solar_properties.tilt)
+        phi_c = math.radians(180 - solar_properties.azimuth)
+        rho = solar_properties.get('rho', 0.0)
 
         # Get irradiance data for today and convert to InfluxDB line protocol
-        irradiance = clearsky.global_irradiance()
+        lp_points = []
+        irradiance = clearsky.global_irradiance(site=site, dawn=self._dawn, dusk=self._dusk, n=doy, sigma=sigma, phi_c=phi_c, rho=rho)
+        for point in irradiance:
+            t = point['t']
+            v = point['v'] * solar_properties.area * solar_properties.efficiency
+            lp = f'production,_inverter=site irradiance={round(v, 1)} {t}'
+            lp_points.append(lp)
+
         lp_points = []
         for point in irradiance:
             t = point['t']
-            v = point['v'] * cfg.multisma2.solar_properties.area * cfg.multisma2.solar_properties.efficiency
-            lp = f'production,inverter=site irradiance={round(v, 1)} {t}'
+            v = point['v'] * solar_properties.area * solar_properties.efficiency
+            lp = f'production,_inverter=site irradiance={round(v, 1)} {t}'
             lp_points.append(lp)
         return lp_points
 
