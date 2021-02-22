@@ -1,5 +1,5 @@
 """Module to estimate the clearsky irradiance for a given day and site."""
-# From Chapter 7 of 'Renewable and Efficient Electric Power Systems' by Masters
+# Equations from G. Masters, “Renewable and Efficient Electric Power Systems,” Wiley-IEEE Press, 2004.
 
 import logging
 import datetime

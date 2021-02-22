@@ -12,7 +12,7 @@ RUN apt-get install -y python3 python3-pip
 # install required python packages
 RUN pip3 install aiohttp asyncio astral python-dateutil
 RUN pip3 install paho-mqtt async_timeout jmespath influxdb-client
-RUN pip3 install python-configuration pyyaml
+RUN pip3 install python-configuration pyyaml pysolar
 
 # clone the repo into the docker container
 WORKDIR /sillygoose
