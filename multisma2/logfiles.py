@@ -39,4 +39,4 @@ def start(app_logger, config):
     app_logger.addHandler(console_handler)
 
     # First entry
-    app_logger.info("Created application log %s", filename)
+    app_logger.info("Created application log at %s", filename)

@@ -7,7 +7,7 @@ import time
 import logging
 import math
 
-# from pprint import pprint
+from pprint import pprint
 from dateutil import tz
 
 from astral.sun import sun, elevation, azimuth
@@ -174,8 +174,7 @@ class PVSite():
             now = datetime.datetime.now()
             tomorrow = now + datetime.timedelta(days=1)
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
-            #await asyncio.sleep((midnight - now).total_seconds())
-            await asyncio.sleep(120)
+            await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
             logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
@@ -183,33 +182,15 @@ class PVSite():
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
-            self._influx.write_points(self.irradiance_today())
-
-    def irradiance_today(self):
-        site = self._config.multisma2.site
-        solar_properties = self._config.multisma2.solar_properties
-
-        doy = self._dawn.timetuple().tm_yday
-        sigma = math.radians(solar_properties.tilt)
-        phi_c = math.radians(180 - solar_properties.azimuth)
-        rho = solar_properties.get('rho', 0.0)
-
-        # Get irradiance data for today and convert to InfluxDB line protocol
-        lp_points = []
-        irradiance = clearsky.global_irradiance(site=site, dawn=self._dawn, dusk=self._dusk, n=doy, sigma=sigma, phi_c=phi_c, rho=rho)
-        for point in irradiance:
-            t = point['t']
-            v = point['v'] * solar_properties.area * solar_properties.efficiency
-            lp = f'production,_inverter=site irradiance={round(v, 1)} {t}'
-            lp_points.append(lp)
-        return lp_points
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
-        last_tick = int(time.time()) / self._scaling
+        timestamp = time.time_ns() // 1000000000
+        last_tick = timestamp / self._scaling
         while True:
-            tick = int(time.time()) / self._scaling
+            timestamp = time.time_ns() // 1000000000
+            tick = timestamp / self._scaling
             if tick != last_tick:
                 last_tick = tick
                 if tick % 10 == 0:
@@ -217,13 +198,13 @@ class PVSite():
                         self.update_instantaneous(),
                         self.update_total_production(),
                     )
-                    queues.get('10s').put_nowait(tick)
+                    queues.get('10s').put_nowait(timestamp)
                 if tick % 30 == 0:
-                    queues.get('30s').put_nowait(tick)
+                    queues.get('30s').put_nowait(timestamp)
                 if tick % 60 == 0:
-                    queues.get('60s').put_nowait(tick)
+                    queues.get('60s').put_nowait(timestamp)
                 if tick % 300 == 0:
-                    queues.get('300s').put_nowait(tick)
+                    queues.get('300s').put_nowait(timestamp)
             await asyncio.sleep(SLEEP)
 
     async def task_10s(self, queue):
@@ -260,6 +241,7 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
+
             sensors = await asyncio.gather(
                 self.sun_position(),
             )
@@ -270,10 +252,11 @@ class PVSite():
     async def task_300s(self, queue):
         """Work done every 300 seconds (5 minutes)."""
         while True:
-            await queue.get()
+            timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
                 self.total_production(),
+                self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
                 self._influx.write_sma_sensors(sensor)
@@ -380,6 +363,15 @@ class PVSite():
         sun_elevation = elevation(observer=self._siteinfo.observer, dateandtime=astral_now)
         sun_azimuth = azimuth(observer=self._siteinfo.observer, dateandtime=astral_now)
         results = [{'topic': 'sun/position', 'elevation': round(sun_elevation, 1), 'azimuth': round(sun_azimuth, 1)}]
+        return results
+
+    async def sun_irradiance(self, timestamp):
+        """Calculate the sun is in the sky."""
+        site_properties = self._config.multisma2.site
+        solar_properties = self._config.multisma2.solar_properties
+        current_igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
+        site_igc = current_igc * solar_properties.area * solar_properties.efficiency
+        results = [{'topic': 'sun/irradiance', 'irradiance': round(site_igc, 1)}]
         return results
 
     async def co2_avoided(self):

@@ -5,6 +5,7 @@
 
 import time
 import logging
+from pprint import pprint
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -27,6 +28,7 @@ LP_LOOKUP = {
     'production/total_wh': {'measurement': 'production', 'tag': '_inverter', 'field': 'total_wh'},
     'production/midnight': {'measurement': 'production', 'tag': '_inverter', 'field': 'midnight'},
     'sun/position': {'measurement': 'sun', 'tag': None, 'field': None},
+    'sun/irradiance': {'measurement': 'sun', 'tag': None, 'field': None},
 }
 
 
@@ -72,7 +74,7 @@ class InfluxDB():
             self._write_api.write(bucket=self._bucket, record=points, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write_points() call failed in write_points(): {e}")
+            logger.error(f"Database write() call failed in write_points(): {e}")
             result = False
         return result
 
@@ -108,7 +110,7 @@ class InfluxDB():
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write_points() call failed in write_history(): {e}")
+            logger.error(f"Database write() call failed in write_history(): {e}")
             result = False
         return result
 
@@ -172,6 +174,6 @@ class InfluxDB():
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write_points() call failed in write_sma_sensors(): {e}")
+            logger.error(f"Database write() call failed in write_sma_sensors(): {e}")
             result = False
         return result
