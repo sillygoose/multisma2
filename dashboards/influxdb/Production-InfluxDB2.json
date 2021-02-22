@@ -171,9 +171,9 @@
        "type": "cell",
        "attributes": {
         "x": 5,
-        "y": 4,
+        "y": 3,
         "w": 5,
-        "h": 2
+        "h": 3
        },
        "relationships": {
         "view": {
@@ -209,7 +209,7 @@
         "x": 5,
         "y": 0,
         "w": 5,
-        "h": 4
+        "h": 3
        },
        "relationships": {
         "view": {
@@ -1210,7 +1210,7 @@
          "type": "single-stat",
          "queries": [
           {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) / 1000.0 }))\n  |> yield(name: \"this_month\")\n",
+           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) / 1000.0 }))\n  |> yield(name: \"this_month\")\n",
            "editMode": "advanced",
            "name": "",
            "builderConfig": {
@@ -1266,7 +1266,7 @@
          "type": "single-stat",
          "queries": [
           {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")\n",
+           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")\n",
            "editMode": "advanced",
            "name": "",
            "builderConfig": {
@@ -1378,7 +1378,7 @@
          "type": "single-stat",
          "queries": [
           {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 0h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kgco2e: float(v: r._total_wh) * 0.18991 * 0.001 }))\n  |> yield(name: \"this_day\")",
+           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 0h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kgco2e: float(v: r._total_wh) * 0.18991 * 0.001 }))\n  |> yield(name: \"this_day\")",
            "editMode": "advanced",
            "name": "",
            "builderConfig": {
