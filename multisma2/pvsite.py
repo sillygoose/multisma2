@@ -174,7 +174,8 @@ class PVSite():
             now = datetime.datetime.now()
             tomorrow = now + datetime.timedelta(days=1)
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
-            await asyncio.sleep((midnight - now).total_seconds())
+            #await asyncio.sleep((midnight - now).total_seconds())
+            await asyncio.sleep(120)
 
             # Update internal sun info and the daily production
             logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
@@ -196,13 +197,6 @@ class PVSite():
         # Get irradiance data for today and convert to InfluxDB line protocol
         lp_points = []
         irradiance = clearsky.global_irradiance(site=site, dawn=self._dawn, dusk=self._dusk, n=doy, sigma=sigma, phi_c=phi_c, rho=rho)
-        for point in irradiance:
-            t = point['t']
-            v = point['v'] * solar_properties.area * solar_properties.efficiency
-            lp = f'production,_inverter=site irradiance={round(v, 1)} {t}'
-            lp_points.append(lp)
-
-        lp_points = []
         for point in irradiance:
             t = point['t']
             v = point['v'] * solar_properties.area * solar_properties.efficiency
@@ -491,7 +485,7 @@ class PVSite():
         return None
 
     def is_daylight(self) -> bool:
-        """FCurrent if currently in daylight conditions."""
+        """True if currently in daylight conditions."""
         return self._daylight
 
 
