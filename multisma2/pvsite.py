@@ -5,9 +5,8 @@ import asyncio
 import datetime
 import time
 import logging
-import math
 
-from pprint import pprint
+# from pprint import pprint
 from dateutil import tz
 
 from astral.sun import sun, elevation, azimuth
@@ -210,14 +209,14 @@ class PVSite():
     async def task_10s(self, queue):
         """Work done every 10 seconds."""
         while True:
-            await queue.get()
+            timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
                 self.snapshot(),
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_30s(self, queue):
         """Work done every 30 seconds."""
@@ -233,7 +232,7 @@ class PVSite():
     async def task_60s(self, queue):
         """Work done every 60 seconds."""
         while True:
-            await queue.get()
+            timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
                 self.production_history(),
@@ -247,7 +246,7 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_300s(self, queue):
         """Work done every 300 seconds (5 minutes)."""
@@ -259,7 +258,7 @@ class PVSite():
                 self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
-                self._influx.write_sma_sensors(sensor)
+                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""

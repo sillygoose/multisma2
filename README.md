@@ -1,5 +1,5 @@
 # multisma2
-Improved Python application for real-time monitoring multiple SMA Sunny Boy inverters.
+Improved Python application for real-time monitoring one or more SMA Sunny Boy inverters.
 
 Now features a wider range of outputs, basically anything you see in your browser when connected to an SMA inverter with WebConnect can be pulled and sent to your InfluxDB database or as an MQTT message (or both).
 
@@ -8,8 +8,9 @@ Now features a wider range of outputs, basically anything you see in your browse
 - total production (day, month, year, and lifetime)
 - inverter efficiency
 - inverter status
-- co2 avoided due to PV production
+- <sub>2</sub> avoided due to PV production
 - sun elevation and azimuth
+- estimate of solar irradiation on a tilted surface at your location
 - add any SMA sensors or setting for which you know the 'key'
 - MQTT messaging
 - InfluxDB interface (writes production data and status direct to InfluxDB 1.8 and 2.0)
@@ -31,14 +32,15 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - aiohttp
     - asyncio
     - astral
+    - pysolar
     - python-dateutil
     - jmespath
     - influxdb-client
     - python-configuration
     - pyyaml
 
-- SMA Sunny Boy inverter(s) supporting WebConnect
-- Docker (a Dockerfile is supplied to allow running in a Docker container as an option)
+- SMA inverter(s) supporting WebConnect (I have Sunny Boy models but others should also work)
+- Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running InfluxDB, InfluxDB2, Telegraf, and Grafana)
 
 ### Installation
 1.  First up is to clone this repository and install the packages it needs to operate:

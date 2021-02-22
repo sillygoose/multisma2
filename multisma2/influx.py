@@ -5,7 +5,7 @@
 
 import time
 import logging
-from pprint import pprint
+# from pprint import pprint
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -114,13 +114,13 @@ class InfluxDB():
             result = False
         return result
 
-    def write_sma_sensors(self, sensors):
+    def write_sma_sensors(self, sensor, timestamp=None):
         if not self._client:
             return False
 
-        ts = int(time.time())
+        ts = timestamp if timestamp is not None else int(time.time())
         lps = []
-        for old_point in sensors:
+        for old_point in sensor:
             point = old_point.copy()
             topic = point.pop('topic', None)
             point.pop('precision', None)
@@ -132,8 +132,8 @@ class InfluxDB():
 
                 measurement = lookup.get('measurement')
                 tag = lookup.get('tag')
+                field = lookup.get('field')
                 for k, v in point.items():
-                    field = lookup.get('field')
                     signature = f'{measurement}_{k}_{field}'
                     lp = f'{measurement}'
                     if tag:
