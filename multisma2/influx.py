@@ -132,8 +132,8 @@ class InfluxDB():
 
                 measurement = lookup.get('measurement')
                 tag = lookup.get('tag')
-                field = lookup.get('field')
                 for k, v in point.items():
+                    field = lookup.get('field')
                     signature = f'{measurement}_{k}_{field}'
                     lp = f'{measurement}'
                     if tag:
