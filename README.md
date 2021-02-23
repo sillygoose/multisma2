@@ -164,3 +164,4 @@ Thanks for the following packages used to build this software:
     - https://astral.readthedocs.io
 - Tricks for managing startup and shutdown
     - https://github.com/wbenny/python-graceful-shutdown
+- Chapter 7.9 (TOTAL CLEAR SKY INSOLATION ON A COLLECTING SURFACE) from from G. Masters, “Renewable and Efficient Electric Power Systems,” Wiley-IEEE Press, 2004
