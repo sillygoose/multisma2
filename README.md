@@ -8,7 +8,7 @@ Now features a wider range of outputs, basically anything you see in your browse
 - total production (day, month, year, and lifetime)
 - inverter efficiency
 - inverter status
-- <sub>2</sub> avoided due to PV production
+- CO<sub>2</sub> avoided due to PV production
 - sun elevation and azimuth
 - estimate of solar irradiation on a tilted surface at your location
 - add any SMA sensors or setting for which you know the 'key'
