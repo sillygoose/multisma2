@@ -66,9 +66,11 @@ class PVSite():
     """Class to describe a PV site with one or more inverters."""
     def __init__(self, session, config):
         """Create a new PVSite object."""
-        cfg = self._config = config
+        self._config = config
         self._inverters = []
         self._session = session
+        self._siteinfo = None
+        self._tzinfo = None
         self._tasks = None
         self._total_production = None
         self._cached_keys = []
@@ -78,19 +80,64 @@ class PVSite():
         self._dawn = None
         self._dusk = None
         self._influx = InfluxDB()
-        self._siteinfo = LocationInfo(cfg.multisma2.site.name, cfg.multisma2.site.region, cfg.multisma2.site.tz, cfg.multisma2.site.latitude, cfg.multisma2.site.longitude)
-        self._tzinfo = tz.gettz(cfg.multisma2.site.tz)
+
+    def check_config(self, config):
+        """Check that the needed YAML options exist."""
+        required_keys = ['site', 'solar_properties', 'inverters']
+        for key in required_keys:
+            if key not in config.keys():
+                logger.error(f"Missing required 'multisma2' option in YAML file: '{key}'")
+                return False
+
+        required_keys = ['name', 'region', 'tz', 'latitude', 'longitude', 'elevation', 'co2_avoided']
+        for key in required_keys:
+            if key not in config.site.keys():
+                logger.error(f"Missing required 'site' option in YAML file: '{key}'")
+                return False
+
+        required_keys = ['azimuth', 'tilt', 'area', 'efficiency', 'rho']
+        for key in required_keys:
+            if key not in config.solar_properties.keys():
+                logger.error(f"Missing required 'solar_properties' option in YAML file: '{key}'")
+                return False
+
+    def check_inverter_config(self, config):
+        """Check that the inverter keys are present."""
+        key = 'inverter'
+        if key not in config.keys():
+            logger.error(f"Missing required 'inverters' option in YAML file: '{key}'")
+            return False
+
+        inverter_keys = config.get('inverter').keys()
+        required_keys = ['name', 'url', 'user', 'password']
+        for key in required_keys:
+            if key not in inverter_keys:
+                logger.error(f"Missing required 'inverter' option in YAML file: '{key}'")
+                return False
 
     async def start(self):
         """Initialize the PVSite object."""
-        if not self._influx.start(self._config):
-            return False
-        if not mqtt.start(self._config):
+        config = self._config
+        if self.check_config(config) is False:
             return False
 
-        for inverter in self._config.multisma2.inverters:
+        self._siteinfo = LocationInfo(config.site.name, config.site.region, config.site.tz, config.site.latitude, config.site.longitude)
+        self._tzinfo = tz.gettz(config.site.tz)
+
+        for inverter in config.inverters:
+            if self.check_inverter_config(inverter) is False:
+                return False
             inv = inverter.get('inverter', None)
-            self._inverters.append(Inverter(inv['name'], inv['url'], inv['user'], inv['password'], self._session))
+            if inv is not None:
+                self._inverters.append(Inverter(inv['name'], inv['url'], inv['user'], inv['password'], self._session))
+
+        if 'influxdb2' in config.keys():
+            if not self._influx.start(config=config.influxdb2):
+                return False
+
+        if 'mqtt' in config.keys():
+            if not mqtt.start(config=config.mqtt):
+                return False
 
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         if None in cached_keys:
@@ -366,16 +413,16 @@ class PVSite():
 
     async def sun_irradiance(self, timestamp):
         """Calculate the sun is in the sky."""
-        site_properties = self._config.multisma2.site
-        solar_properties = self._config.multisma2.solar_properties
+        site_properties = self._config.site
+        solar_properties = self._config.solar_properties
         current_igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
         site_igc = current_igc * solar_properties.area * solar_properties.efficiency
-        results = [{'topic': 'sun/irradiance', 'irradiance': round(site_igc, 1)}]
+        results = [{'topic': 'sun/irradiance', 'irradiance': round(current_igc, 1), 'solar_potential': round(site_igc, 1)}]
         return results
 
     async def co2_avoided(self):
         """Calculate the CO2 avoided by solar production."""
-        CO2_AVOIDANCE_KG = self._config.multisma2.site.co2_avoided
+        CO2_AVOIDANCE_KG = self._config.site.co2_avoided
         CO2_SETTINGS = {
             'today': {'scale': 0.001, 'unit': 'kg', 'precision': 2, 'factor': CO2_AVOIDANCE_KG},
             'month': {'scale': 0.001, 'unit': 'kg', 'precision': 0, 'factor': CO2_AVOIDANCE_KG},

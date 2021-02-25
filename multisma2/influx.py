@@ -4,8 +4,11 @@
 # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
 
 import time
+import collections
 import logging
 # from pprint import pprint
+
+from exceptions import FailedInitialization
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -36,23 +39,32 @@ class InfluxDB():
     def __init__(self):
         self._client = None
         self._write_api = None
-        self._enabled = False
 
     def __del__(self):
         if self._client:
             self._client.close()
 
     def start(self, config):
-        if not config.multisma2.influxdb2.enable:
-            return True
-        self._bucket = config.multisma2.influxdb2.bucket
-        self._client = InfluxDBClient(url=config.multisma2.influxdb2.url, token=config.multisma2.influxdb2.token, org=config.multisma2.influxdb2.org)
-        self._write_api = self._client.write_api(write_options=SYNCHRONOUS) if self._client else None
-        result = self._client if self._client else False
-        if result:
-            logger.info(f"Connected to the InfluxDB database '{self._bucket}' at {config.multisma2.influxdb2.url}")
-        else:
-            logger.error(f"Failed to open the InfluxDB database '{self._bucket}' at {config.multisma2.influxdb2.url}")
+        result = True
+        if 'enable' in config.keys():
+            if config.enable is True:
+                required_keys = ['url', 'token', 'bucket', 'org']
+                for key in required_keys:
+                    if key not in config.keys():
+                        logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
+                        return False
+                try:
+                    self._bucket = config.bucket
+                    self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
+                    self._write_api = self._client.write_api(write_options=SYNCHRONOUS) if self._client else None
+                    result = self._client if self._client else False
+                    if result:
+                        logger.info(f"Connected to the InfluxDB database at {config.url}")
+                    else:
+                        logger.error(f"Failed to open the InfluxDB database at {config.url}")
+                except Exception:
+                    raise FailedInitialization
+
         return result
 
     def stop(self):

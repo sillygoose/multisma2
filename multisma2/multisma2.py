@@ -5,6 +5,7 @@
 import logging
 import sys
 import os
+import time
 import signal
 from config import config_from_yaml
 
@@ -41,6 +42,14 @@ class Multisma2():
     def run(self):
         """Code to handle the start(), run(), and stop() interfaces."""
         try:
+            self._config.multisma2
+        except Exception:
+            logger.critical("Unable to continue, 'multisma2' entry missing in YAML file'")
+            return
+
+        ERROR_DELAY = 10
+        delay = 0
+        try:
             try:
                 with DelayedKeyboardInterrupt():
                     self._start()
@@ -51,20 +60,43 @@ class Multisma2():
             self._run()
             raise NormalCompletion
 
-        except (KeyboardInterrupt, NormalCompletion, AbnormalCompletion, FailedInitialization, TerminateSignal):
+        except (KeyboardInterrupt, NormalCompletion, TerminateSignal):
+            pass
+        except AbnormalCompletion:
+            logger.critical("Received AbnormalCompletion exception detected")
+            delay = ERROR_DELAY
+        except FailedInitialization:
+            logger.critical("Received FailedInitialization exception detected")
+            delay = ERROR_DELAY
+        except Exception as e:
+            #trace_back = sys.exc_info()[2]
+            #line = trace_back.tb_lineno
+            #print(e.__cause__)
+            logger.error(f"Unexpected exception caught: {e}")
+            delay = 0
+        finally:
             try:
                 with DelayedKeyboardInterrupt():
                     self._stop()
             except KeyboardInterrupt:
                 logger.critical("Received KeyboardInterrupt during shutdown")
+            finally:
+                if delay > 0:
+                    logger.info(f"multisma2 is delaying restart for ")
+                    time.sleep(delay)
 
     async def _astart(self):
         """Asynchronous initialization code."""
-        logfiles.start(logger, self._config)
+        config = self._config.multisma2
+        if 'log' not in config.keys():
+            logger.critical("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
+            raise FailedInitialization
+
+        logfiles.start(logger, config.log)
         logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = PVSite(self._session, self._config)
+        self._site = PVSite(self._session, config)
         result = await self._site.start()
         if not result:
             raise FailedInitialization

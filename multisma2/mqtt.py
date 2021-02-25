@@ -104,36 +104,43 @@ def publish(sensors):
 
 def start(config):
     """Tests and caches the client MQTT broker connection."""
-    if not config.multisma2.mqtt.enable:
-        return True
-    local_vars['client'] = config.multisma2.mqtt.client
+    if 'enable' in config.keys():
+        if not config.enable:
+            return True
+
+    required_keys = ['client', 'ip', 'port', 'username', 'password']
+    for key in required_keys:
+        if key not in config.keys():
+            logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
+            return False
 
     # Create a unique client name
+    local_vars['client'] = config.client
     local_vars['clientname'] = (
-        config.multisma2.mqtt.client
+        config.client
         + "_"
         + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
     )
 
     # Check if MQTT is configured properly, create the connection
-    connection_type = ('authenticated', 'anonymous')[len(config.multisma2.mqtt.username) == 0]
+    connection_type = ('authenticated', 'anonymous')[len(config.username) == 0]
     client = mqtt.Client(
         local_vars['clientname'],
-        userdata={'IP': config.multisma2.mqtt.ip, 'Port': config.multisma2.mqtt.port, 'Type': connection_type},
+        userdata={'IP': config.ip, 'Port': config.port, 'Type': connection_type},
     )
 
     # Setup and try to connect to the broker
-    logger.info(f"Attempting {connection_type} MQTT client connection to {config.multisma2.mqtt.ip}:{config.multisma2.mqtt.port}")
+    logger.info(f"Attempting {connection_type} MQTT client connection to {config.ip}:{config.port}")
 
     client.on_connect = on_connect
-    client.username_pw_set(username=config.multisma2.mqtt.username, password=config.multisma2.mqtt.password)
+    client.username_pw_set(username=config.username, password=config.password)
     try:
         # Initialize flags for connection status
         client.connected = client.connection_failed = False
         time_limit = 4.0
         sleep_time = 0.1
         client.loop_start()
-        client.connect(config.multisma2.mqtt.ip, port=config.multisma2.mqtt.port)
+        client.connect(config.ip, port=config.port)
 
         # Wait for the connection to occur or timeout
         while not client.connected and not client.connection_failed and time_limit > 0:
