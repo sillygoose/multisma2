@@ -120,7 +120,7 @@ It maybe helpful to understand these quirks about **multisma2**:
 | 10s | AC production, DC production, inverter status |
 | 30s | Total production (today, month, year, lifetime) |
 | 60s | CO2 avoided |
-| 300s | Production total (Wh) |
+| 300s | Production total (Wh), irradiance and solar_potential |
 
 At night these updates based on the settings in `pvsite.py`:
 ```
