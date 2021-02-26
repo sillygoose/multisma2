@@ -95,7 +95,7 @@ class PVSite():
                 logger.error(f"Missing required 'site' option in YAML file: '{key}'")
                 return False
 
-        required_keys = ['azimuth', 'tilt', 'area', 'efficiency', 'rho']
+        required_keys = ['azimuth', 'tilt']
         for key in required_keys:
             if key not in config.solar_properties.keys():
                 logger.error(f"Missing required 'solar_properties' option in YAML file: '{key}'")
@@ -415,9 +415,8 @@ class PVSite():
         """Calculate the sun is in the sky."""
         site_properties = self._config.site
         solar_properties = self._config.solar_properties
-        current_igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
-        site_igc = current_igc * solar_properties.area * solar_properties.efficiency
-        results = [{'topic': 'sun/irradiance', 'irradiance': round(current_igc, 1), 'solar_potential': round(site_igc, 1)}]
+        igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
+        results = [{'topic': 'sun/irradiance', 'irradiance': round(igc, 1)}]
         return results
 
     async def co2_avoided(self):

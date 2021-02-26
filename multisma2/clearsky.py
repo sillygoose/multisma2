@@ -40,12 +40,22 @@ def current_global_irradiance(site_properties, solar_properties, timestamp):
     phi = phi_s - phi_c
     cos_phi = math.cos(phi)
 
+    # Workaround for a quirk of pvsolar since the airmass for the sun ele===altitude of zero
+    # is infinite and very small numbers close to zero result in NaNs being returned rather
+    # than zero
+    if altitude < 0.0:
+        altitude = -1.0
+
     cos_theta = cos_beta * cos_phi * sin_sigma + sin_beta * cos_sigma
     ib = get_radiation_direct(when=dt, altitude_deg=altitude)
     ibc = ib * cos_theta
     idc = C * ib * (1 + cos_sigma) / 2
     irc = rho * ib * (sin_beta + C) * ((1 - cos_sigma) / 2)
     igc = ibc + idc + irc
+
+    # If we still get a bad result just return 0
+    if math.isnan(igc):
+        igc = 0.0
     return igc
 
 
