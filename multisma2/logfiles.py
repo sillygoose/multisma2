@@ -9,12 +9,23 @@ from logging.handlers import TimedRotatingFileHandler
 logger = logging.getLogger('multisma2')
 
 
+def check_config(config):
+    """Check that the needed YAML options exist."""
+    required_keys = ['file', 'level', 'format']
+    for key in required_keys:
+        if key not in config.keys():
+            logger.error(f"Missing required 'log' option in YAML file: '{key}'")
+            return False
+
 #
 # Public
 #
 
 def start(app_logger, config_log):
     """Create the application log."""
+    if check_config(config_log) is False:
+        return False
+
     filename = os.path.expanduser(config_log.file + ".log")
     APPLICATION_LOG_LEVEL = config_log.level
 
@@ -40,3 +51,4 @@ def start(app_logger, config_log):
 
     # First entry
     app_logger.info("Created application log at %s", filename)
+    return True

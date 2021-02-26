@@ -44,10 +44,11 @@ class Multisma2():
         try:
             self._config.multisma2
         except Exception:
-            logger.critical("Unable to continue, 'multisma2' entry missing in YAML file'")
+            print("Unable to continue, 'multisma2' entry missing in YAML file'")
             return
 
-        ERROR_DELAY = 10
+        # ERROR_DELAY might be non-zero when SMA errors are detected *for now not implemented)
+        ERROR_DELAY = 0
         delay = 0
         try:
             try:
@@ -69,9 +70,6 @@ class Multisma2():
             logger.critical("Received FailedInitialization exception detected")
             delay = ERROR_DELAY
         except Exception as e:
-            #trace_back = sys.exc_info()[2]
-            #line = trace_back.tb_lineno
-            #print(e.__cause__)
             logger.error(f"Unexpected exception caught: {e}")
             delay = 0
         finally:
@@ -82,17 +80,19 @@ class Multisma2():
                 logger.critical("Received KeyboardInterrupt during shutdown")
             finally:
                 if delay > 0:
-                    logger.info(f"multisma2 is delaying restart for ")
+                    print(f"multisma2 is delaying restart for {delay} seconds (Docker will restart multisma2, otherwise exits)")
                     time.sleep(delay)
 
     async def _astart(self):
         """Asynchronous initialization code."""
         config = self._config.multisma2
         if 'log' not in config.keys():
-            logger.critical("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
+            print("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
             raise FailedInitialization
 
-        logfiles.start(logger, config.log)
+        if not logfiles.start(logger, config.log):
+            print("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
+            raise FailedInitialization
         logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
@@ -108,8 +108,10 @@ class Multisma2():
     async def _astop(self):
         """Asynchronous closing code."""
         logger.info("Closing multisma2 application")
-        await self._site.stop()
-        await self._session.close()
+        if self._site:
+            await self._site.stop()
+        if self._session:
+            await self._session.close()
 
     def _start(self):
         """Initialize everything prior to running."""

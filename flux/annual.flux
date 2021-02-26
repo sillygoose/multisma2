@@ -20,7 +20,7 @@
 import "date"
 
 // This can be used to align results with x-axis labels
-timeAxisShift = 15d
+timeAxisShift = -0d
 
 // Extract the last 12 months of production
 past_12 = from(bucket: "multisma2")
@@ -29,8 +29,9 @@ past_12 = from(bucket: "multisma2")
   |> filter(fn: (r) => date.monthDay(t: r._time) == 1)
   |> sort(columns: ["_time"], desc: true)
   |> difference()
-  |> map(fn: (r) => ({ _time: r._time, total: float(v: r._value) / -1000.0, _field: "total_wh" }))
+  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))
   |> sort(columns: ["_time"], desc: false)
+  |> timeShift(duration: timeAxisShift, columns: ["_time"])
   |> yield(name: "past_12")
 
 // Extract the current months of production
@@ -38,24 +39,25 @@ first_of_month = from(bucket: "multisma2")
   |> range(start: -32d)
   |> filter(fn: (r) => r._measurement == "production" and r._inverter == "site" and r._field == "midnight")
   |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )
-  |> map(fn: (r) => ({ _time: r._time, total: r._value, _field: "total_wh" }))
+  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))
   |> yield(name: "first_of_month")
 
 today = from(bucket: "multisma2")
-  |> range(start: -1d)
+  |> range(start: -2h)
   |> filter(fn: (r) => r._measurement == "production" and r._inverter == "site" and r._field == "total_wh")
   |> last()
-  |> map(fn: (r) => ({ _time: r._time, total: r._value, _field: "total_wh" }))
+  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))
   |> yield(name: "today")
 
 this_month = union(tables: [first_of_month, today])
-  |> difference(nonNegative: false, columns: ["total"])
-  |> map(fn: (r) => ({ _time: r._time, total: float(v: r.total) / -1000.0, _field: "total_wh" }))
+  |> sort(columns: ["_time"], desc: true)
+  |> difference(nonNegative: false, columns: ["_total_wh"])
+  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))
+  |> timeShift(duration: timeAxisShift, columns: ["_time"])
   |> yield(name: "this_month")
 
 // Combine the results in to a single table with '_value' and '_time' as the axes
 union(tables: [past_12, this_month])
   |> sort(columns: ["_time"], desc: false)
-  |> map(fn: (r) => ({ _time: r._time, _value: r.total, _field: "total_wh" }))
   |> timeShift(duration: timeAxisShift, columns: ["_time"])
   |> yield(name: "combined")

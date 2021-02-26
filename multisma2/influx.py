@@ -44,28 +44,50 @@ class InfluxDB():
         if self._client:
             self._client.close()
 
-    def start(self, config):
-        result = True
-        if 'enable' in config.keys():
-            if config.enable is True:
-                required_keys = ['url', 'token', 'bucket', 'org']
-                for key in required_keys:
-                    if key not in config.keys():
-                        logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
-                        return False
-                try:
-                    self._bucket = config.bucket
-                    self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
-                    self._write_api = self._client.write_api(write_options=SYNCHRONOUS) if self._client else None
-                    result = self._client if self._client else False
-                    if result:
-                        logger.info(f"Connected to the InfluxDB database at {config.url}")
-                    else:
-                        logger.error(f"Failed to open the InfluxDB database at {config.url}")
-                except Exception:
-                    raise FailedInitialization
+    def check_config(self, config):
+        """Check that the needed YAML options exist."""
+        required_keys = ['url', 'token', 'bucket', 'org']
+        for key in required_keys:
+            if key not in config.keys():
+                logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
+                return False
 
-        return result
+    def start(self, config):
+        key = 'enable'
+        if key not in config.keys():
+            logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
+            return False
+
+        if config.enable is True:
+            if self.check_config(config) is False:
+                return False
+            try:
+                self._bucket = config.bucket
+                self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
+                if not self._client:
+                    logger.error(f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
+                    return False
+
+                self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
+                if not self._write_api:
+                    logger.error(f"Failed to get client write_api() object from {config.url}")
+                    return False
+
+                # Small test query to confirm the bucket exists
+                query_api = self._client.query_api()
+                if not query_api:
+                    logger.error(f"Failed to get client query_api() object from {config.url}")
+                try:
+                    query_api.query(f'from(bucket: "{self._bucket}") |> range(start: -1m)')
+                    logger.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
+                    return True
+                except Exception:
+                    logger.error(f"Unable to access bucket '{self._bucket}' at {config.url}")
+                    return False
+
+            except Exception:
+                logger.error(f"Unexpected exception, unable to access bucket '{self._bucket}' at {config.url}")
+        return False
 
     def stop(self):
         if self._write_api:

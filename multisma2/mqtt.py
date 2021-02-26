@@ -61,58 +61,29 @@ def mqtt_exit():
     logger.info("MQTT client disconnect being called")
     local_vars['mqtt_client'].disconnect()
 
-
-#
-# Public
-#
-
-def publish(sensors):
-    """Publish a dictionary of sensor keys amd values using MQTT."""
-    # Check if MQTT is not connected to a broker or the sensor list is empty
-    if 'mqtt_client' not in local_vars or not sensors:
-        return
-
-    # Separate out the sensor dictionaries
-    for original_sensor in sensors:
-        sensor = original_sensor.copy()
-        if 'topic' not in sensor:
-            logger.warning(f"'topic' not in sensor dictionary: {str(sensor)}")
-            continue
-
-        # Extract the topic and precision from the dictionary
-        topic = sensor.pop('topic')
-        precision = sensor.pop('precision', None)
-
-        # Limit floats to the requested precision
-        for key, value in sensor.items():
-            if isinstance(value, dict):
-                for dict_key, dict_value in value.items():
-                    value[dict_key] = round(dict_value, precision) if precision else dict_value
-            if isinstance(value, float):
-                sensor[key] = round(value, precision) if precision else value
-
-        # Encode each sensor in JSON and publish
-        sensor_json = json.dumps(sensor)
-        message_info = local_vars['mqtt_client'].publish(
-            local_vars['client'] + "/" + topic, sensor_json
-        )
-        if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning(
-                f"MQTT message topic '{topic}'' failed to publish: {error_msg(message_info.rc)}",
-            )
-
-
-def start(config):
-    """Tests and caches the client MQTT broker connection."""
-    if 'enable' in config.keys():
-        if not config.enable:
-            return True
-
+def check_config(config):
+    """Check that the needed YAML options exist."""
     required_keys = ['client', 'ip', 'port', 'username', 'password']
     for key in required_keys:
         if key not in config.keys():
             logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
             return False
+
+#
+# Public
+#
+
+def start(config):
+    """Tests and caches the client MQTT broker connection."""
+    key = 'enable'
+    if key not in config.keys():
+        logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
+        return False
+
+    if config.enable is True:
+        if check_config(config) is False:
+            return False
+    result = False
 
     # Create a unique client name
     local_vars['client'] = config.client
@@ -159,12 +130,10 @@ def start(config):
 
     except KeyboardInterrupt:
         client.loop_stop()
-        raise
 
     except Exception:
         client.loop_stop()
         logger.error(f"MQTT connection failed with exception: {sys.exc_info()[0]}")
-        raise
 
     # Close the connection and return success
     if client.connected:
@@ -175,7 +144,42 @@ def start(config):
         return True
 
     # Some sort of error occurred
-    return False
+    return result
+
+def publish(sensors):
+    """Publish a dictionary of sensor keys amd values using MQTT."""
+    # Check if MQTT is not connected to a broker or the sensor list is empty
+    if 'mqtt_client' not in local_vars or not sensors:
+        return
+
+    # Separate out the sensor dictionaries
+    for original_sensor in sensors:
+        sensor = original_sensor.copy()
+        if 'topic' not in sensor:
+            logger.warning(f"'topic' not in sensor dictionary: {str(sensor)}")
+            continue
+
+        # Extract the topic and precision from the dictionary
+        topic = sensor.pop('topic')
+        precision = sensor.pop('precision', None)
+
+        # Limit floats to the requested precision
+        for key, value in sensor.items():
+            if isinstance(value, dict):
+                for dict_key, dict_value in value.items():
+                    value[dict_key] = round(dict_value, precision) if precision else dict_value
+            if isinstance(value, float):
+                sensor[key] = round(value, precision) if precision else value
+
+        # Encode each sensor in JSON and publish
+        sensor_json = json.dumps(sensor)
+        message_info = local_vars['mqtt_client'].publish(
+            local_vars['client'] + "/" + topic, sensor_json
+        )
+        if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
+            logger.warning(
+                f"MQTT message topic '{topic}'' failed to publish: {error_msg(message_info.rc)}",
+            )
 
 
 if __name__ == '__main__':
