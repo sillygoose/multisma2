@@ -12,6 +12,7 @@
       }
     ]
   },
+  "description": "Solar production at Parker Lane",
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
@@ -19,14 +20,18 @@
   "links": [],
   "panels": [
     {
-      "aliasColors": {},
+      "aliasColors": {
+        "site": "green"
+      },
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "InfluxDB2",
+      "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "unit": "watt"
         },
         "overrides": []
       },
@@ -45,7 +50,7 @@
         "current": false,
         "max": false,
         "min": false,
-        "show": false,
+        "show": true,
         "total": false,
         "values": false
       },
@@ -82,7 +87,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -118,7 +123,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -154,7 +159,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
           "refId": "C",
           "resultFormat": "time_series",
           "select": [
@@ -190,7 +195,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -3d)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))\n  |> sample(n: 10, pos: 1)",
           "refId": "D",
           "resultFormat": "time_series",
           "select": [
@@ -211,10 +216,10 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": "3d",
+      "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Inverters",
+      "title": "Inverter Production",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -230,11 +235,12 @@
       },
       "yaxes": [
         {
-          "format": "short",
-          "label": null,
+          "decimals": null,
+          "format": "watt",
+          "label": "",
           "logBase": 1,
-          "max": null,
-          "min": null,
+          "max": "25000",
+          "min": "0",
           "show": true
         },
         {
@@ -689,7 +695,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n  \nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_day\")",
+          "query": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n  \nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: true, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_day\")",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -749,9 +755,9 @@
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
-            "mean"
+            "last"
           ],
-          "fields": "/^Value$/",
+          "fields": "/^_kwh$/",
           "values": false
         },
         "textMode": "value"
@@ -775,7 +781,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _value: float(v: r._total) / 1000.0 }))\n  |> yield(name: \"this_month\")\n",
+          "query": "import \"experimental\"\nimport \"date\"\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_month\")",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -981,7 +987,8 @@
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "custom": {}
+          "custom": {},
+          "unit": "watt"
         },
         "overrides": []
       },
@@ -1039,7 +1046,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "days_to_visualize = -5d     // Visualize the last 5 days of site total production\n\n// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: days_to_visualize)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, site: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
+          "query": "// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, site: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1075,7 +1082,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "days_to_visualize = -5d\nfrom(bucket: \"multisma2\")\n  |> range(start: days_to_visualize)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._field == \"irradiance\" and r._inverter == \"site\")\n  |> yield(name: \"irradiance\")\n",
+          "query": "site_area = 144.0\nsite_efficiency = 0.1725\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, _value: r._value * site_area * site_efficiency }))\n  |> yield(name: \"irradiance\")\n",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1096,7 +1103,7 @@
         }
       ],
       "thresholds": [],
-      "timeFrom": "5d",
+      "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
       "title": "Clear Sky Irradiance",
@@ -1115,10 +1122,11 @@
       },
       "yaxes": [
         {
-          "format": "short",
+          "decimals": null,
+          "format": "watt",
           "label": null,
           "logBase": 1,
-          "max": null,
+          "max": "25000",
           "min": "0",
           "show": true
         },
@@ -1831,7 +1839,7 @@
           "tags": []
         }
       ],
-      "timeFrom": "12h",
+      "timeFrom": "6h",
       "timeShift": null,
       "title": "Operating Status",
       "tooltip": {
@@ -2071,7 +2079,7 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "kWh"
         },
         "overrides": []
       },
@@ -2133,7 +2141,7 @@
           "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0h\n\npast_30 = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"past_30\")\n",
+          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -6h\n\npast_30 = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) / -1000.0 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"past_30\")\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2170,7 +2178,7 @@
           "hide": true,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_day\")\n",
+          "query": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -6h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_day\")\n",
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2192,7 +2200,16 @@
       ],
       "thresholds": [],
       "timeFrom": "31d",
-      "timeRegions": [],
+      "timeRegions": [
+        {
+          "colorMode": "background6",
+          "fill": true,
+          "fillColor": "rgba(234, 112, 112, 0.12)",
+          "line": false,
+          "lineColor": "rgba(237, 46, 24, 0.60)",
+          "op": "time"
+        }
+      ],
       "timeShift": null,
       "title": "30 Day",
       "tooltip": {
@@ -2212,7 +2229,7 @@
       "yaxes": [
         {
           "decimals": 0,
-          "format": "none",
+          "format": "kWh",
           "label": "",
           "logBase": 1,
           "max": null,
@@ -2406,7 +2423,7 @@
           "tags": []
         }
       ],
-      "timeFrom": "12h",
+      "timeFrom": "6h",
       "timeShift": null,
       "title": "Condition",
       "tooltip": {
@@ -2596,7 +2613,7 @@
           "tags": []
         }
       ],
-      "timeFrom": "12h",
+      "timeFrom": "6h",
       "timeShift": null,
       "title": "Derating",
       "tooltip": {
@@ -2622,12 +2639,17 @@
   "refresh": "10s",
   "schemaVersion": 26,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "influxdb2",
+    "multisma2",
+    "raspberrypi",
+    "pi4"
+  ],
   "templating": {
     "list": []
   },
   "time": {
-    "from": "now-5d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
@@ -2638,7 +2660,7 @@
     ]
   },
   "timezone": "",
-  "title": "Production",
+  "title": "Solar Production",
   "uid": "eM8UF8BGj",
-  "version": 22
+  "version": 32
 }

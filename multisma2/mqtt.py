@@ -61,6 +61,7 @@ def mqtt_exit():
     logger.info("MQTT client disconnect being called")
     local_vars['mqtt_client'].disconnect()
 
+
 def check_config(config):
     """Check that the needed YAML options exist."""
     required_keys = ['client', 'ip', 'port', 'username', 'password']
@@ -68,6 +69,7 @@ def check_config(config):
         if key not in config.keys():
             logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
             return False
+
 
 #
 # Public
@@ -145,6 +147,7 @@ def start(config):
 
     # Some sort of error occurred
     return result
+
 
 def publish(sensors):
     """Publish a dictionary of sensor keys amd values using MQTT."""

@@ -17,6 +17,7 @@ def check_config(config):
             logger.error(f"Missing required 'log' option in YAML file: '{key}'")
             return False
 
+
 #
 # Public
 #

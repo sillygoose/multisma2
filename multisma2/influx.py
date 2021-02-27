@@ -4,11 +4,8 @@
 # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
 
 import time
-import collections
 import logging
 # from pprint import pprint
-
-from exceptions import FailedInitialization
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -51,6 +48,7 @@ class InfluxDB():
             if key not in config.keys():
                 logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
                 return False
+        return True
 
     def start(self, config):
         key = 'enable'
@@ -58,35 +56,44 @@ class InfluxDB():
             logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
             return False
 
-        if config.enable is True:
-            if self.check_config(config) is False:
+        if not isinstance(config.enable, bool):
+            logger.error(f"The influxdb 'enable' option is not a boolean '{config.enable}'")
+            return False
+
+        if not config.enable:
+            return True
+
+        if self.check_config(config) is False:
+            return False
+
+        try:
+            self._bucket = config.bucket
+            self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
+            if not self._client:
+                logger.error(f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
                 return False
+
+            self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
+            if not self._write_api:
+                logger.error(f"Failed to get client write_api() object from {config.url}")
+                return False
+
+            # Small test query to confirm the bucket exists
+            query_api = self._client.query_api()
+            if not query_api:
+                logger.error(f"Failed to get client query_api() object from {config.url}")
             try:
-                self._bucket = config.bucket
-                self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
-                if not self._client:
-                    logger.error(f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
-                    return False
-
-                self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
-                if not self._write_api:
-                    logger.error(f"Failed to get client write_api() object from {config.url}")
-                    return False
-
-                # Small test query to confirm the bucket exists
-                query_api = self._client.query_api()
-                if not query_api:
-                    logger.error(f"Failed to get client query_api() object from {config.url}")
-                try:
-                    query_api.query(f'from(bucket: "{self._bucket}") |> range(start: -1m)')
-                    logger.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
-                    return True
-                except Exception:
-                    logger.error(f"Unable to access bucket '{self._bucket}' at {config.url}")
-                    return False
-
+                query_api.query(f'from(bucket: "{self._bucket}") |> range(start: -1m)')
+                logger.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
+                return True
             except Exception:
-                logger.error(f"Unexpected exception, unable to access bucket '{self._bucket}' at {config.url}")
+                logger.error(f"Unable to access bucket '{self._bucket}' at {config.url}")
+                return False
+
+        except Exception:
+            logger.error(f"Unexpected exception, unable to access bucket '{self._bucket}' at {config.url}")
+            return False
+
         return False
 
     def stop(self):
