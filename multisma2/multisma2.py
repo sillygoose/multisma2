@@ -31,8 +31,13 @@ class Multisma2():
         self._site = None
         signal.signal(signal.SIGTERM, self.catch)
         signal.siginterrupt(signal.SIGTERM, False)
-        yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
-        self._config = config_from_yaml(data=yaml_file, read_from_file=True)
+        try:
+            yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
+            self._config = config_from_yaml(data=yaml_file, read_from_file=True)
+        except Exception as e:
+            file = os.path.basename(e.args[1].name)
+            print(f"YAML file error {e.args[0]} in {file}:{e.args[1].line}, column {e.args[1].column}: {e.args[2]}")
+            raise FailedInitialization
 
     def catch(self, signum, frame):
         """Handler for SIGTERM signals."""
@@ -44,7 +49,7 @@ class Multisma2():
         try:
             self._config.multisma2
         except Exception:
-            print("Unable to continue, 'multisma2' entry missing in YAML file'")
+            print("Unable to continue, 'multisma2' entry missing in YAML file")
             return
 
         # ERROR_DELAY might be non-zero when SMA errors are detected *for now not implemented)
@@ -128,8 +133,13 @@ class Multisma2():
 
 def main():
     """Set up and start multisma2."""
-    multisma2 = Multisma2()
-    multisma2.run()
+    try:
+        multisma2 = Multisma2()
+        multisma2.run()
+    except FailedInitialization:
+        pass
+    except Exception as e:
+        print(f"Unexpected exception: {e}")
 
 
 if __name__ == "__main__":
