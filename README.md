@@ -8,11 +8,12 @@ Now features a wider range of outputs, basically anything you see in your browse
 - total production (day, month, year, and lifetime)
 - inverter efficiency
 - inverter status
-- co2 avoided due to PV production
+- CO<sub>2</sub> avoided due to PV production
 - sun elevation and azimuth
+- estimate of solar irradiation on a tilted surface at your location
 - add any SMA sensors or setting for which you know the 'key'
 - MQTT messaging
-- InfluxDB interface (writes production data and status direct to InfluxDB 1.8 and 2.0)
+- InfluxDB interface (writes production data and status direct to InfluxDB 1.8.x and 2.x)
 - utility available to extract historical inverter production data to InfluxDB (sbhistory)
 
 ## Rationale for multisma2
@@ -31,6 +32,7 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - aiohttp
     - asyncio
     - astral
+    - pysolar
     - python-dateutil
     - jmespath
     - influxdb-client
@@ -38,7 +40,7 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - pyyaml
 
 - SMA Sunny Boy inverter(s) supporting WebConnect
-- Docker (a Dockerfile is supplied to allow running in a Docker container as an option)
+- Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running InfluxDB, InfluxDB2, Telegraf, and Grafana)
 
 ### Installation
 1.  First up is to clone this repository and install the packages it needs to operate:
@@ -71,7 +73,7 @@ Once you have a working `multisma2.yaml` file you can build a Docker container t
 
 ```
     sudo docker build --no-cache -t multisma2:your-tag .
-    sudo docker image tag multisma2:your-tag multisma2:latest
+    sudo docker image tag multisma2:your-tag multisma2:latest        (optional)
     sudo docker-compose up -d
 ```
 
@@ -129,15 +131,17 @@ At night these updates based on the settings in `pvsite.py`:
 ```
 
 ## Example Dashboards
-Example dashboards are provided for Grafana and InfluxDB and InfluxDB2.  These contain the Flux scripts used to query InfluxDB so be sure to examine them.
+Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.
 
-### InfluxDB
-All InfluxDB queries are done in Flux, looked more powerful to me and since I didn't know SQL it seemed like a better choice.  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x, only the settings in `multisma2.yaml` need to change.
+### InfluxDB2
+All InfluxDB2 queries are done in Flux, looked more intuitive to me since I never used SQL it seemed like a better choice (SQL reminded me of COBOL, both are from IBM and only slightly newer than COBOL).  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x database output, only the settings in `multisma2.yaml` file need to change to use the older version.
 
-![Sample dashboard using InfluxDB:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb-production.jpg)
+![Sample dashboard using InfluxDB2:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb2-production.jpg)
+
+The one downside of using InfluxDB2 is that the bar graphs were a step backward in the esthetics, such is the cost of progress I guess.
 
 ### Grafana
-InfluxDB visualizations don't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a Status Map visualization that looks more promising.
+InfluxDB2 visualizations don't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a very nice Status Map visualization that looks more promising.
 
 ![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
@@ -148,7 +152,7 @@ This dashboard uses the following Grafana panel plug-ins:
 ```
 
 ### Home Assistant
-This last example is a dashboard made in Home Assistant driven by the MQTT output of **multisma2**, this was done first since MQTT support was completed before the InfluxDB support.
+This last example is a dashboard made in Home Assistant driven by the MQTT output of **multisma2**, this was done first since MQTT support was completed before learning how the InfluxDB operated.
 
 ![Home Assistant dashboard using MQTT:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/home-assistant-production.jpg)
 
@@ -162,3 +166,4 @@ Thanks for the following packages used to build this software:
     - https://astral.readthedocs.io
 - Tricks for managing startup and shutdown
     - https://github.com/wbenny/python-graceful-shutdown
+- Chapter 7.9 (TOTAL CLEAR SKY INSOLATION ON A COLLECTING SURFACE) from from G. Masters, “Renewable and Efficient Electric Power Systems,” Wiley-IEEE Press, 2004
