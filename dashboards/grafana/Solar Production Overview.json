@@ -26,11 +26,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-      "datasource": "InfluxDB2",
-=======
       "datasource": "parkerlane",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -753,11 +749,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n  \nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: true, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_day\")",
-=======
           "query": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n  \nright_now = from(bucket: \"multisma2\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: true, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_day\")",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -929,11 +921,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")",
-=======
           "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 15d\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1019,11 +1007,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._value) * 0.000001 }))",
-=======
           "query": "from(bucket: \"multisma2\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._value) * 0.000001 }))",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1150,11 +1134,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, site: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
-=======
           "query": "// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, _site_w: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> yield(name: \"production\")\n",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1190,11 +1170,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "site_area = 144.0\nsite_efficiency = 0.1725\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, _value: r._value * site_area * site_efficiency }))\n  |> yield(name: \"irradiance\")\n",
-=======
           "query": "site_area = 144.0\nsite_efficiency = 0.1725\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, _irradiance: r._value * site_area * site_efficiency }))\n  |> yield(name: \"irradiance\")\n",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -1951,11 +1927,7 @@
           "tags": []
         }
       ],
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-      "timeFrom": "6h",
-=======
       "timeFrom": "4h",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
       "timeShift": null,
       "title": "Operating Status",
       "tooltip": {
@@ -2098,11 +2070,7 @@
           "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0d\n\n// Extract the last 12 months of production\npast_12 = from(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"past_12\")",
-=======
           "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -15d\n\n// Extract the last 12 months of production\npast_12 = from(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _by_month: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"past_12\")",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2138,11 +2106,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_month\")",
-=======
           "query": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -15d\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _this_month: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_month\")",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2397,11 +2361,7 @@
           "hide": true,
           "orderByTime": "ASC",
           "policy": "default",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-          "query": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -6h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_day\")\n",
-=======
           "query": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -6h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> timeShift(duration: timeAxisShift, columns: [\"_time\"])\n  |> yield(name: \"this_day\")",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
           "refId": "B",
           "resultFormat": "time_series",
           "select": [
@@ -2682,11 +2642,7 @@
           "tags": []
         }
       ],
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-      "timeFrom": "6h",
-=======
       "timeFrom": "4h",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
       "timeShift": null,
       "title": "Condition",
       "tooltip": {
@@ -2876,11 +2832,7 @@
           "tags": []
         }
       ],
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-      "timeFrom": "6h",
-=======
       "timeFrom": "4h",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
       "timeShift": null,
       "title": "Derating",
       "tooltip": {
@@ -2916,11 +2868,7 @@
     "list": []
   },
   "time": {
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-    "from": "now-7d",
-=======
-    "from": "now-3d",
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {
@@ -2931,13 +2879,7 @@
     ]
   },
   "timezone": "",
-<<<<<<< HEAD:dashboards/grafana/Production-InfluxDB2.json
-  "title": "Solar Production",
-  "uid": "eM8UF8BGj",
-  "version": 32
-=======
   "title": "Solar Production Overview",
   "uid": "eM8UF8BGj",
   "version": 13
->>>>>>> dashboards:dashboards/grafana/Solar Production Overview.json
 }
