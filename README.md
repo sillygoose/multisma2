@@ -138,14 +138,16 @@ At night these updates based on the settings in `pvsite.py`:
 Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.
 
 ### InfluxDB2
-All InfluxDB2 queries are done in Flux, looked more intuitive to me since I never used SQL it seemed like a better choice (SQL reminded me of COBOL, both are from IBM and only slightly newer than COBOL).  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x database output, only the settings in `multisma2.yaml` file need to change to use the older version.
+All InfluxDB2 queries are done in Flux, looked more intuitive to me since I never used SQL it seemed like a better choice (SQL reminded me of COBOL, both are from IBM and SQL is only slightly newer than COBOL).  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x database output, only the settings in `multisma2.yaml` file need to change to use the older version.
 
 ![Sample dashboard using InfluxDB2:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb2-production.jpg)
 
 The one downside of using InfluxDB2 is that the bar graphs were a step backward in the esthetics, such is the cost of progress I guess.
 
 ### Grafana
-InfluxDB2 visualizations don't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a very nice Status Map visualization that looks more promising.
+InfluxDB2 visualizations don't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a very nice Status Map visualization that works very well for this.
+
+I recently upgraded to Grafana 7.4.x so now it uses dashboard variables to control the InfluxDB bucket ued in all queries and the constants used in the clear sky irradiance panel to scale up the solar radiation in W/m<sup>2</sup> for a particular site.  These are located in the dashboard settings under variable so be sure to check them out.
 
 ![Sample inverter status dashboard using Grafana:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/grafana-production.jpg)
 
