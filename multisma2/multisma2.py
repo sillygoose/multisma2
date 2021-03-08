@@ -22,6 +22,40 @@ from exceptions import TerminateSignal, NormalCompletion, AbnormalCompletion, Fa
 logger = logging.getLogger('multisma2')
 
 
+def buildYAMLExceptionString(exception, file='sbhistory'):
+    e = exception
+    try:
+        type = ''
+        file = file
+        line = 0
+        column = 0
+        info = ''
+
+        if e.args[0]:
+            type = e.args[0]
+            type += ' '
+
+        if e.args[1]:
+            file = os.path.basename(e.args[1].name)
+            line = e.args[1].line
+            column = e.args[1].column
+
+        if e.args[2]:
+            info = os.path.basename(e.args[2])
+
+        if e.args[3]:
+            file = os.path.basename(e.args[3].name)
+            line = e.args[3].line
+            column = e.args[3].column
+
+        errmsg = f"YAML file error {type}in {file}:{line}, column {column}: {info}"
+
+    except Exception:
+        errmsg = f"YAML file error and no idea how it is encoded."
+
+    return errmsg
+
+
 class Multisma2():
 
     def __init__(self):
@@ -35,8 +69,8 @@ class Multisma2():
             yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
             self._config = config_from_yaml(data=yaml_file, read_from_file=True)
         except Exception as e:
-            file = os.path.basename(e.args[1].name)
-            print(f"YAML file error {e.args[0]} in {file}:{e.args[1].line}, column {e.args[1].column}: {e.args[2]}")
+            error_message = buildYAMLExceptionString(exception=e, file='multisma2.yaml')
+            print(error_message)
             raise FailedInitialization
 
     def catch(self, signum, frame):

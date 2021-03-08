@@ -26,7 +26,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -110,7 +110,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -312,7 +312,7 @@
       }
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -382,9 +382,10 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -429,7 +430,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -476,9 +477,10 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "text": {}
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -690,7 +692,7 @@
       "type": "mxswat-separator-panel"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -728,9 +730,10 @@
           "fields": "/^_kwh$/",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -775,7 +778,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -814,9 +817,10 @@
           "fields": "/^_kwh$/",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -861,7 +865,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -900,9 +904,10 @@
           "fields": "/^_mwh$/",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -947,7 +952,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -986,9 +991,10 @@
           "fields": "/^_mwh$/",
           "values": false
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -1037,7 +1043,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1099,7 +1105,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1292,7 +1298,7 @@
       "type": "mxswat-separator-panel"
     },
     {
-      "datasource": null,
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1326,6 +1332,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
+          "queryType": "randomWalk",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1351,7 +1358,7 @@
       "type": "mxswat-separator-panel"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1390,9 +1397,10 @@
           "fields": "",
           "values": true
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -1437,7 +1445,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1476,9 +1484,10 @@
           "fields": "",
           "values": true
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -1523,7 +1532,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -1563,9 +1572,10 @@
           "fields": "/^_kgco2e$/",
           "values": true
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -1610,7 +1620,7 @@
       "type": "stat"
     },
     {
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1649,9 +1659,10 @@
           "fields": "",
           "values": true
         },
+        "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "targets": [
         {
           "groupBy": [
@@ -1791,7 +1802,7 @@
           }
         ]
       },
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -1931,9 +1942,11 @@
       "timeShift": null,
       "title": "Operating Status",
       "tooltip": {
+        "extraInfo": "",
         "freezeOnClick": false,
         "items": [],
         "show": true,
+        "showExtraInfo": false,
         "showItems": true
       },
       "type": "flant-statusmap-panel",
@@ -1947,31 +1960,26 @@
         "minWidth": -1,
         "show": false
       },
-      "yAxisSort": "metrics"
+      "yAxisSort": "metrics",
+      "yLabel": {
+        "delimiter": "",
+        "labelTemplate": "",
+        "usingSplitLabel": false
+      }
     },
     {
       "aliasColors": {},
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           },
           "unit": "kWh"
         },
@@ -2029,7 +2037,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2183,24 +2191,14 @@
       "bars": true,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
           "custom": {},
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
+            "steps": []
           },
           "unit": "kWh"
         },
@@ -2271,7 +2269,7 @@
         "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.3.6",
+      "pluginVersion": "7.4.3",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2506,7 +2504,7 @@
           }
         ]
       },
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -2646,9 +2644,11 @@
       "timeShift": null,
       "title": "Condition",
       "tooltip": {
+        "extraInfo": "",
         "freezeOnClick": false,
         "items": [],
         "show": true,
+        "showExtraInfo": false,
         "showItems": true
       },
       "type": "flant-statusmap-panel",
@@ -2662,7 +2662,12 @@
         "minWidth": -1,
         "show": false
       },
-      "yAxisSort": "metrics"
+      "yAxisSort": "metrics",
+      "yLabel": {
+        "delimiter": "",
+        "labelTemplate": "",
+        "usingSplitLabel": false
+      }
     },
     {
       "cards": {
@@ -2696,7 +2701,7 @@
           }
         ]
       },
-      "datasource": "parkerlane",
+      "datasource": "multisma2",
       "description": "",
       "fieldConfig": {
         "defaults": {
@@ -2836,9 +2841,11 @@
       "timeShift": null,
       "title": "Derating",
       "tooltip": {
+        "extraInfo": "",
         "freezeOnClick": false,
         "items": [],
         "show": true,
+        "showExtraInfo": false,
         "showItems": true
       },
       "type": "flant-statusmap-panel",
@@ -2852,11 +2859,16 @@
         "minWidth": -1,
         "show": false
       },
-      "yAxisSort": "metrics"
+      "yAxisSort": "metrics",
+      "yLabel": {
+        "delimiter": "",
+        "labelTemplate": "",
+        "usingSplitLabel": false
+      }
     }
   ],
-  "refresh": "60s",
-  "schemaVersion": 26,
+  "refresh": "10s",
+  "schemaVersion": 27,
   "style": "dark",
   "tags": [
     "influxdb2",
@@ -2880,6 +2892,6 @@
   },
   "timezone": "",
   "title": "Solar Production Overview",
-  "uid": "eM8UF8BGj",
-  "version": 13
+  "uid": "eM8UF8BqW",
+  "version": 3
 }

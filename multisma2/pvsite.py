@@ -105,14 +105,14 @@ class PVSite():
         """Check that the inverter keys are present."""
         key = 'inverter'
         if key not in config.keys():
-            logger.error(f"Missing required 'inverters' option in YAML file: '{key}'")
+            logger.error(f"Check your YAML file 'inverters' options, missing the required '{key}' option.")
             return False
 
         inverter_keys = config.get('inverter').keys()
         required_keys = ['name', 'url', 'user', 'password']
         for key in required_keys:
             if key not in inverter_keys:
-                logger.error(f"Missing required 'inverter' option in YAML file: '{key}'")
+                logger.error(f"Check your YAML file 'inverter' options, missing the required '{key}' option.")
                 return False
 
     async def start(self):
