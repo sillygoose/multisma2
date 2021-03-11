@@ -17,7 +17,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 1,
-  "iteration": 1615230316519,
+  "iteration": 1615441806043,
   "links": [],
   "panels": [
     {
@@ -844,7 +844,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "import \"experimental\"\nimport \"date\"\n\nfirst_of_month = from(bucket: \"${datasource}\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"${datasource}\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_month\")",
+          "query": "import \"experimental\"\nimport \"date\"\n\nfirst_of_month = from(bucket: \"${datasource}\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"${datasource}\")\n  |> range(start: -2h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_month\")",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2946,5 +2946,5 @@
   "timezone": "",
   "title": "Solar Production Overview",
   "uid": "eM8UF8BqW",
-  "version": 15
+  "version": 16
 }
