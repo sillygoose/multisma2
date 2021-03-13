@@ -46,15 +46,17 @@ MQTT_TOPICS = {
 
 # These are keys that we calculate a total across all inverters (if multiple inverters)
 AGGREGATE_KEYS = [
-    '6100_40263F00',    # AC grid power (current)
-    '6100_0046C200',    # PV generation power (current)
+    '6100_40263F00',    # AC grid power (totals for site and each inverter)
+    '6100_0046C200',    # PV generation power (instantaneous)
     '6400_0046C300',    # Meter count and PV gen. meter (total Wh meter)
     '6380_40251E00',    # DC power (totals for site and each inverter)
 ]
 
-SITE_SNAPSHOT = [
-    '6100_40263F00',    # AC grid power (current)
-    '6380_40251E00',    # DC power (current)
+SITE_SNAPSHOT = [       # Instantaneous values
+    '6100_40263F00',    # AC grid power (by inverter/site)
+    '6380_40251E00',    # DC power (by inverter/site)
+    '6380_40451F00',    # DC voltage (by inverter/string)
+    '6380_40452100',    # DC current (by inverter/string)
     '6180_08416500',    # Status: Reason for derating
     '6180_08412800',    # Status: General operating status
     '6180_08416400',    # Status: Grid relay

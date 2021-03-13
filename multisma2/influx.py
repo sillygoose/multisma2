@@ -13,14 +13,14 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 
 logger = logging.getLogger('multisma2')
 
-CACHE_ENABLED = False
-
 LP_LOOKUP = {
     'ac_measurements/power': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'power'},
     'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'voltage'},
     'ac_measurements/current': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'current'},
     'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'efficiency'},
-    'dc_measurements/power': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'power'},
+    'dc_measurements/power': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'power', 'subtag': '_string'},
+    'dc_measurements/voltage': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'voltage', 'subtag': '_string'},
+    'dc_measurements/current': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'current', 'subtag': '_string'},
     'status/reason_for_derating': {'measurement': 'status', 'tag': '_inverter', 'field': 'derating'},
     'status/general_operating_status': {'measurement': 'status', 'tag': '_inverter', 'field': 'operating_status'},
     'status/grid_relay': {'measurement': 'status', 'tag': '_inverter', 'field': 'grid_relay'},
@@ -106,8 +106,6 @@ class InfluxDB():
             self._client = None
             logger.info(f"Closed the InfluxDB bucket '{bucket}'")
 
-    cache = {}
-
     def write_points(self, points):
         if not self._write_api:
             return False
@@ -172,44 +170,40 @@ class InfluxDB():
                     continue
 
                 measurement = lookup.get('measurement')
-                tag = lookup.get('tag')
+                tag = lookup.get('tag', None)
                 for k, v in point.items():
                     field = lookup.get('field')
-                    signature = f'{measurement}_{k}_{field}'
                     lp = f'{measurement}'
                     if tag:
                         lp += f',{tag}={k}'
-                    lp += ' '
+                    #lp += ' '
                     if not field:
                         field = k
                     if isinstance(v, int):
-                        lp += f'{field}={v}i'
+                        lp += f' {field}={v}i {ts}'
+                        lps.append(lp)
                     elif isinstance(v, float):
-                        lp += f'{field}={v}'
+                        lp += f' {field}={v} {ts}'
+                        lps.append(lp)
                     elif isinstance(v, dict):
-                        first = True
+                        # dc_measurements,_inverter=sb71,_string=a current=0.23 1556813561098
+                        lp_prefix = f'{lp}'
+                        subtag = lookup.get('subtag', None)
                         for k1, v1 in v.items():
-                            if not first:
-                                lp += ','
+                            lp = f'{lp_prefix}'
+                            if subtag:
+                                lp += f',{subtag}={k1}'
                             if isinstance(v1, int):
-                                lp += f'{k1}={v1}i' if k1 != k else f'{field}={v1}i'
+                                lp += f' {field}={v1}i {ts}'
+                                lps.append(lp)
+                            elif isinstance(v1, float):
+                                lp += f' {field}={v1} {ts}'
+                                lps.append(lp)
                             else:
                                 logger.error(f"write_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
-                            first = False
                     else:
                         logger.error(f"write_sma_sensors(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
                         continue
-
-                    # Check if in the cache, if not or different update cache and write
-                    if CACHE_ENABLED:
-                        cached_result = InfluxDB.cache.get(signature, None)
-                        if cached_result:
-                            if lp == cached_result:
-                                continue
-
-                    InfluxDB.cache[signature] = lp
-                    lp += f' {ts}'
-                    lps.append(lp)
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
