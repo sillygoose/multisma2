@@ -4,8 +4,10 @@
 # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
 
 import time
+import os
 import logging
-# from pprint import pprint
+from config import config_from_yaml
+from pprint import pprint
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -14,21 +16,21 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 logger = logging.getLogger('multisma2')
 
 LP_LOOKUP = {
-    'ac_measurements/power': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'power'},
-    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'voltage'},
-    'ac_measurements/current': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'current'},
-    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tag': '_inverter', 'field': 'efficiency'},
-    'dc_measurements/power': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'power', 'subtag': '_string'},
-    'dc_measurements/voltage': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'voltage', 'subtag': '_string'},
-    'dc_measurements/current': {'measurement': 'dc_measurements', 'tag': '_inverter', 'field': 'current', 'subtag': '_string'},
-    'status/reason_for_derating': {'measurement': 'status', 'tag': '_inverter', 'field': 'derating'},
-    'status/general_operating_status': {'measurement': 'status', 'tag': '_inverter', 'field': 'operating_status'},
-    'status/grid_relay': {'measurement': 'status', 'tag': '_inverter', 'field': 'grid_relay'},
-    'status/condition': {'measurement': 'status', 'tag': '_inverter', 'field': 'condition'},
-    'production/total_wh': {'measurement': 'production', 'tag': '_inverter', 'field': 'total_wh'},
-    'production/midnight': {'measurement': 'production', 'tag': '_inverter', 'field': 'midnight'},
-    'sun/position': {'measurement': 'sun', 'tag': None, 'field': None},
-    'sun/irradiance': {'measurement': 'sun', 'tag': None, 'field': None},
+    'ac_measurements/power': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'power'},
+    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'voltage'},
+    'ac_measurements/current': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'current'},
+    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'efficiency'},
+    'dc_measurements/power': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'power'},
+    'dc_measurements/voltage': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'voltage'},
+    'dc_measurements/current': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'current'},
+    'status/reason_for_derating': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'derating'},
+    'status/general_operating_status': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'operating_status'},
+    'status/grid_relay': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'grid_relay'},
+    'status/condition': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'condition'},
+    'production/total_wh': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'total_wh'},
+    'production/midnight': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'midnight'},
+    'sun/position': {'measurement': 'sun', 'tags': None, 'field': None},
+    'sun/irradiance': {'measurement': 'sun', 'tags': None, 'field': None},
 }
 
 
@@ -127,8 +129,8 @@ class InfluxDB():
             return False
 
         measurement = lookup.get('measurement')
-        tag = lookup.get('tag')
-        field = lookup.get('field')
+        tags = lookup.get('tags', None)
+        field = lookup.get('field', None)
         lps = []
         for inverter in site:
             inverter_name = inverter.pop(0)
@@ -138,8 +140,11 @@ class InfluxDB():
                 v = history['v']
                 if v is None:
                     continue
+                lp = f'{measurement}'
+                if tags and len(tags):
+                    lp += f',{tags[0]}={name}'
                 if isinstance(v, int):
-                    lp = f'{measurement},{tag}={name} {field}={v}i {t}'
+                    lp += f' {field}={v}i {t}'
                     lps.append(lp)
                 else:
                     logger.error(f"write_history(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
@@ -170,33 +175,38 @@ class InfluxDB():
                     continue
 
                 measurement = lookup.get('measurement')
-                tag = lookup.get('tag', None)
+                tags = lookup.get('tags', None)
                 for k, v in point.items():
                     field = lookup.get('field')
+                    # sample: dc_measurements
                     lp = f'{measurement}'
-                    if tag:
-                        lp += f',{tag}={k}'
-                    #lp += ' '
+                    if tags and len(tags):
+                        # sample: dc_measurements,_inverter=sb71
+                        lp += f',{tags[0]}={k}'
                     if not field:
                         field = k
                     if isinstance(v, int):
+                        # sample: ac_measurements,_inverter=sb71 power=0.23 1556813561098
                         lp += f' {field}={v}i {ts}'
                         lps.append(lp)
                     elif isinstance(v, float):
+                        # sample: ac_measurements,_inverter=sb71 power=0.23 1556813561098
                         lp += f' {field}={v} {ts}'
                         lps.append(lp)
                     elif isinstance(v, dict):
-                        # dc_measurements,_inverter=sb71,_string=a current=0.23 1556813561098
                         lp_prefix = f'{lp}'
-                        subtag = lookup.get('subtag', None)
                         for k1, v1 in v.items():
+                            # sample: dc_measurements,_inverter=sb71
                             lp = f'{lp_prefix}'
-                            if subtag:
-                                lp += f',{subtag}={k1}'
+                            if tags and len(tags) > 1:
+                                # sample: dc_measurements,_inverter=sb71,_string=a
+                                lp += f',{tags[1]}={k1}'
                             if isinstance(v1, int):
+                                # sample: dc_measurements,_inverter=sb71,_string=a power=1000 1556813561098
                                 lp += f' {field}={v1}i {ts}'
                                 lps.append(lp)
                             elif isinstance(v1, float):
+                                # sample: dc_measurements,_inverter=sb71,_string=a current=0.23 1556813561098
                                 lp += f' {field}={v1} {ts}'
                                 lps.append(lp)
                             else:
@@ -212,3 +222,27 @@ class InfluxDB():
             logger.error(f"Database write() call failed in write_sma_sensors(): {e}")
             result = False
         return result
+
+
+#
+# Debug code to test instandalone mode
+#
+
+testdata = [
+    {'sb51': 0, 'sb71': 0, 'sb72': 0, 'site': 0, 'topic': 'ac_measurements/power'},
+    {'sb51': {'a': 0, 'b': 0, 'c': 0, 'sb51': 0}, 'sb71': {'a': 0, 'b': 0, 'c': 0, 'sb71': 0}, 'sb72': {'a': 0, 'b': 0, 'c': 0, 'sb72': 0}, 'site': 0, 'topic': 'dc_measurements/power'},
+    {'sb51': {'a': 10.0, 'b': 20.0, 'c': 30.0}, 'sb71': {'a': 40.0, 'b': 50.0, 'c': 60.0}, 'sb72': {'a': 70.0, 'b': 80.0, 'c': 90.0}, 'topic': 'dc_measurements/voltage'},
+    {'sb51': 16777213, 'sb71': 16777213, 'sb72': 16777213, 'topic': 'status/general_operating_status'}
+]
+
+if __name__ == "__main__":
+    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
+    config = config_from_yaml(data=yaml_file, read_from_file=True)
+    influxdb = InfluxDB()
+    result = influxdb.start(config=config.multisma2.influxdb2)
+    if not result:
+        print("Something failed during initialization")
+    else:
+        influxdb.write_sma_sensors(testdata)
+        influxdb.stop()
+        print("Done")
