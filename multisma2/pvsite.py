@@ -414,11 +414,11 @@ class PVSite():
         return results
 
     async def sun_irradiance(self, timestamp):
-        """Calculate the sun is in the sky."""
+        """Calculate the estimated irradiation available."""
         site_properties = self._config.site
         solar_properties = self._config.solar_properties
         igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
-        results = [{'topic': 'sun/irradiance', 'irradiance': round(igc, 1)}]
+        results = [{'topic': 'sun/irradiance', 'modeled': round(igc, 1)}]
         return results
 
     async def co2_avoided(self):
