@@ -7,13 +7,12 @@ import time
 import os
 import logging
 from config import config_from_yaml
-from pprint import pprint
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 
-logger = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
 
 LP_LOOKUP = {
     'ac_measurements/power': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'power'},
@@ -38,6 +37,8 @@ class InfluxDB():
     def __init__(self):
         self._client = None
         self._write_api = None
+        self._query_api = None
+        self._enabled = False
 
     def __del__(self):
         if self._client:
@@ -45,68 +46,58 @@ class InfluxDB():
 
     def check_config(self, config):
         """Check that the needed YAML options exist."""
-        required_keys = ['url', 'token', 'bucket', 'org']
+        required_keys = ['enable', 'url', 'token', 'bucket', 'org']
         for key in required_keys:
             if key not in config.keys():
-                logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
+                _LOGGER.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
                 return False
+
+        if not isinstance(config.enable, bool):
+            _LOGGER.error(f"The influxdb 'enable' option is not a boolean '{config.enable}'")
+            return False
+
         return True
 
     def start(self, config):
-        key = 'enable'
-        if key not in config.keys():
-            logger.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
+        if not self.check_config(config):
             return False
-
-        if not isinstance(config.enable, bool):
-            logger.error(f"The influxdb 'enable' option is not a boolean '{config.enable}'")
-            return False
-
         if not config.enable:
             return True
-
-        if self.check_config(config) is False:
-            return False
 
         try:
             self._bucket = config.bucket
             self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
             if not self._client:
-                logger.error(f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
-                return False
+                raise Exception(
+                    f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
 
             self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
             if not self._write_api:
-                logger.error(f"Failed to get client write_api() object from {config.url}")
-                return False
+                raise Exception(f"Failed to get client write_api() object from {config.url}")
 
-            # Small test query to confirm the bucket exists
             query_api = self._client.query_api()
             if not query_api:
-                logger.error(f"Failed to get client query_api() object from {config.url}")
+                raise Exception(f"Failed to get client query_api() object from {config.url}")
             try:
                 query_api.query(f'from(bucket: "{self._bucket}") |> range(start: -1m)')
-                logger.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
-                return True
+                _LOGGER.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
             except Exception:
-                logger.error(f"Unable to access bucket '{self._bucket}' at {config.url}")
-                return False
+                raise Exception(f"Unable to access bucket '{self._bucket}' at {config.url}")
 
-        except Exception:
-            logger.error(f"Unexpected exception, unable to access bucket '{self._bucket}' at {config.url}")
+        except Exception as e:
+            _LOGGER.error(f"{e}")
+            self.stop()
             return False
 
-        return False
+        return True
 
     def stop(self):
         if self._write_api:
             self._write_api.close()
             self._write_api = None
         if self._client:
-            bucket = self._bucket
             self._client.close()
             self._client = None
-            logger.info(f"Closed the InfluxDB bucket '{bucket}'")
 
     def write_points(self, points):
         if not self._write_api:
@@ -115,7 +106,7 @@ class InfluxDB():
             self._write_api.write(bucket=self._bucket, record=points, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write() call failed in write_points(): {e}")
+            _LOGGER.error(f"Database write() call failed in write_points(): {e}")
             result = False
         return result
 
@@ -125,7 +116,7 @@ class InfluxDB():
 
         lookup = LP_LOOKUP.get(topic, None)
         if not lookup:
-            logger.error(f"write_history(): unknown topic '{topic}'")
+            _LOGGER.error(f"write_history(): unknown topic '{topic}'")
             return False
 
         measurement = lookup.get('measurement')
@@ -147,14 +138,15 @@ class InfluxDB():
                     lp += f' {field}={v}i {t}'
                     lps.append(lp)
                 else:
-                    logger.error(f"write_history(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
+                    _LOGGER.error(
+                        f"write_history(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
                     continue
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write() call failed in write_history(): {e}")
+            _LOGGER.error(f"Database write() call failed in write_history(): {e}")
             result = False
         return result
 
@@ -171,7 +163,7 @@ class InfluxDB():
             if topic:
                 lookup = LP_LOOKUP.get(topic, None)
                 if not lookup:
-                    logger.error(f"write_sma_sensors(): unknown topic '{topic}'")
+                    _LOGGER.error(f"write_sma_sensors(): unknown topic '{topic}'")
                     continue
 
                 measurement = lookup.get('measurement')
@@ -210,16 +202,18 @@ class InfluxDB():
                                 lp += f' {field}={v1} {ts}'
                                 lps.append(lp)
                             else:
-                                logger.error(f"write_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
+                                _LOGGER.error(
+                                    f"write_sma_sensors(): unanticipated dictionary type '{type(v1)}' in measurement '{measurement}/{field}'")
                     else:
-                        logger.error(f"write_sma_sensors(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
+                        _LOGGER.error(
+                            f"write_sma_sensors(): unanticipated type '{type(v)}' in measurement '{measurement}/{field}'")
                         continue
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
             result = True
         except Exception as e:
-            logger.error(f"Database write() call failed in write_sma_sensors(): {e}")
+            _LOGGER.error(f"Database write() call failed in write_sma_sensors(): {e}")
             result = False
         return result
 
@@ -230,8 +224,10 @@ class InfluxDB():
 
 testdata = [
     {'sb51': 0, 'sb71': 0, 'sb72': 0, 'site': 0, 'topic': 'ac_measurements/power'},
-    {'sb51': {'a': 0, 'b': 0, 'c': 0, 'sb51': 0}, 'sb71': {'a': 0, 'b': 0, 'c': 0, 'sb71': 0}, 'sb72': {'a': 0, 'b': 0, 'c': 0, 'sb72': 0}, 'site': 0, 'topic': 'dc_measurements/power'},
-    {'sb51': {'a': 10.0, 'b': 20.0, 'c': 30.0}, 'sb71': {'a': 40.0, 'b': 50.0, 'c': 60.0}, 'sb72': {'a': 70.0, 'b': 80.0, 'c': 90.0}, 'topic': 'dc_measurements/voltage'},
+    {'sb51': {'a': 0, 'b': 0, 'c': 0, 'sb51': 0}, 'sb71': {'a': 0, 'b': 0, 'c': 0, 'sb71': 0},
+        'sb72': {'a': 0, 'b': 0, 'c': 0, 'sb72': 0}, 'site': 0, 'topic': 'dc_measurements/power'},
+    {'sb51': {'a': 10.0, 'b': 20.0, 'c': 30.0}, 'sb71': {'a': 40.0, 'b': 50.0, 'c': 60.0},
+        'sb72': {'a': 70.0, 'b': 80.0, 'c': 90.0}, 'topic': 'dc_measurements/voltage'},
     {'sb51': 16777213, 'sb71': 16777213, 'sb72': 16777213, 'topic': 'status/general_operating_status'}
 ]
 
