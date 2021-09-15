@@ -4,7 +4,7 @@
 from pathlib import Path
 from setuptools import setup
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 URL = "https://github.com/sillygoose/multisma2"
 
 setup(
@@ -18,9 +18,6 @@ setup(
     author="Rick Naro",
     author_email="sillygoose@me.com",
     license="MIT",
-    setup_requires=[
-        "flake8",
-    ],
     install_requires=[
         "aiohttp",
         "asyncio",
@@ -31,8 +28,8 @@ setup(
         "astral",
         "pysolar",
         "python-dateutil",
-        "pyyaml",
         "python-configuration",
+        "pyyaml",
     ],
     zip_safe=True,
 )

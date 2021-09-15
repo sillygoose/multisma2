@@ -103,10 +103,10 @@ class Multisma2():
         except (KeyboardInterrupt, NormalCompletion, TerminateSignal):
             pass
         except AbnormalCompletion:
-            logger.critical("Received AbnormalCompletion exception detected")
+            # logger.critical("Received AbnormalCompletion exception detected")
             delay = ERROR_DELAY
         except FailedInitialization:
-            logger.critical("Received FailedInitialization exception detected")
+            # logger.critical("Received FailedInitialization exception detected")
             delay = ERROR_DELAY
         except Exception as e:
             logger.error(f"Unexpected exception caught: {e}")
@@ -119,7 +119,8 @@ class Multisma2():
                 logger.critical("Received KeyboardInterrupt during shutdown")
             finally:
                 if delay > 0:
-                    print(f"multisma2 is delaying restart for {delay} seconds (Docker will restart multisma2, otherwise exits)")
+                    print(
+                        f"multisma2 is delaying restart for {delay} seconds (Docker will restart multisma2, otherwise exits)")
                     time.sleep(delay)
 
     async def _astart(self):
@@ -178,7 +179,7 @@ def main():
 
 if __name__ == "__main__":
     # make sure we can run multisma2
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 7:
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 9:
         main()
     else:
-        print("python 3.7 or better required")
+        print("python 3.9 or better required")

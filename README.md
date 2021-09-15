@@ -26,7 +26,7 @@ multisma2 is pretty complete for my purposes but there could be small improvemen
 ## Using multisma2
 A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker (now that the setup has migrated to a YAML configuration file).
 ### Requirements
-- Python 3.7 or later
+- Python 3.9 or later
 - Python packages used
     - paho-mqtt
     - aiohttp
