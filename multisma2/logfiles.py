@@ -2,54 +2,61 @@
 
 import os
 import sys
+from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
 
-logger = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
 
 
-def check_config(config):
+def check_config(log_options):
     """Check that the needed YAML options exist."""
     required_keys = ['file', 'level', 'format']
     for key in required_keys:
-        if key not in config.keys():
-            logger.error(f"Missing required 'log' option in YAML file: '{key}'")
-            return False
+        if key not in log_options.keys():
+            _LOGGER.error(f"Missing required 'log' option in YAML file: '{key}'")
+            return None
+    return dict(log_options)
 
 
-#
-# Public
-#
-
-def start(app_logger, config_log):
+def start(config):
     """Create the application log."""
-    if check_config(config_log) is False:
-        return False
 
-    filename = os.path.expanduser(config_log.file + ".log")
-    APPLICATION_LOG_LEVEL = config_log.level
+    try:
+        log_options = check_config(config.multisma2.log)
+    except Exception as e:
+        raise Exception(f"Error processing the 'log' options in the configuration file: {e}")
+
+    log_options = dict(dict(config.multisma2.log))
+    log_level = log_options.get('level', None)
+    log_format = log_options.get('format', None)
+    log_file = log_options.get('file', None)
+
+    now = datetime.now()
+    filename = os.path.expanduser(log_file + "_" + now.strftime("%Y-%m-%d") + ".log")
 
     # Create the directory if needed
     filename_parts = os.path.split(filename)
     if filename_parts[0] and not os.path.isdir(filename_parts[0]):
         os.mkdir(filename_parts[0])
-    logname = os.path.abspath(filename)
+    filename = os.path.abspath(filename)
 
-    handler = TimedRotatingFileHandler(logname, when='midnight', interval=1, backupCount=10)
+    # Change log files at midnight
+    handler = TimedRotatingFileHandler(filename, when='midnight', interval=1, backupCount=10)
     handler.suffix = "%Y-%m-%d"
-    handler.setLevel(APPLICATION_LOG_LEVEL)
-    formatter = logging.Formatter(config_log.format)
+    handler.setLevel(log_level)
+    formatter = logging.Formatter(log_format)
+    # formatter = logging.Formatter(config_log.format)
     handler.setFormatter(formatter)
-    app_logger.addHandler(handler)
+    _LOGGER.addHandler(handler)
 
     # Add some console output for anyone watching
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(level=APPLICATION_LOG_LEVEL)
-    console_handler.setFormatter(logging.Formatter(config_log.format))
-    app_logger.setLevel(level=APPLICATION_LOG_LEVEL)
-    app_logger.addHandler(console_handler)
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(logging.Formatter(log_format))
+    _LOGGER.addHandler(console_handler)
+    _LOGGER.setLevel(logging.INFO)
 
     # First entry
-    app_logger.info("Created application log at %s", filename)
-    return True
+    _LOGGER.info("Created application log %s", filename)

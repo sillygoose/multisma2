@@ -33,7 +33,7 @@ LP_LOOKUP = {
 }
 
 
-class InfluxDB():
+class InfluxDB:
     def __init__(self):
         self._client = None
         self._write_api = None
@@ -63,13 +63,12 @@ class InfluxDB():
             return False
         if not config.enable:
             return True
-
         try:
             self._bucket = config.bucket
             self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
             if not self._client:
                 raise Exception(
-                    f"Failed to get InfluxDBClient object from {config.url} (check your url, token, and/or organization)")
+                    f"Failed to get InfluxDBClient from {config.url} (check url, token, and/or organization)")
 
             self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
             if not self._write_api:
@@ -144,11 +143,10 @@ class InfluxDB():
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
-            result = True
+            return True
         except Exception as e:
             _LOGGER.error(f"Database write() call failed in write_history(): {e}")
-            result = False
-        return result
+            return False
 
     def write_sma_sensors(self, sensor, timestamp=None):
         if not self._client:

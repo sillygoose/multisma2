@@ -7,7 +7,7 @@ import sys
 import os
 import time
 import signal
-from config import config_from_yaml
+from readconfig import read_config
 
 import asyncio
 import aiohttp
@@ -19,10 +19,11 @@ import logfiles
 from exceptions import TerminateSignal, NormalCompletion, AbnormalCompletion, FailedInitialization
 
 
-logger = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
 
 
-def buildYAMLExceptionString(exception, file='sbhistory'):
+def buildYAMLExceptionString(exception, file='multisma2'):
     e = exception
     try:
         type = ''
@@ -58,33 +59,27 @@ def buildYAMLExceptionString(exception, file='sbhistory'):
 
 class Multisma2():
 
-    def __init__(self):
+    def __init__(self, config):
         """Initialize the Multisma2 instance."""
+        self._config = config
         self._loop = asyncio.new_event_loop()
         self._session = None
         self._site = None
         signal.signal(signal.SIGTERM, self.catch)
         signal.siginterrupt(signal.SIGTERM, False)
-        try:
-            yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'multisma2.yaml')
-            self._config = config_from_yaml(data=yaml_file, read_from_file=True)
-        except Exception as e:
-            error_message = buildYAMLExceptionString(exception=e, file='multisma2.yaml')
-            print(error_message)
-            raise FailedInitialization
 
     def catch(self, signum, frame):
         """Handler for SIGTERM signals."""
-        logger.critical("Received SIGTERM signal, forcing shutdown")
+        _LOGGER.critical("Received SIGTERM signal, forcing shutdown")
         raise TerminateSignal
 
     def run(self):
         """Code to handle the start(), run(), and stop() interfaces."""
-        try:
-            self._config.multisma2
-        except Exception:
-            print("Unable to continue, 'multisma2' entry missing in YAML file")
-            return
+        # try:
+        #    self._config.multisma2
+        # except Exception:
+        #    print("Unable to continue, 'multisma2' entry missing in YAML file")
+        #    return
 
         # ERROR_DELAY might be non-zero when SMA errors are detected *for now not implemented)
         ERROR_DELAY = 0
@@ -94,7 +89,7 @@ class Multisma2():
                 with DelayedKeyboardInterrupt():
                     self._start()
             except KeyboardInterrupt:
-                logger.critical("Received KeyboardInterrupt during startup")
+                _LOGGER.critical("Received KeyboardInterrupt during startup")
                 raise
 
             self._run()
@@ -103,20 +98,20 @@ class Multisma2():
         except (KeyboardInterrupt, NormalCompletion, TerminateSignal):
             pass
         except AbnormalCompletion:
-            # logger.critical("Received AbnormalCompletion exception detected")
+            # _LOGGER.critical("Received AbnormalCompletion exception detected")
             delay = ERROR_DELAY
         except FailedInitialization:
-            # logger.critical("Received FailedInitialization exception detected")
+            # _LOGGER.critical("Received FailedInitialization exception detected")
             delay = ERROR_DELAY
         except Exception as e:
-            logger.error(f"Unexpected exception caught: {e}")
+            _LOGGER.error(f"Unexpected exception caught: {e}")
             delay = 0
         finally:
             try:
                 with DelayedKeyboardInterrupt():
                     self._stop()
             except KeyboardInterrupt:
-                logger.critical("Received KeyboardInterrupt during shutdown")
+                _LOGGER.critical("Received KeyboardInterrupt during shutdown")
             finally:
                 if delay > 0:
                     print(
@@ -126,15 +121,6 @@ class Multisma2():
     async def _astart(self):
         """Asynchronous initialization code."""
         config = self._config.multisma2
-        if 'log' not in config.keys():
-            print("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
-            raise FailedInitialization
-
-        if not logfiles.start(logger, config.log):
-            print("Unable to continue, 'log' entry missing in 'multisma2' YAML file section'")
-            raise FailedInitialization
-        logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
         self._site = PVSite(self._session, config)
         result = await self._site.start()
@@ -147,7 +133,7 @@ class Multisma2():
 
     async def _astop(self):
         """Asynchronous closing code."""
-        logger.info("Closing multisma2 application")
+        _LOGGER.info("Closing multisma2 application")
         if self._site:
             await self._site.stop()
         if self._session:
@@ -168,8 +154,20 @@ class Multisma2():
 
 def main():
     """Set up and start multisma2."""
+
     try:
-        multisma2 = Multisma2()
+        config = read_config()
+        if config is None:
+            return
+    except Exception as e:
+        print(f"{e}")
+        return
+
+    logfiles.start(config)
+    _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+
+    try:
+        multisma2 = Multisma2(config)
         multisma2.run()
     except FailedInitialization:
         pass
