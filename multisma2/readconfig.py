@@ -13,6 +13,7 @@ from typing import Dict, List, TextIO, TypeVar, Union
 
 import yaml
 from config import config_from_yaml
+from exceptions import FailedInitialization
 
 
 CONFIG_YAML = "multisma2.yaml"
@@ -117,7 +118,7 @@ def check_key(config, required, path=''):
         # look for unknown entries
         options = required.get(k, None)
         if options is None:
-            print(f"Unknown option '{currentpath}'")
+            _LOGGER.error(f"Unknown option '{currentpath}'")
             passed = False
             continue
         elif options is False:
@@ -127,13 +128,13 @@ def check_key(config, required, path=''):
         if isinstance(v, dict):
             for key in options.keys():
                 if v.get(key, None) is None:
-                    print(f"Missing option '{key}' in '{currentpath}'")
+                    _LOGGER.error(f"Missing option '{key}' in '{currentpath}'")
                     passed = False
         if isinstance(v, Configuration):
             for key in options.keys():
                 v1 = dict(v)
                 if v1.get(key, None) is None:
-                    print(f"Missing option '{key}' in '{currentpath}'")
+                    _LOGGER.error(f"Missing option '{key}' in '{currentpath}'")
                     passed = False
 
         if isinstance(v, dict):
@@ -147,7 +148,7 @@ def check_key(config, required, path=''):
 
 
 def check_config(config):
-    """Check that the important options are present."""
+    """Check that the important options are present and unknown options aren't."""
 
     required_keys = {
         'multisma2': {
@@ -163,14 +164,16 @@ def check_config(config):
     return config if result else None
 
 
-def read_config():
+def read_config(checking=False):
     try:
         yaml.FullLoader.add_constructor('!secret', secret_yaml)
         yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONFIG_YAML)
         config = config_from_yaml(data=yaml_file, read_from_file=True)
-        return check_config(config)
-    except Exception:
-        raise Exception(f"Error processing the configuration file")
+        if checking:
+            return check_config(config)
+        return config
+    except Exception as e:
+        raise FailedInitialization(Exception("One or more errors detected in the YAML configuration file: {e}"))
 
 
 if __name__ == '__main__':
