@@ -158,23 +158,23 @@ def main():
     # load the yaml file for logging options but don't check
     try:
         config = read_config(checking=False)
-        if config is None:
-            raise FailedInitialization(Exception("One or more errors detected in the YAML configuration file"))
-    except Exception as e:
-        raise FailedInitialization(Exception("One or more errors detected in the YAML configuration file: {e}"))
+    except FailedInitialization as e:
+        print(f"{e}")
+        return
 
-    logfiles.start(config)
-    _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+    try:
+        logfiles.start(config)
+        _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+    except FailedInitialization as e:
+        print(f"{e}")
+        return
 
     try:
         config = read_config(checking=True)
-        if config is None:
-            raise FailedInitialization(Exception("One or more errors detected in the YAML configuration file"))
         multisma2 = Multisma2(config)
         multisma2.run()
     except FailedInitialization as e:
         _LOGGER.error(f"{e}")
-        pass
     except Exception as e:
         _LOGGER.error(f"Unexpected exception: {e}")
 

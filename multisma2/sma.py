@@ -12,7 +12,7 @@ import jmespath
 from aiohttp import client_exceptions
 
 
-logger = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
 
 USERS = {"user": "usr", "installer": "istl"}
 
@@ -35,7 +35,7 @@ class SMA:
         if group not in USERS:
             raise KeyError("Invalid user type: {}".format(group))
         if len(password) > 12:
-            logger.warning("Password should not exceed 12 characters")
+            _LOGGER.warning("Password should not exceed 12 characters")
         self._new_session_data = {'right': USERS[group], 'pass': password}
         self._url = url.rstrip("/")
         if not url.startswith("http"):
@@ -64,21 +64,21 @@ class SMA:
         if self.sma_sid is None:
             await self.new_session()
             if self.sma_sid is None:
-                logger.error(f"Unable to create new session with inverter {self._url}")
+                _LOGGER.error(f"Unable to create new session with inverter {self._url}")
                 return None
         body = await self._fetch_json(url, payload=payload)
 
         # On the first error we close the session which will re-login
         err = body.get('err')
         if err is not None:
-            logger.error(
+            _LOGGER.error(
                 f"{self._url}: error detected, closing session to force another login attempt, got: {body}",
             )
             await self.close_session()
             return None
 
         if not isinstance(body, dict) or 'result' not in body:
-            logger.error(f"No 'result' in reply from SMA, got: {body}")
+            _LOGGER.error(f"No 'result' in reply from SMA, got: {body}")
             return None
 
         if self.sma_uid is None:
@@ -87,7 +87,7 @@ class SMA:
 
         result_body = body['result'].pop(self.sma_uid, None)
         if body != {'result': {}}:
-            logger.error(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
+            _LOGGER.error(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
 
         return result_body
 
@@ -103,11 +103,11 @@ class SMA:
 
         if err:
             if err == 503:
-                logger.error(msg, "Max amount of sessions reached")
+                _LOGGER.error(msg, "Max amount of sessions reached")
             else:
-                logger.error(msg, err)
+                _LOGGER.error(msg, err)
         else:
-            logger.error(msg, "Session ID expected [result.sid]")
+            _LOGGER.error(msg, "Session ID expected [result.sid]")
         return False
 
     async def close_session(self):

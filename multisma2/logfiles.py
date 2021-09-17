@@ -5,6 +5,9 @@ import sys
 from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
+from exceptions import FailedInitialization
+
+from mqtt import error_msg
 
 
 _LOGGER = logging.getLogger('multisma2')
@@ -12,23 +15,28 @@ _LOGGER = logging.getLogger('multisma2')
 
 def check_config(log_options):
     """Check that the needed YAML options exist."""
-    required_keys = ['file', 'level', 'format']
-    for key in required_keys:
-        if key not in log_options.keys():
+    errors = False
+    required = {'file': str, 'level': str, 'format': str}
+    options = dict(log_options)
+    for key in required:
+        if key not in options.keys():
             _LOGGER.error(f"Missing required 'log' option in YAML file: '{key}'")
-            return None
-    return dict(log_options)
+            errors = True
+        else:
+            v = options.get(key, None)
+            if not isinstance(v, required.get(key)):
+                _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'log.{key}'")
+                errors = True
+            pass
+    if errors:
+        raise FailedInitialization(Exception("Errors detected in 'log' YAML options"))
+    return options
 
 
 def start(config):
     """Create the application log."""
 
-    try:
-        log_options = check_config(config.multisma2.log)
-    except Exception as e:
-        raise Exception(f"Error processing the 'log' options in the configuration file: {e}")
-
-    log_options = dict(dict(config.multisma2.log))
+    log_options = check_config(config.multisma2.log)
     log_level = log_options.get('level', None)
     log_format = log_options.get('format', None)
     log_file = log_options.get('file', None)

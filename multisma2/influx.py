@@ -11,6 +11,8 @@ from config import config_from_yaml
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
+from exceptions import FailedInitialization
+
 
 _LOGGER = logging.getLogger('multisma2')
 
@@ -44,25 +46,30 @@ class InfluxDB:
         if self._client:
             self._client.close()
 
-    def check_config(self, config):
+    def check_config(self, influxdb2):
         """Check that the needed YAML options exist."""
-        required_keys = ['enable', 'url', 'token', 'bucket', 'org']
-        for key in required_keys:
-            if key not in config.keys():
+        errors = False
+        required = {'enable': bool, 'url': str, 'token': str, 'bucket': str, 'org': str}
+        options = dict(influxdb2)
+        for key in required:
+            if key not in options.keys():
                 _LOGGER.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
-                return False
-
-        if not isinstance(config.enable, bool):
-            _LOGGER.error(f"The influxdb 'enable' option is not a boolean '{config.enable}'")
-            return False
-
-        return True
+                errors = True
+            else:
+                v = options.get(key, None)
+                if not isinstance(v, required.get(key)):
+                    _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'influxdb2.{key}'")
+                    errors = True
+                pass
+        if errors:
+            raise FailedInitialization(Exception("Errors detected in 'influxdb2' YAML options"))
+        return options
 
     def start(self, config):
-        if not self.check_config(config):
-            return False
+        self.check_config(config)
         if not config.enable:
             return True
+
         try:
             self._bucket = config.bucket
             self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)

@@ -12,9 +12,11 @@ import logging
 import json
 import paho.mqtt.client as mqtt
 
+from exceptions import FailedInitialization
 
-logger = logging.getLogger('multisma2')
-local_vars = {}
+
+_LOGGER = logging.getLogger('multisma2')
+_LOCAL_VARS = {}
 
 
 def error_msg(code):
@@ -36,10 +38,10 @@ def on_disconnect(client, userdata, result_code):
     client.connected = False
     client.disconnect_failed = False
     if result_code == mqtt.MQTT_ERR_SUCCESS:
-        logger.info("MQTT client successfully disconnected")
+        _LOGGER.info("MQTT client successfully disconnected")
     else:
         client.disconnect_failed = True
-        logger.info(
+        _LOGGER.info(
             f"MQTT client unexpectedly disconnected: {error_msg(result_code)}, trying reconnect()")
 
 
@@ -48,27 +50,39 @@ def on_connect(client, userdata, flags, result_code):
     # pylint: disable=unused-argument
     if result_code == mqtt.MQTT_ERR_SUCCESS:
         client.connected = True
-        logger.info(f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']} using topics '{local_vars['client']}/#'")
+        _LOGGER.info(
+            f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']} using topics '{_LOCAL_VARS['client']}/#'")
     else:
         client.connection_failed = True
-        logger.info(f"MQTT client connection failed: {error_msg(result_code)}")
+        _LOGGER.info(f"MQTT client connection failed: {error_msg(result_code)}")
 
 
 def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
     # Disconnect the MQTT client from the broker
-    local_vars['mqtt_client'].loop_stop()
-    logger.info("MQTT client disconnect being called")
-    local_vars['mqtt_client'].disconnect()
+    _LOCAL_VARS['mqtt_client'].loop_stop()
+    _LOGGER.info("MQTT client disconnect being called")
+    _LOCAL_VARS['mqtt_client'].disconnect()
 
 
-def check_config(config):
+def check_config(mqtt):
     """Check that the needed YAML options exist."""
-    required_keys = ['client', 'ip', 'port', 'username', 'password']
-    for key in required_keys:
-        if key not in config.keys():
-            logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
-            return False
+    errors = False
+    required = {'enable': bool, 'client': str, 'ip': str, 'port': int, 'username': str, 'password': str}
+    options = dict(mqtt)
+    for key in required:
+        if key not in options.keys():
+            _LOGGER.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
+            errors = True
+        else:
+            v = options.get(key, None)
+            if not isinstance(v, required.get(key)):
+                _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'mqtt.{key}'")
+                errors = True
+            pass
+    if errors:
+        raise FailedInitialization(Exception("Errors detected in 'mqtt' YAML options"))
+    return options
 
 
 #
@@ -77,19 +91,22 @@ def check_config(config):
 
 def start(config):
     """Tests and caches the client MQTT broker connection."""
-    key = 'enable'
-    if key not in config.keys():
-        logger.error(f"Missing required 'mqtt' option in YAML file: '{key}'")
+    try:
+        check_config(config)
+    except FailedInitialization:
         return False
 
-    if config.enable is True:
-        if check_config(config) is False:
-            return False
+    if config.enable is False:
+        return True
+
+    if check_config(config) is False:
+        return False
+
     result = False
 
     # Create a unique client name
-    local_vars['client'] = config.client
-    local_vars['clientname'] = (
+    _LOCAL_VARS['client'] = config.client
+    _LOCAL_VARS['clientname'] = (
         config.client
         + "_"
         + "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
@@ -98,12 +115,12 @@ def start(config):
     # Check if MQTT is configured properly, create the connection
     connection_type = ('authenticated', 'anonymous')[len(config.username) == 0]
     client = mqtt.Client(
-        local_vars['clientname'],
+        _LOCAL_VARS['clientname'],
         userdata={'IP': config.ip, 'Port': config.port, 'Type': connection_type},
     )
 
     # Setup and try to connect to the broker
-    logger.info(f"Attempting {connection_type} MQTT client connection to {config.ip}:{config.port}")
+    _LOGGER.info(f"Attempting {connection_type} MQTT client connection to {config.ip}:{config.port}")
 
     client.on_connect = on_connect
     client.username_pw_set(username=config.username, password=config.password)
@@ -120,28 +137,28 @@ def start(config):
             time.sleep(sleep_time)
             time_limit -= sleep_time
         if not client.connected and not client.connection_failed:
-            logger.error("MQTT timeout error, no response")
+            _LOGGER.error("MQTT timeout error, no response")
 
     except socket.gaierror:
         client.loop_stop()
-        logger.error(f"Connection failed: {sys.exc_info()[0]}")
+        _LOGGER.error(f"Connection failed: {sys.exc_info()[0]}")
 
     except ConnectionRefusedError:
         client.loop_stop()
-        logger.error(f"Connection refused: {sys.exc_info()[0]}")
+        _LOGGER.error(f"Connection refused: {sys.exc_info()[0]}")
 
     except KeyboardInterrupt:
         client.loop_stop()
 
     except Exception:
         client.loop_stop()
-        logger.error(f"MQTT connection failed with exception: {sys.exc_info()[0]}")
+        _LOGGER.error(f"MQTT connection failed with exception: {sys.exc_info()[0]}")
 
     # Close the connection and return success
     if client.connected:
         client.on_disconnect = on_disconnect
         client.reconnect_delay_set(min_delay=1, max_delay=120)
-        local_vars['mqtt_client'] = client
+        _LOCAL_VARS['mqtt_client'] = client
         atexit.register(mqtt_exit)
         return True
 
@@ -152,14 +169,14 @@ def start(config):
 def publish(sensors):
     """Publish a dictionary of sensor keys amd values using MQTT."""
     # Check if MQTT is not connected to a broker or the sensor list is empty
-    if 'mqtt_client' not in local_vars or not sensors:
+    if 'mqtt_client' not in _LOCAL_VARS or not sensors:
         return
 
     # Separate out the sensor dictionaries
     for original_sensor in sensors:
         sensor = original_sensor.copy()
         if 'topic' not in sensor:
-            logger.warning(f"'topic' not in sensor dictionary: {str(sensor)}")
+            _LOGGER.warning(f"'topic' not in sensor dictionary: {str(sensor)}")
             continue
 
         # Extract the topic and precision from the dictionary
@@ -176,11 +193,11 @@ def publish(sensors):
 
         # Encode each sensor in JSON and publish
         sensor_json = json.dumps(sensor)
-        message_info = local_vars['mqtt_client'].publish(
-            local_vars['client'] + "/" + topic, sensor_json
+        message_info = _LOCAL_VARS['mqtt_client'].publish(
+            _LOCAL_VARS['client'] + "/" + topic, sensor_json
         )
         if message_info.rc != mqtt.MQTT_ERR_SUCCESS:
-            logger.warning(
+            _LOGGER.warning(
                 f"MQTT message topic '{topic}'' failed to publish: {error_msg(message_info.rc)}",
             )
 

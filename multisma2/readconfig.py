@@ -3,16 +3,16 @@
 import logging
 import os
 import sys
-from config.configuration import Configuration
 
+from config.configuration import Configuration
 from dateutil.parser import parse
 from pathlib import Path
+import yaml
+from config import config_from_yaml
 
 from collections import OrderedDict
 from typing import Dict, List, TextIO, TypeVar, Union
 
-import yaml
-from config import config_from_yaml
 from exceptions import FailedInitialization
 
 
@@ -108,7 +108,7 @@ def secret_yaml(loader: FullLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     raise ConfigError(f"Secret '{node.value}' not defined")
 
 
-def check_key(config, required, path=''):
+def check_key(config, required, path='') -> bool:
     """Recursively check the configuration file for required entries."""
 
     passed = True
@@ -156,8 +156,8 @@ def check_config(config):
             'site': {'name': True, 'region': True, 'tz': True, 'latitude': True, 'longitude': True, 'elevation': True, 'co2_avoided': True},
             'solar_properties': {'azimuth': True, 'tilt': True, 'area': True, 'efficiency': True, 'rho': True},
             'influxdb2': {'enable': True, 'org': True, 'url': True, 'bucket': True, 'token': True},
-            'mqtt': {'enable': True, 'client': True, 'ip': True, 'port': False, 'username': True, 'password': True},
-            'inverters': {'inverter': {'name': True, 'url': True, 'user': True, 'password': True}}
+            'mqtt': {'enable': True, 'client': True, 'ip': True, 'port': True, 'username': True, 'password': True},
+            'inverters': {'inverter': {'name': True, 'url': True, 'username': True, 'password': True}}
         }
     }
     result = check_key(dict(config), required_keys)
@@ -165,15 +165,21 @@ def check_config(config):
 
 
 def read_config(checking=False):
+    """Open the YAML configuration file and optionally check the contents"""
+
     try:
         yaml.FullLoader.add_constructor('!secret', secret_yaml)
         yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), CONFIG_YAML)
         config = config_from_yaml(data=yaml_file, read_from_file=True)
-        if checking:
-            return check_config(config)
-        return config
+
+        if config and checking:
+            config = check_config(config)
+
+        if config is None:
+            raise FailedInitialization(Exception(f"One or more errors detected in the YAML configuration file"))
     except Exception as e:
-        raise FailedInitialization(Exception("One or more errors detected in the YAML configuration file: {e}"))
+        raise FailedInitialization(Exception(f"One or more errors detected in the YAML configuration file: {e}"))
+    return config
 
 
 if __name__ == '__main__':

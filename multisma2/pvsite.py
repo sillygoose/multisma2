@@ -19,8 +19,10 @@ from inverter import Inverter
 from influx import InfluxDB
 import mqtt
 
+from exceptions import FailedInitialization
 
-logger = logging.getLogger('multisma2')
+
+_LOGGER = logging.getLogger('multisma2')
 
 
 # Unlisted topics will use the key as the MQTT topic name
@@ -66,6 +68,7 @@ SITE_SNAPSHOT = [       # Instantaneous values
 
 class PVSite():
     """Class to describe a PV site with one or more inverters."""
+
     def __init__(self, session, config):
         """Create a new PVSite object."""
         self._config = config
@@ -88,53 +91,69 @@ class PVSite():
         required_keys = ['site', 'solar_properties', 'inverters']
         for key in required_keys:
             if key not in config.keys():
-                logger.error(f"Missing required 'multisma2' option in YAML file: '{key}'")
+                _LOGGER.error(f"Missing required 'multisma2' option in YAML file: '{key}'")
                 return False
 
         required_keys = ['name', 'region', 'tz', 'latitude', 'longitude', 'elevation', 'co2_avoided']
         for key in required_keys:
             if key not in config.site.keys():
-                logger.error(f"Missing required 'site' option in YAML file: '{key}'")
+                _LOGGER.error(f"Missing required 'site' option in YAML file: '{key}'")
                 return False
 
         required_keys = ['azimuth', 'tilt']
         for key in required_keys:
             if key not in config.solar_properties.keys():
-                logger.error(f"Missing required 'solar_properties' option in YAML file: '{key}'")
+                _LOGGER.error(f"Missing required 'solar_properties' option in YAML file: '{key}'")
                 return False
 
-    def check_inverter_config(self, config):
-        """Check that the inverter keys are present."""
+    def check_inverter_config(self, inverter):
+        """Check that the needed YAML options exist."""
         key = 'inverter'
-        if key not in config.keys():
-            logger.error(f"Check your YAML file 'inverters' options, missing the required '{key}' option.")
+        if key not in inverter.keys():
+            _LOGGER.error(f"Check your YAML file 'inverters' options, at least '{key}' option required.")
             return False
 
-        inverter_keys = config.get('inverter').keys()
-        required_keys = ['name', 'url', 'user', 'password']
-        for key in required_keys:
-            if key not in inverter_keys:
-                logger.error(f"Check your YAML file 'inverter' options, missing the required '{key}' option.")
-                return False
+        errors = False
+        required = {'url': str, 'name': str, 'username': str, 'password': str}
+        options = dict(inverter.get(key))
+        for key in required:
+            if key not in options.keys():
+                _LOGGER.error(f"Missing required 'inverter' option in YAML file: '{key}'")
+                errors = True
+            else:
+                v = options.get(key, None)
+                if not isinstance(v, required.get(key)):
+                    _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'inverter.{key}'")
+                    errors = True
+                pass
+        if errors:
+            raise FailedInitialization(Exception("Errors detected in 'inverter' YAML options"))
+        return options
 
     async def start(self):
         """Initialize the PVSite object."""
         config = self._config
-        if self.check_config(config) is False:
+        self.check_config(config)
+
+        try:
+            site = config.site
+            self._siteinfo = LocationInfo(site.name, site.region, site.tz, site.latitude, site.longitude)
+            self._tzinfo = tz.gettz(config.site.tz)
+        except FailedInitialization:
             return False
 
-        self._siteinfo = LocationInfo(config.site.name, config.site.region, config.site.tz, config.site.latitude, config.site.longitude)
-        self._tzinfo = tz.gettz(config.site.tz)
-
         for inverter in config.inverters:
-            if self.check_inverter_config(inverter) is False:
+            try:
+                inv = self.check_inverter_config(inverter)
+                self._inverters.append(Inverter(inv['name'], inv['url'],
+                                       inv['username'], inv['password'], self._session))
+            except FailedInitialization:
                 return False
-            inv = inverter.get('inverter', None)
-            if inv is not None:
-                self._inverters.append(Inverter(inv['name'], inv['url'], inv['user'], inv['password'], self._session))
 
         if 'influxdb2' in config.keys():
-            if not self._influx.start(config=config.influxdb2):
+            try:
+                self._influx.start(config=config.influxdb2)
+            except FailedInitialization:
                 return False
 
         if 'mqtt' in config.keys():
@@ -187,10 +206,10 @@ class PVSite():
         self._dawn = astral['dawn']
         self._dusk = astral['dusk']
         self._daylight = self._dawn < astral_now < self._dusk
-        logger.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
-                    f"noon is at {astral['noon'].strftime('%H:%M')}, "
-                    f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
-                    f"on this {day_of_year()} day of {astral_now.year}")
+        _LOGGER.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
+                     f"noon is at {astral['noon'].strftime('%H:%M')}, "
+                     f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
+                     f"on this {day_of_year()} day of {astral_now.year}")
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
@@ -225,7 +244,7 @@ class PVSite():
             await asyncio.sleep((midnight - now).total_seconds())
 
             # Update internal sun info and the daily production
-            logger.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+            _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             await self.update_total_production()
@@ -348,7 +367,7 @@ class PVSite():
         """Get the daily, monthly, yearly, and lifetime production values."""
         total_productions = await self.total_production()
         # [{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total_wh'}]
-        # logger.debug(f"total_productions: {total_productions}")
+        # _LOGGER.debug(f"total_productions: {total_productions}")
         updated_total_production = []
         for total_production in total_productions:
             for period in ['today', 'month', 'year', 'lifetime']:
@@ -369,7 +388,7 @@ class PVSite():
 
                 updated_total_production.append(period_stats)
 
-        logger.debug(f"update_total_production()/updated_total_production: {updated_total_production}")
+        _LOGGER.debug(f"update_total_production()/updated_total_production: {updated_total_production}")
         # [{'sb71': 157, 'site': 442, 'period': 'today', 'sb72': 176, 'sb51': 109},
         #  {'sb71': 97028, 'site': 260611, 'period': 'month', 'sb72': 97827, 'sb51': 65756},
         #  {'sb71': 97028, 'site': 260611, 'period': 'year', 'sb72': 97827, 'sb51': 65756},
@@ -398,7 +417,7 @@ class PVSite():
             history['topic'] = 'production/' + period
             histories.append(history)
 
-        logger.debug(f"production_history()/histories: {histories}")
+        _LOGGER.debug(f"production_history()/histories: {histories}")
         # [{'sb71': 0.21, 'site': 0.6, 'sb72': 0.24, 'sb51': 0.15, 'topic': 'production/today'},
         #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/month'},
         #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},
@@ -417,7 +436,8 @@ class PVSite():
         """Calculate the estimated irradiation available."""
         site_properties = self._config.site
         solar_properties = self._config.solar_properties
-        igc = clearsky.current_global_irradiance(site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
+        igc = clearsky.current_global_irradiance(
+            site_properties=site_properties, solar_properties=solar_properties, timestamp=timestamp)
         results = [{'topic': 'sun/irradiance', 'modeled': round(igc, 1)}]
         return results
 
