@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import sys
 
 from config.configuration import Configuration
@@ -24,6 +25,40 @@ DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
 
 _LOGGER = logging.getLogger("multisma2")
 __SECRET_CACHE: Dict[str, JSON_TYPE] = {}
+
+
+def buildYAMLExceptionString(exception, file='multisma2'):
+    e = exception
+    try:
+        type = ''
+        file = file
+        line = 0
+        column = 0
+        info = ''
+
+        if e.args[0]:
+            type = e.args[0]
+            type += ' '
+
+        if e.args[1]:
+            file = os.path.basename(e.args[1].name)
+            line = e.args[1].line
+            column = e.args[1].column
+
+        if e.args[2]:
+            info = os.path.basename(e.args[2])
+
+        if e.args[3]:
+            file = os.path.basename(e.args[3].name)
+            line = e.args[3].line
+            column = e.args[3].column
+
+        errmsg = f"YAML file error {type}in {file}:{line}, column {column}: {info}"
+
+    except Exception:
+        errmsg = f"YAML file error and no idea how it is encoded."
+
+    return errmsg
 
 
 class ConfigError(Exception):
@@ -108,59 +143,165 @@ def secret_yaml(loader: FullLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
     raise ConfigError(f"Secret '{node.value}' not defined")
 
 
-def check_key(config, required, path='') -> bool:
-    """Recursively check the configuration file for required entries."""
-
+def check_required_keys(yaml, required, path='') -> bool:
     passed = True
-    for k, v in config.items():
-        currentpath = path + k if path == '' else path + '.' + k
 
-        # look for unknown entries
-        options = required.get(k, None)
-        if options is None:
-            _LOGGER.error(f"Unknown option '{currentpath}'")
-            passed = False
-            continue
-        elif options is False:
-            continue
+    for keywords in required:
+        for rk, rv in keywords.items():
+            currentpath = path + rk if path == '' else path + '.' + rk
 
-        # look for missing entries
-        if isinstance(v, dict):
-            for key in options.keys():
-                if v.get(key, None) is None:
-                    _LOGGER.error(f"Missing option '{key}' in '{currentpath}'")
-                    passed = False
-        if isinstance(v, Configuration):
-            for key in options.keys():
-                v1 = dict(v)
-                if v1.get(key, None) is None:
-                    _LOGGER.error(f"Missing option '{key}' in '{currentpath}'")
-                    passed = False
+            requiredKey = rv.get('required')
+            requiredSubkeys = rv.get('keys')
+            keyType = rv.get('type', None)
+            typeStr = '' if not keyType else f" (type is '{keyType.__name__}')"
+            requiredStr = 'is required for operation' if requiredKey else ''
 
-        if isinstance(v, dict):
-            passed = check_key(v, options, currentpath) and passed
-        elif isinstance(v, list):
-            for lk in v:
-                passed = check_key(lk, options, currentpath) and passed
-        elif isinstance(v, Configuration):
-            passed = check_key(dict(v), options, currentpath) and passed
+            if not yaml:
+                raise FailedInitialization(
+                    Exception(f"YAML file is corrupt or truncated, expecting to find '{rk}' and found nothing"))
+
+            if isinstance(yaml, list):
+                for index, element in enumerate(yaml):
+                    path = f"{currentpath}[{index}]"
+                    yamlKeys = element.keys()
+                    if rk not in yamlKeys:
+                        _LOGGER.error(f"'{currentpath}' {requiredStr}{typeStr}")
+                        continue
+
+                    yamlDict = dict(element)
+                    yamlValue = yamlDict.get(rk, None)
+                    if keyType and not isinstance(yamlValue, keyType):
+                        _LOGGER.error(f"'{currentpath}' should be type '{keyType.__name__}'")
+
+                    if isinstance(requiredSubkeys, list):
+                        passed = check_required_keys(yamlValue, requiredSubkeys, path) and passed
+                    else:
+                        raise FailedInitialization(Exception('Unexpected YAML checking error'))
+            elif isinstance(yaml, dict) or isinstance(yaml, Configuration):
+                yamlKeys = yaml.keys()
+                if rk not in yamlKeys:
+                    _LOGGER.error(f"'{currentpath}' {requiredStr}{typeStr}")
+                    continue
+
+                yamlDict = dict(yaml)
+                yamlValue = yamlDict.get(rk, None)
+                if keyType and not isinstance(yamlValue, keyType):
+                    _LOGGER.error(f"'{currentpath}' should be type '{keyType.__name__}'")
+
+                if isinstance(requiredSubkeys, list):
+                    passed = check_required_keys(yamlValue, requiredSubkeys, currentpath) and passed
+                else:
+                    raise FailedInitialization(Exception('Unexpected YAML checking error'))
+            else:
+                raise FailedInitialization(Exception('Unexpected YAML checking error'))
+    return passed
+
+
+def check_unsupported(yaml, required, path=''):
+    passed = True
+
+    if not yaml:
+        raise FailedInitialization(Exception(f"YAML file is corrupt or truncated, nothong left to parse"))
+
+    if isinstance(yaml, list):
+        for index, element in enumerate(yaml):
+            for yk in element.keys():
+                listpath = f"{path}.{yk}[{index}]"
+
+                yamlValue = dict(element).get(yk, None)
+                for rk in required:
+                    supportedSubkeys = rk.get(yk, None)
+                    if supportedSubkeys:
+                        break
+                if not supportedSubkeys:
+                    _LOGGER.info(f"'{listpath}' option is unsupported")
+                    return
+
+                subkeyList = supportedSubkeys.get('keys', None)
+                if subkeyList:
+                    passed = check_unsupported(yamlValue, subkeyList, listpath) and passed
+    elif isinstance(yaml, dict) or isinstance(yaml, Configuration):
+        for yk in yaml.keys():
+            currentpath = path + yk if path == '' else path + '.' + yk
+
+            yamlValue = dict(yaml).get(yk, None)
+            for rk in required:
+                supportedSubkeys = rk.get(yk, None)
+                if supportedSubkeys:
+                    break
+            if not supportedSubkeys:
+                _LOGGER.info(f"'{currentpath}' option is unsupported")
+                return
+
+            subkeyList = supportedSubkeys.get('keys', None)
+            if subkeyList:
+                passed = check_unsupported(yamlValue, subkeyList, currentpath) and passed
+
+    else:
+        raise FailedInitialization(Exception('Unexpected YAML checking error'))
     return passed
 
 
 def check_config(config):
     """Check that the important options are present and unknown options aren't."""
 
-    required_keys = {
-        'multisma2': {
-            'log': {'file': True, 'format': True, 'level': True},
-            'site': {'name': True, 'region': True, 'tz': True, 'latitude': True, 'longitude': True, 'elevation': True, 'co2_avoided': True},
-            'solar_properties': {'azimuth': True, 'tilt': True, 'area': True, 'efficiency': True, 'rho': True},
-            'influxdb2': {'enable': True, 'org': True, 'url': True, 'bucket': True, 'token': True},
-            'mqtt': {'enable': True, 'client': True, 'ip': True, 'port': True, 'username': True, 'password': True},
-            'inverters': {'inverter': {'name': True, 'url': True, 'username': True, 'password': True}}
-        }
-    }
-    result = check_key(dict(config), required_keys)
+    required_keys = [
+        {
+            'multisma2': {'required': True, 'keys':
+                          [
+                              {'log': {'required': True, 'keys': [
+                                  {'file': {'required': True, 'keys': [], 'type': str}},
+                                  {'format': {'required': True, 'keys': [], 'type': str}},
+                                  {'level': {'required': True, 'keys': [], 'type': str}},
+                              ]}},
+                              {'site': {'required': True, 'keys': [
+                                  {'name': {'required': True, 'keys': [], 'type': str}},
+                                  {'region': {'required': True, 'keys': [], 'type': str}},
+                                  {'tz': {'required': True, 'keys': [], 'type': str}},
+                                  {'latitude': {'required': True, 'keys': [], 'type': float}},
+                                  {'longitude': {'required': True, 'keys': [], 'type': float}},
+                                  {'elevation': {'required': True, 'keys': [], 'type': float}},
+                                  {'co2_avoided': {'required': True, 'keys': [], 'type': float}},
+                              ]}},
+                              {'solar_properties': {'required': True, 'keys': [
+                                  {'azimuth': {'required': True, 'keys': [], 'type': float}},
+                                  {'tilt': {'required': True, 'keys': [], 'type': float}},
+                                  {'area': {'required': True, 'keys': [], 'type': float}},
+                                  {'efficiency': {'required': True, 'keys': [], 'type': float}},
+                                  {'rho': {'required': True, 'keys': [], 'type': float}},
+                              ]}},
+                              {'influxdb2': {'required': False, 'keys': [
+                                  {'enable': {'required': True, 'keys': [], 'type': bool}},
+                                  {'org': {'required': True, 'keys': [], 'type': str}},
+                                  {'url': {'required': True, 'keys': [], 'type': str}},
+                                  {'bucket': {'required': True, 'keys': [], 'type': str}},
+                                  {'token': {'required': True, 'keys': [], 'type': str}},
+                              ]}},
+                              {'mqtt': {'required': False, 'keys': [
+                                  {'enable': {'required': True, 'keys': [], 'type': bool}},
+                                  {'client': {'required': True, 'keys': [], 'type': str}},
+                                  {'ip': {'required': True, 'keys': [], 'type': str}},
+                                  {'port': {'required': True, 'keys': [], 'type': int}},
+                                  {'username': {'required': True, 'keys': [], 'type': str}},
+                                  {'password': {'required': True, 'keys': [], 'type': str}},
+                              ]}},
+                              {'inverters': {'required': True, 'keys': [
+                                  {'inverter': {'required': True, 'keys': [
+                                      {'name': {'required': True, 'keys': [], 'type': str}},
+                                      {'url': {'required': True, 'keys': [], 'type': str}},
+                                      {'username': {'required': True, 'keys': [], 'type': str}},
+                                      {'password': {'required': True, 'keys': [], 'type': str}},
+                                  ]}},
+                              ]}},
+                          ],
+                          },
+        },
+        #        {'sbhistory': {'required': False, 'keys':
+        #                       [{'log': {'required': True, 'keys': []}},
+        #                        {'log2': {'required': False, 'keys': []}}, ], }, },
+    ]
+    result = check_required_keys(dict(config), required_keys)
+    check_unsupported(dict(config), required_keys)
     return config if result else None
 
 
@@ -175,10 +316,11 @@ def read_config(checking=False):
         if config and checking:
             config = check_config(config)
 
-        if config is None:
-            raise FailedInitialization(Exception(f"One or more errors detected in the YAML configuration file"))
+    except FailedInitialization:
+        raise
     except Exception as e:
-        raise FailedInitialization(Exception(f"One or more errors detected in the YAML configuration file: {e}"))
+        error_message = buildYAMLExceptionString(exception=e, file=yaml_file)
+        raise FailedInitialization(Exception(f"{error_message}"))
     return config
 
 

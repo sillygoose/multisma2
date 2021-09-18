@@ -12,34 +12,40 @@ from mqtt import error_msg
 
 _LOGGER = logging.getLogger('multisma2')
 
+_DEFAULT_LOG_FILE = 'multisma2'
+_DEFAULT_LOG_FORMAT = '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
+_DEFAULT_LOG_LEVEL = 'INFO'
 
-def check_config(log_options):
-    """Check that the needed YAML options exist."""
-    errors = False
-    required = {'file': str, 'level': str, 'format': str}
-    options = dict(log_options)
-    for key in required:
-        if key not in options.keys():
-            _LOGGER.error(f"Missing required 'log' option in YAML file: '{key}'")
-            errors = True
-        else:
-            v = options.get(key, None)
-            if not isinstance(v, required.get(key)):
-                _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'log.{key}'")
-                errors = True
-            pass
-    if errors:
-        raise FailedInitialization(Exception("Errors detected in 'log' YAML options"))
-    return options
+
+def check_config(options):
+    """Check that the the proper log option but don't check the keys."""
+
+    if 'multisma2' not in options.keys():
+        return None
+    if 'log' not in options.multisma2.keys():
+        return None
+
+    return dict(options.multisma2.log)
 
 
 def start(config):
     """Create the application log."""
 
-    log_options = check_config(config.multisma2.log)
-    log_level = log_options.get('level', None)
-    log_format = log_options.get('format', None)
-    log_file = log_options.get('file', None)
+    log_options = check_config(config)
+    if not log_options:
+        log_file = _DEFAULT_LOG_FILE
+        log_format = _DEFAULT_LOG_FORMAT
+        log_level = _DEFAULT_LOG_LEVEL
+    else:
+        log_file = log_options.get('file', None)
+        if not log_file:
+            log_file = _DEFAULT_LOG_FILE
+        log_format = log_options.get('format', None)
+        if not log_format:
+            log_format = _DEFAULT_LOG_FORMAT
+        log_level = log_options.get('level', None)
+        if not log_level:
+            log_level = _DEFAULT_LOG_LEVEL
 
     now = datetime.now()
     filename = os.path.expanduser(log_file + "_" + now.strftime("%Y-%m-%d") + ".log")

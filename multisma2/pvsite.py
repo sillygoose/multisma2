@@ -86,68 +86,21 @@ class PVSite():
         self._dusk = None
         self._influx = InfluxDB()
 
-    def check_config(self, config):
-        """Check that the needed YAML options exist."""
-        required_keys = ['site', 'solar_properties', 'inverters']
-        for key in required_keys:
-            if key not in config.keys():
-                _LOGGER.error(f"Missing required 'multisma2' option in YAML file: '{key}'")
-                return False
-
-        required_keys = ['name', 'region', 'tz', 'latitude', 'longitude', 'elevation', 'co2_avoided']
-        for key in required_keys:
-            if key not in config.site.keys():
-                _LOGGER.error(f"Missing required 'site' option in YAML file: '{key}'")
-                return False
-
-        required_keys = ['azimuth', 'tilt']
-        for key in required_keys:
-            if key not in config.solar_properties.keys():
-                _LOGGER.error(f"Missing required 'solar_properties' option in YAML file: '{key}'")
-                return False
-
-    def check_inverter_config(self, inverter):
-        """Check that the needed YAML options exist."""
-        key = 'inverter'
-        if key not in inverter.keys():
-            _LOGGER.error(f"Check your YAML file 'inverters' options, at least '{key}' option required.")
-            return False
-
-        errors = False
-        required = {'url': str, 'name': str, 'username': str, 'password': str}
-        options = dict(inverter.get(key))
-        for key in required:
-            if key not in options.keys():
-                _LOGGER.error(f"Missing required 'inverter' option in YAML file: '{key}'")
-                errors = True
-            else:
-                v = options.get(key, None)
-                if not isinstance(v, required.get(key)):
-                    _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'inverter.{key}'")
-                    errors = True
-                pass
-        if errors:
-            raise FailedInitialization(Exception("Errors detected in 'inverter' YAML options"))
-        return options
-
     async def start(self):
         """Initialize the PVSite object."""
         config = self._config
-        self.check_config(config)
 
-        try:
-            site = config.site
-            self._siteinfo = LocationInfo(site.name, site.region, site.tz, site.latitude, site.longitude)
-            self._tzinfo = tz.gettz(config.site.tz)
-        except FailedInitialization:
-            return False
+        site = config.site
+        self._siteinfo = LocationInfo(site.name, site.region, site.tz, site.latitude, site.longitude)
+        self._tzinfo = tz.gettz(config.site.tz)
 
         for inverter in config.inverters:
             try:
-                inv = self.check_inverter_config(inverter)
-                self._inverters.append(Inverter(inv['name'], inv['url'],
-                                       inv['username'], inv['password'], self._session))
-            except FailedInitialization:
+                i = inverter.get('inverter')
+                invObject = Inverter(i.get('name'), i.get('url'), i.get('username'), i.get('password'), self._session)
+                self._inverters.append(invObject)
+            except Exception as e:
+                _LOGGER.error(f"An error occurred while setting up the inverters: {e} ")
                 return False
 
         if 'influxdb2' in config.keys():

@@ -79,7 +79,6 @@ def check_config(mqtt):
             if not isinstance(v, required.get(key)):
                 _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'mqtt.{key}'")
                 errors = True
-            pass
     if errors:
         raise FailedInitialization(Exception("Errors detected in 'mqtt' YAML options"))
     return options

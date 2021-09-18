@@ -63,6 +63,8 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
 
 3.  Edit `multisma2.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the optional login credentials, if interfacing to InfluxDB you need the host address and login credentials.
 
+Rename the `sample_secrets.yaml` file to `secrets.yaml` and edit to match your site (if you don't wish to use secrets then edit `sbhistory.yaml` to remove the `!secret` references).  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as `sbhistory` will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
+
     There are some other fields to configure for the log files, time zone, site location, etc, these should be easy to figure out.
 
 4.  Test that **multisma2** connects to your inverters, MQTT broker, and InfluxDB database:

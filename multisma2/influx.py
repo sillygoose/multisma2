@@ -60,7 +60,6 @@ class InfluxDB:
                 if not isinstance(v, required.get(key)):
                     _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'influxdb2.{key}'")
                     errors = True
-                pass
         if errors:
             raise FailedInitialization(Exception("Errors detected in 'influxdb2' YAML options"))
         return options

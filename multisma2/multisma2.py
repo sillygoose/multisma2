@@ -20,41 +20,6 @@ from exceptions import TerminateSignal, NormalCompletion, AbnormalCompletion, Fa
 
 
 _LOGGER = logging.getLogger('multisma2')
-_LOGGER = logging.getLogger('multisma2')
-
-
-def buildYAMLExceptionString(exception, file='multisma2'):
-    e = exception
-    try:
-        type = ''
-        file = file
-        line = 0
-        column = 0
-        info = ''
-
-        if e.args[0]:
-            type = e.args[0]
-            type += ' '
-
-        if e.args[1]:
-            file = os.path.basename(e.args[1].name)
-            line = e.args[1].line
-            column = e.args[1].column
-
-        if e.args[2]:
-            info = os.path.basename(e.args[2])
-
-        if e.args[3]:
-            file = os.path.basename(e.args[3].name)
-            line = e.args[3].line
-            column = e.args[3].column
-
-        errmsg = f"YAML file error {type}in {file}:{line}, column {column}: {info}"
-
-    except Exception:
-        errmsg = f"YAML file error and no idea how it is encoded."
-
-    return errmsg
 
 
 class Multisma2():
@@ -155,23 +120,17 @@ class Multisma2():
 def main():
     """Set up and start multisma2."""
 
-    # load the yaml file for logging options but don't check
     try:
         config = read_config(checking=False)
     except FailedInitialization as e:
-        print(f"{e}")
+        _LOGGER(f"{e}")
         return
 
-    try:
-        logfiles.start(config)
-        _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-    except FailedInitialization as e:
-        print(f"{e}")
-        return
+    logfiles.start(config)
+    _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
     try:
-        config = read_config(checking=True)
-        multisma2 = Multisma2(config)
+        multisma2 = Multisma2(read_config(checking=True))
         multisma2.run()
     except FailedInitialization as e:
         _LOGGER.error(f"{e}")
