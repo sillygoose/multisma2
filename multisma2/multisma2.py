@@ -123,7 +123,7 @@ def main():
     try:
         config = read_config(checking=False)
     except FailedInitialization as e:
-        _LOGGER(f"{e}")
+        print(f"{e}")
         return
 
     logfiles.start(config)
