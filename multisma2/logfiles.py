@@ -5,9 +5,6 @@ import sys
 from datetime import datetime
 import logging
 from logging.handlers import TimedRotatingFileHandler
-from exceptions import FailedInitialization
-
-from mqtt import error_msg
 
 
 _LOGGER = logging.getLogger('multisma2')

@@ -2,7 +2,6 @@
 
 import logging
 import os
-import re
 import sys
 
 from config.configuration import Configuration
