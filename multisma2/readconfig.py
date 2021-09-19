@@ -296,9 +296,6 @@ def check_config(config):
                           ],
                           },
         },
-        #        {'sbhistory': {'required': False, 'keys':
-        #                       [{'log': {'required': True, 'keys': []}},
-        #                        {'log2': {'required': False, 'keys': []}}, ], }, },
     ]
     result = check_required_keys(dict(config), required_keys)
     check_unsupported(dict(config), required_keys)
@@ -325,7 +322,6 @@ def read_config(checking=False):
 
 
 if __name__ == '__main__':
-    # make sure we can run
     if sys.version_info[0] >= 3 and sys.version_info[1] >= 9:
         config = read_config()
     else:
