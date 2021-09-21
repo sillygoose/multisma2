@@ -11,7 +11,7 @@ import sma
 from exceptions import SmaException
 
 
-logger = logging.getLogger('multisma2')
+_LOGGER = logging.getLogger('multisma2')
 
 # Inverter keys that contain aggregates
 AGGREGATE_KEYS = [
@@ -43,20 +43,21 @@ class Inverter:
             self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
         except SmaException:
             return None
+
         await self._sma.new_session()
         if self._sma.sma_sid is None:
-            logger.info(f"{self._name} - no session ID")
+            _LOGGER.error(f"{self._name} - no session ID")
             return None
-        # logger.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        _LOGGER.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
 
         # Grab the metadata dictionary
-        metadata_url = self._url + "/data/ObjectMetadata_Istl.json"
+        metadata_url = self._url + '/data/ObjectMetadata_Istl.json'
         async with self._session.get(metadata_url) as resp:
             assert resp.status == 200
             self._metadata = json.loads(await resp.text())
 
         # Grab the inverter tag dictionary
-        tag_url = self._url + "/data/l10n/en-US.json"
+        tag_url = self._url + '/data/l10n/en-US.json'
         async with self._session.get(tag_url) as resp:
             assert resp.status == 200
             self._tags = json.loads(await resp.text())
@@ -80,14 +81,16 @@ class Inverter:
 
     async def read_instantaneous(self):
         """Update the instantaneous inverter states."""
-        async with self._lock:
-            self._instantaneous = await self._sma.read_instantaneous()
-            if self._instantaneous is None:
-                # logger.info(f"Retrying 'read_instantaneous()' to create a new session")
+        try:
+            async with self._lock:
                 self._instantaneous = await self._sma.read_instantaneous()
                 if self._instantaneous is None:
-                    return False
-        return True
+                    # _LOGGER.info(f"Retrying 'read_instantaneous()' to create a new session")
+                    self._instantaneous = await self._sma.read_instantaneous()
+            return self._instantaneous
+        except Exception as e:
+            _LOGGER.error(f"read_instantaneous() error: {e}")
+            return None
 
     def clean(self, raw_results):
         """Clean the raw inverter data and return a dict with the key and result."""
@@ -124,9 +127,9 @@ class Inverter:
                     cleaned[key] = {'val': tag_list[0].get('tag')}
                     break
             else:
-                logger.warning(f"unexpected sma type: {sma_type}")
+                _LOGGER.warning(f"unexpected sma type: {sma_type}")
 
-        cleaned["name"] = self._name
+        cleaned['name'] = self._name
         return cleaned
 
     async def read_keys(self, keys):
@@ -139,12 +142,14 @@ class Inverter:
     async def read_key(self, key):
         """Read a specified inverter key."""
         raw_result = await self._sma.read_values([key])
-        return self.clean({key: raw_result.get(key)})
+        if raw_result:
+            return self.clean({key: raw_result.get(key)})
+        return False
 
     async def read_history(self, start, stop):
         history = await self._sma.read_history(start, stop)
         if not history:
-            logger.error(f"{self._name}:read_history({start}, {stop}) returned 'None' (check your local time)")
+            _LOGGER.error(f"{self._name}: read_history({start}, {stop}) returned 'None' (check your local time)")
             return None
         history.insert(0, {'inverter': self._name})
         return history
@@ -173,7 +178,7 @@ class Inverter:
         #  'month': {'t': 1609477200, 'v': 3055878},
         #  'year': {'t': 1609477200, 'v': 3055878},
         #  'lifetime': {'t': 0, 'v': 0}}
-        logger.debug(f"{self._name}/read_inverter_production()/_history: {self._history}")
+        _LOGGER.debug(f"{self._name}/read_inverter_production()/_history: {self._history}")
         return True
 
     def display_metadata(self, key):

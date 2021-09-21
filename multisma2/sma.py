@@ -40,7 +40,9 @@ class SMA:
         if password is not None and len(password) > 12:
             _LOGGER.warning("Password should not exceed 12 characters")
         if password is None:
+            _LOGGER.error("Password is required to login the inverter")
             self._new_session_data = None
+            raise SmaException
         else:
             self._new_session_data = {'right': USERS[group], 'pass': password}
         self._url = url.rstrip('/')
@@ -71,13 +73,14 @@ class SMA:
             await self.new_session()
             if self.sma_sid is None:
                 _LOGGER.error(f"Unable to create new session with inverter {self._url}")
-                return None
+                raise SmaException
+
         body = await self._fetch_json(url, payload=payload)
 
         # On the first error we close the session which will re-login
         err = body.get('err')
         if err is not None:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 f"{self._url}: error detected, closing session to force another login attempt, got: {body}",
             )
             await self.close_session()

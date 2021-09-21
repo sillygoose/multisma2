@@ -301,7 +301,9 @@ class PVSite():
 
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
-        await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
+        results = await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
+        if None in results:
+            _LOGGER.error(f"update_instantaneous(): one more inverters returned no results")
 
     async def get_yesterday_production(self):
         """Get the total production meter values for the previous day."""
@@ -458,7 +460,7 @@ class PVSite():
 
     async def total_production(self):
         """Get the total production of each inverter and the total of all inverters."""
-        return await self.get_composite(["6400_0046C300"])
+        return await self.get_composite(['6400_0046C300'])
 
     async def read_keys(self, keys):
         """Read a list of keys from the cache or the inverter(s)."""
