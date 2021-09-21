@@ -349,7 +349,7 @@ def read_config(checking=False):
 
 
 if __name__ == '__main__':
-    if sys.version_info[0] >= 3 and sys.version_info[1] >= 9:
+    if sys.version_info[0] >= 3 and sys.version_info[1] >= 8:
         config = read_config()
     else:
-        print("python 3.9 or better required")
+        print("python 3.8 or better required")
