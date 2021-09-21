@@ -153,7 +153,6 @@ def check_required_keys(yaml, required, path='') -> bool:
             requiredSubkeys = rv.get('keys')
             keyType = rv.get('type', None)
             typeStr = '' if not keyType else f" (type is '{keyType.__name__}')"
-            requiredStr = 'is required for operation' if requiredKey else ''
 
             if not yaml:
                 raise FailedInitialization(
@@ -162,33 +161,46 @@ def check_required_keys(yaml, required, path='') -> bool:
             if isinstance(yaml, list):
                 for index, element in enumerate(yaml):
                     path = f"{currentpath}[{index}]"
-                    yamlKeys = element.keys()
-                    if rk not in yamlKeys:
-                        _LOGGER.error(f"'{currentpath}' {requiredStr}{typeStr}")
-                        continue
 
-                    yamlDict = dict(element)
-                    yamlValue = yamlDict.get(rk, None)
-                    if keyType and not isinstance(yamlValue, keyType):
+                    yamlKeys = element.keys()
+                    if requiredKey:
+                        if rk not in yamlKeys:
+                            _LOGGER.error(f"'{currentpath}' is required for operation {typeStr}")
+                            passed = False
+                            continue
+
+                    yamlValue = dict(element).get(rk, None)
+                    if yamlValue is None:
+                        return passed
+
+                    if rk in yamlKeys and keyType and not isinstance(yamlValue, keyType):
                         _LOGGER.error(f"'{currentpath}' should be type '{keyType.__name__}'")
+                        passed = False
 
                     if isinstance(requiredSubkeys, list):
-                        passed = check_required_keys(yamlValue, requiredSubkeys, path) and passed
+                        if len(requiredSubkeys):
+                            passed = check_required_keys(yamlValue, requiredSubkeys, path) and passed
                     else:
                         raise FailedInitialization(Exception('Unexpected YAML checking error'))
             elif isinstance(yaml, dict) or isinstance(yaml, Configuration):
                 yamlKeys = yaml.keys()
-                if rk not in yamlKeys:
-                    _LOGGER.error(f"'{currentpath}' {requiredStr}{typeStr}")
-                    continue
+                if requiredKey:
+                    if rk not in yamlKeys:
+                        _LOGGER.error(f"'{currentpath}' is required for operation {typeStr}")
+                        passed = False
+                        continue
 
-                yamlDict = dict(yaml)
-                yamlValue = yamlDict.get(rk, None)
-                if keyType and not isinstance(yamlValue, keyType):
+                yamlValue = dict(yaml).get(rk, None)
+                if yamlValue is None:
+                    return passed
+
+                if rk in yamlKeys and keyType and not isinstance(yamlValue, keyType):
                     _LOGGER.error(f"'{currentpath}' should be type '{keyType.__name__}'")
+                    passed = False
 
                 if isinstance(requiredSubkeys, list):
-                    passed = check_required_keys(yamlValue, requiredSubkeys, currentpath) and passed
+                    if len(requiredSubkeys):
+                        passed = check_required_keys(yamlValue, requiredSubkeys, currentpath) and passed
                 else:
                     raise FailedInitialization(Exception('Unexpected YAML checking error'))
             else:
@@ -292,12 +304,28 @@ def check_config(config):
                                       {'password': {'required': True, 'keys': [], 'type': str}},
                                   ]}},
                               ]}},
+                              {'settings': {'required': False, 'keys': [
+                                  {'sampling': {'required': False, 'keys': [
+                                      {'fast': {'required': False, 'keys': [], 'type': int}},
+                                      {'medium': {'required': False, 'keys': [], 'type': int}},
+                                      {'slow': {'required': False, 'keys': [], 'type': int}},
+                                      {'turtle': {'required': False, 'keys': [], 'type': int}},
+                                      {'night': {'required': False, 'keys': [], 'type': int}},
+                                  ]}},
+                              ]}},
                           ],
                           },
         },
     ]
-    result = check_required_keys(dict(config), required_keys)
-    check_unsupported(dict(config), required_keys)
+
+    try:
+        result = check_required_keys(dict(config), required_keys)
+        check_unsupported(dict(config), required_keys)
+    except FailedInitialization:
+        raise
+    except Exception:
+        error_message = "###"
+        raise FailedInitialization(Exception(f"{error_message}"))
     return config if result else None
 
 

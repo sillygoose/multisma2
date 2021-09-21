@@ -39,11 +39,7 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - python-configuration
     - pyyaml
 
-<<<<<<< HEAD
-- SMA inverter(s) supporting WebConnect (I have Sunny Boy models but others should also work)
-=======
 - SMA Sunny Boy inverter(s) supporting WebConnect
->>>>>>> dashboards
 - Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running InfluxDB, InfluxDB2, Telegraf, and Grafana)
 
 ### Installation
@@ -94,23 +90,17 @@ There is a useful utility that complements **multisma2** in the **sbhistory** re
 
 If you are just starting out with **multisma2**, you are collecting data but you have no past data to work with.  **sbhistory** fixes ths by allowing you to download the past history from your inverter(s) and import it into your InfluxDB database.
 
-**sbhistory** will use the settings in your **multisma2** YAML file, you can just append it to sample **sbhistory** YAML file, pick the few **sbhistory** options and transfer the history in one pass.  Now your dashboards can display the past 30 day and yearly solar production from your SMA inverter(s) and look really good.
+**sbhistory** will use the settings in your **multisma2** YAML file, you can just append it to the sample **sbhistory** YAML file, pick the few **sbhistory** options and transfer the history in one pass.  Now your dashboards can display the past 30 day and yearly solar production from your SMA inverter(s) and look really good.
 
 ```
     sbhistory:
-        # Starting date to pull history from inverters
-        start:
-            # Set the date to start the collection, make sure your database retention policy covers
-            # this start date, collection is up the current day.
-            year: 2020
-            month: 1
-            day: 1
+      daily_history:
+      enable: True
+      start: '2021-09-01'
 
-        # Select the outputs you want to populate the database
-        outputs:
-            fine_history: True
-            daily_history: True
-            ...
+    fine_history:
+      enable: True
+      start:  '2021-09-01'
 
     multisma2:
         ...
@@ -140,11 +130,9 @@ At night these updates based on the settings in `pvsite.py`:
 Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.
 
 ### InfluxDB2
-All InfluxDB2 queries are done in Flux, looked more intuitive to me since I never used SQL it seemed like a better choice (SQL reminded me of COBOL, both are from IBM and SQL is only slightly newer than COBOL).  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x database output, only the settings in `multisma2.yaml` file need to change to use the older version.
+All InfluxDB2 queries are done in Flux, looked more intuitive to me since I never used SQL.  Currently supporting InfluxDB 1.8.x and InfluxDB 2.0.x database output, only the settings in `multisma2.yaml` file need to change to use the older version.
 
 ![Sample dashboard using InfluxDB2:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/influxdb2-production.jpg)
-
-The one downside of using InfluxDB2 is that the bar graphs were a step backward in the esthetics, such is the cost of progress I guess.
 
 ### Grafana
 InfluxDB2 visualizations don't really handle state outputs like the inverter status very well so just integer state returned by the inverter is displayed, Grafana on the other hand has a very nice Status Map visualization that works very well for this.
@@ -160,9 +148,18 @@ This dashboard uses the following Grafana panel plug-ins:
 ```
 
 ### Home Assistant
-This last example is a dashboard made in Home Assistant driven by the MQTT output of **multisma2**, this was done first since MQTT support was completed before learning how the InfluxDB operated.
+This last example is a dashboard made in Home Assistant driven by the MQTT output of **multisma2**.
 
 ![Home Assistant dashboard using MQTT:](https://raw.githubusercontent.com/sillygoose/multisma2/main/images/home-assistant-production.jpg)
+
+## Errors
+If you happen to make errors and get locked out of your inverters (confirm by being unable to log into an inverter using the WebConnect browser interface), the Sunny Boy inverters can be reset by
+
+- disconnect grid power from inverters (usually one or more breakers)
+- disconnect DC power from the panels to the inverters (rotary switch on each inverter)
+- wait 2 minutes
+- restore DC power via each rotary switch
+- restore grid power via breakers
 
 ## Thanks
 Thanks for the following packages used to build this software:

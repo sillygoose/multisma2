@@ -24,6 +24,12 @@ from exceptions import FailedInitialization
 
 _LOGGER = logging.getLogger('multisma2')
 
+# Default sampling values used when not defined in the configuration file
+_DEFAULT_FAST = 30
+_DEFAULT_MEDIUM = 60
+_DEFAULT_SLOW = 120
+_DEFAULT_TURTLE = 300
+_DEFAULT_NIGHT = 20
 
 # Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
@@ -79,12 +85,17 @@ class PVSite():
         self._tasks = None
         self._total_production = None
         self._cached_keys = []
-        self._scaling = 1
         self._daylight = None
         self._task_gather = None
         self._dawn = None
         self._dusk = None
         self._influx = InfluxDB()
+        self._sampling_fast = _DEFAULT_FAST
+        self._sampling_medium = _DEFAULT_MEDIUM
+        self._sampling_slow = _DEFAULT_SLOW
+        self._sampling_turtle = _DEFAULT_TURTLE
+        self._sampling_night = _DEFAULT_NIGHT
+        self._scaling = 1
 
     async def start(self):
         """Initialize the PVSite object."""
@@ -113,6 +124,13 @@ class PVSite():
             if not mqtt.start(config=config.mqtt):
                 return False
 
+        if 'settings' in config.keys() and 'sampling' in config.settings.keys():
+            self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
+            self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
+            self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
+            self._sampling_turtle = config.settings.sampling.get('turtle', _DEFAULT_TURTLE)
+            self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
+
         cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         if None in cached_keys:
             return False
@@ -128,19 +146,19 @@ class PVSite():
         )
 
         queues = {
-            '10s': asyncio.Queue(),
-            '30s': asyncio.Queue(),
-            '60s': asyncio.Queue(),
-            '300s': asyncio.Queue(),
+            'fast': asyncio.Queue(),
+            'medium': asyncio.Queue(),
+            'slow': asyncio.Queue(),
+            'turtle': asyncio.Queue(),
         }
         self._task_gather = asyncio.gather(
             self.daylight(),
             self.midnight(),
             self.scheduler(queues),
-            self.task_10s(queues.get('10s')),
-            self.task_30s(queues.get('30s')),
-            self.task_60s(queues.get('60s')),
-            self.task_300s(queues.get('300s')),
+            self.task_fast(queues.get('fast')),
+            self.task_medium(queues.get('medium')),
+            self.task_slow(queues.get('slow')),
+            self.task_turtle(queues.get('turtle')),
         )
         await self._task_gather
 
@@ -167,8 +185,8 @@ class PVSite():
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
         SAMPLE_PERIOD = [
-            {'scale': 18},     # night (18 is 3 minute sample intervals)
-            {'scale': 1},      # day (1 is 10 second sample intervals)
+            {'scale': self._sampling_night},
+            {'scale': 1},
         ]
         while True:
             astral_now = now(tzinfo=self._tzinfo)
@@ -213,22 +231,22 @@ class PVSite():
             tick = timestamp / self._scaling
             if tick != last_tick:
                 last_tick = tick
-                if tick % 10 == 0:
+                if tick % self._sampling_fast == 0:
                     await asyncio.gather(
                         self.update_instantaneous(),
                         self.update_total_production(),
                     )
-                    queues.get('10s').put_nowait(timestamp)
-                if tick % 30 == 0:
-                    queues.get('30s').put_nowait(timestamp)
-                if tick % 60 == 0:
-                    queues.get('60s').put_nowait(timestamp)
-                if tick % 300 == 0:
-                    queues.get('300s').put_nowait(timestamp)
+                    queues.get('fast').put_nowait(timestamp)
+                if tick % self._sampling_medium == 0:
+                    queues.get('medium').put_nowait(timestamp)
+                if tick % self._sampling_slow == 0:
+                    queues.get('slow').put_nowait(timestamp)
+                if tick % self._sampling_turtle == 0:
+                    queues.get('turtle').put_nowait(timestamp)
             await asyncio.sleep(SLEEP)
 
-    async def task_10s(self, queue):
-        """Work done every 10 seconds."""
+    async def task_fast(self, queue):
+        """Work done at a fast sample rate."""
         while True:
             timestamp = await queue.get()
             queue.task_done()
@@ -239,8 +257,8 @@ class PVSite():
                 mqtt.publish(sensor)
                 self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
-    async def task_30s(self, queue):
-        """Work done every 30 seconds."""
+    async def task_medium(self, queue):
+        """Work done at a medium sample rate."""
         while True:
             await queue.get()
             queue.task_done()
@@ -250,8 +268,8 @@ class PVSite():
             for sensor in sensors:
                 mqtt.publish(sensor)
 
-    async def task_60s(self, queue):
-        """Work done every 60 seconds."""
+    async def task_slow(self, queue):
+        """Work done at a slow sample rate."""
         while True:
             timestamp = await queue.get()
             queue.task_done()
@@ -269,8 +287,8 @@ class PVSite():
                 mqtt.publish(sensor)
                 self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
-    async def task_300s(self, queue):
-        """Work done every 300 seconds (5 minutes)."""
+    async def task_turtle(self, queue):
+        """Work done a very slow sample rate."""
         while True:
             timestamp = await queue.get()
             queue.task_done()

@@ -130,17 +130,17 @@ class InfluxDB:
         lps = []
         for inverter in site:
             inverter_name = inverter.pop(0)
-            name = inverter_name['inverter']
+            name = inverter_name.get('inverter', 'sunnyboy')
             for history in inverter:
                 t = history['t']
                 v = history['v']
                 if v is None:
                     continue
-                lp = f'{measurement}'
+                lp = f"{measurement}"
                 if tags and len(tags):
-                    lp += f',{tags[0]}={name}'
+                    lp += f",{tags[0]}={name}"
                 if isinstance(v, int):
-                    lp += f' {field}={v}i {t}'
+                    lp += f" {field}={v}i {t}"
                     lps.append(lp)
                 else:
                     _LOGGER.error(

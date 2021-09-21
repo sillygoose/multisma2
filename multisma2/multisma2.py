@@ -40,12 +40,6 @@ class Multisma2():
 
     def run(self):
         """Code to handle the start(), run(), and stop() interfaces."""
-        # try:
-        #    self._config.multisma2
-        # except Exception:
-        #    print("Unable to continue, 'multisma2' entry missing in YAML file")
-        #    return
-
         # ERROR_DELAY might be non-zero when SMA errors are detected *for now not implemented)
         ERROR_DELAY = 0
         delay = 0
@@ -130,8 +124,10 @@ def main():
     _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
     try:
-        multisma2 = Multisma2(read_config(checking=True))
-        multisma2.run()
+        config = read_config(checking=True)
+        if config:
+            multisma2 = Multisma2(config)
+            multisma2.run()
     except FailedInitialization as e:
         _LOGGER.error(f"{e}")
     except Exception as e:

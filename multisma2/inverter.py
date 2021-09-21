@@ -8,6 +8,8 @@ from pprint import pprint
 
 import sma
 
+from exceptions import SmaException
+
 
 logger = logging.getLogger('multisma2')
 
@@ -19,6 +21,7 @@ AGGREGATE_KEYS = [
 
 class Inverter:
     """Class to encapsulate a single inverter."""
+
     def __init__(self, name, url, group, password, session):
         """Setup an Inverter class instance."""
         self._name = name
@@ -36,7 +39,10 @@ class Inverter:
     async def start(self):
         """Setup inverter for data collection."""
         # SMA class object for access to inverters
-        self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
+        try:
+            self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
+        except SmaException:
+            return None
         await self._sma.new_session()
         if self._sma.sma_sid is None:
             logger.info(f"{self._name} - no session ID")
@@ -148,8 +154,10 @@ class Inverter:
         one_hour = 60 * 60 * 1
         three_hours = 60 * 60 * 3
         today_start = int(datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)).timestamp())
-        month_start = int(datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp())
-        year_start = int(datetime.datetime.combine(datetime.date.today().replace(month=1, day=1), datetime.time(0, 0)).timestamp())
+        month_start = int(datetime.datetime.combine(
+            datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp())
+        year_start = int(datetime.datetime.combine(datetime.date.today().replace(
+            month=1, day=1), datetime.time(0, 0)).timestamp())
         results = await asyncio.gather(
             self.read_history(today_start - one_hour, today_start + three_hours),
             self.read_history(month_start - one_hour, today_start),

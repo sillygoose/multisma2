@@ -15,3 +15,7 @@ class FailedInitialization(Exception):
 
 class TerminateSignal(Exception):
     """SIGTERM."""
+
+
+class SmaException(Exception):
+    """Base exception of the pysma library."""
