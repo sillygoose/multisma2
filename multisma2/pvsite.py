@@ -304,6 +304,8 @@ class PVSite():
         results = await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
         if None in results:
             _LOGGER.error(f"update_instantaneous(): one more inverters returned no results")
+            return False
+        return True
 
     async def get_yesterday_production(self):
         """Get the total production meter values for the previous day."""

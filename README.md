@@ -26,7 +26,7 @@ multisma2 is pretty complete for my purposes but there could be small improvemen
 ## Using multisma2
 A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker (now that the setup has migrated to a YAML configuration file).
 ### Requirements
-- Python 3.9 or later
+- Python 3.8 or later
 - Python packages used
     - paho-mqtt
     - aiohttp
@@ -51,15 +51,15 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     pip3 install -e .
 ```
 
-2.  Copy `sample.yaml` to `multisma2.yaml`
+2.  Copy `example.multisma2.yaml` to `multisma2.yaml`
 ```
     cd multisma2
-    cp sample.yaml multisma2.yaml
+    cp example.multisma2.yaml multisma2.yaml
 ```
 
 3.  Edit `multisma2.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the optional login credentials, if interfacing to InfluxDB you need the host address and login credentials.
 
-Rename the `sample_secrets.yaml` file to `secrets.yaml` and edit to match your site (if you don't wish to use secrets then edit `sbhistory.yaml` to remove the `!secret` references).  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as `sbhistory` will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
+Rename the `example.secrets.yaml` file to `secrets.yaml` and edit to match your site (if you don't wish to use secrets then edit `sbhistory.yaml` to remove the `!secret` references).  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as `sbhistory` will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
 
     There are some other fields to configure for the log files, time zone, site location, etc, these should be easy to figure out.
 
@@ -79,7 +79,7 @@ Once you have a working `multisma2.yaml` file you can build a Docker container t
     sudo docker-compose up -d
 ```
 
-where `your-tag` is a name of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2**).  The `docker-compose.yaml` file assumes the image to be `multisma2:latest`, the second command adds this tag so you can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+where `your-tag` is a name of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2** from GitHub).  The `docker-compose.yaml` file assumes the image to be `multisma2:latest`, the second command adds this tag so you can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
 
 ### Sunny Boy History Utility (sbhistory)
 There is a useful utility that complements **multisma2** in the **sbhistory** repo:
@@ -88,7 +88,7 @@ There is a useful utility that complements **multisma2** in the **sbhistory** re
     git clone https://github.com/sillygoose/sbhistory
 ```
 
-If you are just starting out with **multisma2**, you are collecting data but you have no past data to work with.  **sbhistory** fixes ths by allowing you to download the past history from your inverter(s) and import it into your InfluxDB database.
+If you are just starting out with **multisma2**, you are collecting data but you have no past data to work with.  **sbhistory** fixes this by allowing you to download the past history from your SMA inverter(s) and import it into your InfluxDB database.
 
 **sbhistory** will use the settings in your **multisma2** YAML file, you can just append it to the sample **sbhistory** YAML file, pick the few **sbhistory** options and transfer the history in one pass.  Now your dashboards can display the past 30 day and yearly solar production from your SMA inverter(s) and look really good.
 
@@ -109,22 +109,25 @@ If you are just starting out with **multisma2**, you are collecting data but you
 ### Some Interesting Facts
 It maybe helpful to understand these quirks about **multisma2**:
 
-1.  **multisma2** runs at full speed during daylight hours, which for now is defined from dawn to dusk.  At night it slows down by a factor of 30 (10 second updates become 5 minute updates) to keep any applications like Home Assistant or OpenHAB updated.
+1.  **multisma2** runs at full speed during daylight hours, which is dawn to dusk.  At night it slows down by a factor of 20 (30 second updates become 10 minute updates) to keep any applications like Home Assistant or OpenHAB updated without generating a lot of database records filled with zeros.
 
 | Interval | Outputs |
 | --- | --------- |
-| 10s | AC production, DC production, inverter status |
-| 30s | Total production (today, month, year, lifetime) |
-| 60s | CO2 avoided |
-| 300s | Production total (Wh), irradiance and solar_potential |
+| fast | AC production, DC production, inverter status |
+| medium | inverter efficiency |
+| slow | sun position, CO2 avoided, total production (today, month, year, lifetime)|
+| turtle | Production total (Wh), irradiance and solar_potential |
 
-At night these updates based on the settings in `pvsite.py`:
-```
-    SAMPLE_PERIOD = [
-        {'scale': 18},     # night (18 is 3 minute sample intervals)
-        {'scale': 1},      # day (1 is 10 second sample intervals)
-    ]
-```
+These may be modified in the YAML file using the `settings.sampling` options:
+
+    settings:
+        sampling:
+            fast:   10
+            medium: 30
+            slow:   60
+            turtle: 300
+            night:  10
+
 
 ## Example Dashboards
 Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.

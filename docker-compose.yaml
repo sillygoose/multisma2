@@ -1,0 +1,10 @@
+version: '3.6'
+services:
+  multisma2:
+    container_name: multisma2
+    image: multisma2:latest
+    restart: always
+    environment:
+      - TZ=America/New_York
+    volumes:
+      - ./volumes/multisma2/log:/sillygoose/log
