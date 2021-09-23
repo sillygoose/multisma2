@@ -35,14 +35,15 @@ class SMA:
     def __init__(self, session, url, password, group='user', uid=None):
         """Init SMA connection."""
         if group not in USERS:
-            _LOGGER.error(f"Invalid user type: {group}")
-            raise SmaException
+            _LOGGER.debug(f"Invalid user type: {group}")
+            raise SmaException(SmaException.BAD_USER_TYPE)
         if password is not None and len(password) > 12:
-            _LOGGER.warning("Password should not exceed 12 characters")
-        if password is None:
-            _LOGGER.error("Password is required to login the inverter")
+            _LOGGER.debug("Password should not exceed 12 characters")
+            raise SmaException(SmaException.PASSWORD_TOO_LONG)
+        if password is None or len(password) == 0:
             self._new_session_data = None
-            raise SmaException
+            _LOGGER.debug("Password is required to login the inverter")
+            raise SmaException(SmaException.PASSWORD_REQUIRED)
         else:
             self._new_session_data = {'right': USERS[group], 'pass': password}
         self._url = url.rstrip('/')
@@ -72,8 +73,8 @@ class SMA:
         if self.sma_sid is None and self._new_session_data is not None:
             await self.new_session()
             if self.sma_sid is None:
-                _LOGGER.error(f"Unable to create new session with inverter {self._url}")
-                raise SmaException
+                _LOGGER.debug(f"Unable to create new session with inverter {self._url}")
+                raise SmaException(SmaException.NO_SESSION)
 
         body = await self._fetch_json(url, payload=payload)
 
@@ -84,11 +85,11 @@ class SMA:
                 f"{self._url}: error detected, closing session to force another login attempt, got: {body}",
             )
             await self.close_session()
-            raise SmaException
+            raise SmaException(SmaException.ERR_RETURNED)
 
         if not isinstance(body, dict) or 'result' not in body:
-            _LOGGER.error(f"No 'result' in reply from SMA, got: {body}")
-            raise SmaException
+            _LOGGER.debug(f"No 'result' in reply from SMA, got: {body}")
+            raise SmaException(SmaException.NO_RESULT)
 
         if self.sma_uid is None:
             # Get the unique ID
@@ -96,73 +97,60 @@ class SMA:
 
         result_body = body['result'].pop(self.sma_uid, None)
         if body != {'result': {}}:
-            _LOGGER.error(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
-            raise SmaException
+            _LOGGER.debug(f"Unexpected body {json.dumps(body)}, extracted {json.dumps(result_body)}")
+            raise SmaException(SmaException.UNEXPECTED_BODY)
 
         return result_body
 
-    async def new_session(self):
+    async def new_session(self) -> None:
         """Establish a new session."""
         body = await self._fetch_json(URL_LOGIN, self._new_session_data)
         self.sma_sid = jmespath.search('result.sid', body)
         if self.sma_sid:
-            return True
+            return
 
         err = body.pop('err', None)
-        msg = f"Could not start session, %s, got {body}"
-
+        msg = f"Could not start session, {body}, got {{}}"
         if err:
             if err == 503:
-                _LOGGER.error(msg, "Max amount of sessions reached")
-            else:
-                _LOGGER.error(msg, err)
+                _LOGGER.debug(msg, "Max amount of sessions reached")
+                raise SmaException(SmaException.MAX_SESSIONS)
+            _LOGGER.debug(msg, err)
+            raise SmaException(SmaException.START_SESSION, msg)
         else:
-            _LOGGER.error(msg, "Session ID expected [result.sid]")
-        return False
+            _LOGGER.debug(msg, "Session ID expected [result.sid]")
+            raise SmaException(SmaException.SESSION_ID_EXPECTED)
 
     async def close_session(self):
-        """Close the session login."""
-        if self.sma_sid is None:
-            return
-        try:
-            await self._fetch_json(URL_LOGOUT, {})
-        finally:
-            self.sma_sid = None
+        """Close the session."""
+        if self.sma_sid is not None:
+            try:
+                await self._fetch_json(URL_LOGOUT, {})
+            finally:
+                self.sma_sid = None
 
     async def read_values(self, keys):
         """Read a list of one or more keys."""
         payload = {'destDev': [], 'keys': keys}
-        try:
-            result_body = await self._read_body(URL_VALUES, payload)
-        except SmaException:
-            return None
+        result_body = await self._read_body(URL_VALUES, payload)
         return result_body
 
     async def read_instantaneous(self):
         """One command to read the sensors in the Instantaneous inverter view."""
         payload = {'destDev': []}
-        try:
-            result_body = await self._read_body(URL_ONLINE, payload)
-        except SmaException:
-            return None
+        result_body = await self._read_body(URL_ONLINE, payload)
         return result_body
 
     async def read_history(self, start, end):
         """Read the history for the specified period."""
         # {'destDev':[],'key':28704,'tStart':1601521200,'tEnd':1604217600}.
         payload = {'destDev': [], 'key': 28704, 'tStart': start, 'tEnd': end}
-        try:
-            result_body = await self._read_body(URL_LOGGER, payload)
-        except SmaException:
-            return None
+        result_body = await self._read_body(URL_LOGGER, payload)
         return result_body
 
     async def read_fine_history(self, start, end):
         """Read the fine history for the specified period."""
         # {'destDev':[],'key':28672,'tStart':1601521200,'tEnd':1604217600}.
         payload = {'destDev': [], 'key': 28672, 'tStart': start, 'tEnd': end}
-        try:
-            result_body = await self._read_body(URL_LOGGER, payload)
-        except SmaException:
-            return None
+        result_body = await self._read_body(URL_LOGGER, payload)
         return result_body

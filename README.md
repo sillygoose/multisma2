@@ -19,9 +19,9 @@ Now features a wider range of outputs, basically anything you see in your browse
 ## Rationale for multisma2
 **multisma2** is driven by my desire to see what is happening in my ground mount solar array which uses three Sunny Boy inverters tied to eight strings of nine panels each (total 24.84 kWp).  SMA offers Sunny Portal which is a non-real time window of the AC production and this quickly proved to be inadequate.  It also uses an unknown and less than robust averaging algorithm which guarantees that I never see my peak production where there is the chance of the inverter limiting the output.  There is more data available using the WebConnect interface but you need to log into each inverter to get it, with three inverters to check, **multisma2** fixes this by working with one or many Sunny Boy inverters and combines the data intelligently for easy display or analysis.
 
-I wanted a real-time dashboard in Home Assistant that displays both the site totals and the individual inverters so **multisma2** is the result, building on the pysma project to log into each inverter and pull **ALL** the data in the *Instantaneous values* menu every 10 seconds from each inverter.  This is cached and you display selected outputs at various intervals depending on your needs.  For example, I report the AC production, DC production (by inverter and string), and inverter status every ten seconds.  Slower changing outputs such as total production and sun elevation/azimuth occurs every 30 or 60 seconds.
+I wanted a real-time dashboard in Home Assistant that displays both the site totals and the individual inverters so **multisma2** is the result, building on the pysma project to log into each inverter and pull **ALL** the data in the *Instantaneous values* menu every fast event loop from each inverter.  This is cached and you display selected outputs at various intervals depending on your needs.  For example, I report the AC production, DC production (by inverter and string), and inverter status in the fast loop (which I have running every 10 seconds).  Slower changing outputs such as total production and sun elevation/azimuth occurs every 30 or 60 seconds.
 
-multisma2 is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
+**multisma2** is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
 
 ## Using multisma2
 A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker (now that the setup has migrated to a YAML configuration file).
@@ -79,7 +79,15 @@ Once you have a working `multisma2.yaml` file you can build a Docker container t
     sudo docker-compose up -d
 ```
 
-where `your-tag` is a name of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2** from GitHub).  The `docker-compose.yaml` file assumes the image to be `multisma2:latest`, the second command adds this tag so you can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+where `your-tag` is a string of your choosing (the `--no-cache` option will force Docker to pull the latest version of **multisma2** from GitHub).  The `docker-compose.yaml` file assumes the image to be `multisma2:latest`, the second command adds this tag so you can use the docker-compose file to start the new instance and keep the old image as a backup until the new version checks out.
+
+As an example, suppose you download the current **multisma2** build of 1.1.0.  Then to create and run the Docker container you would use
+
+```
+    sudo docker build --no-cache -t multisma2:1.1.0 .
+    sudo docker image tag multisma2:1.1.0 multisma2:latest
+    sudo docker-compose up -d
+```
 
 ### Sunny Boy History Utility (sbhistory)
 There is a useful utility that complements **multisma2** in the **sbhistory** repo:

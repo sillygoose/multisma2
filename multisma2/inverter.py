@@ -5,6 +5,7 @@ import datetime
 import logging
 import json
 from pprint import pprint
+from typing import Dict
 
 import sma
 
@@ -36,19 +37,22 @@ class Inverter:
         self._history = {}
         self._lock = asyncio.Lock()
 
-    async def start(self):
+    async def start(self) -> Dict:
         """Setup inverter for data collection."""
-        # SMA class object for access to inverters
+
         try:
             self._sma = sma.SMA(session=self._session, url=self._url, password=self._password, group=self._group)
-        except SmaException:
-            return None
+        except SmaException as e:
+            _LOGGER.debug(f"Inverter error with '{self._url}': '{e.name}'")
+            return {'keys': None, 'name': self._url, 'error': e.name}
 
-        await self._sma.new_session()
-        if self._sma.sma_sid is None:
-            _LOGGER.error(f"{self._name} - no session ID")
-            return None
-        _LOGGER.debug(f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        try:
+            await self._sma.new_session()
+            _LOGGER.debug(
+                f"Connected to SMA inverter '{self._name}' at {self._url} with session ID '{self._sma.sma_sid}'")
+        except SmaException as e:
+            _LOGGER.debug(f"{self._name}, login failed: {e}")
+            return {'keys': None, 'name': self._url, 'error': e.name}
 
         # Grab the metadata dictionary
         metadata_url = self._url + '/data/ObjectMetadata_Istl.json'
@@ -65,13 +69,13 @@ class Inverter:
         # Read the initial set of history state data
         success = await self.read_inverter_production()
         if not success:
-            return None
+            return {'keys': None, 'name': self._url, 'error': 'read_inverter_production() failed'}
         success = await self.read_instantaneous()
         if not success:
-            return None
+            return {'keys': None, 'name': self._url, 'error': 'read_instantaneous() failed'}
 
         # Return a list of cached keys
-        return self._instantaneous.keys()
+        return {'keys': self._instantaneous.keys(), 'name': self._url, 'error': None}
 
     async def stop(self):
         """Log out of the interter."""
@@ -85,7 +89,7 @@ class Inverter:
             async with self._lock:
                 self._instantaneous = await self._sma.read_instantaneous()
                 if self._instantaneous is None:
-                    # _LOGGER.info(f"Retrying 'read_instantaneous()' to create a new session")
+                    _LOGGER.debug(f"Retrying 'read_instantaneous()' to create a new session")
                     self._instantaneous = await self._sma.read_instantaneous()
             return self._instantaneous
         except Exception as e:
@@ -141,15 +145,23 @@ class Inverter:
 
     async def read_key(self, key):
         """Read a specified inverter key."""
-        raw_result = await self._sma.read_values([key])
+        try:
+            raw_result = await self._sma.read_values([key])
+        except SmaException as e:
+            _LOGGER.debug(f"{self._name}: read_key({key}): {e}")
+            return False
         if raw_result:
             return self.clean({key: raw_result.get(key)})
         return False
 
     async def read_history(self, start, stop):
-        history = await self._sma.read_history(start, stop)
+        try:
+            history = await self._sma.read_history(start, stop)
+        except SmaException as e:
+            _LOGGER.debug(f"{self._name}: read_history({start}, {stop}): {e}")
+            return None
         if not history:
-            _LOGGER.error(f"{self._name}: read_history({start}, {stop}) returned 'None' (check your local time)")
+            _LOGGER.debug(f"{self._name}: read_history({start}, {stop}) returned 'None' (check your local time)")
             return None
         history.insert(0, {'inverter': self._name})
         return history
@@ -248,6 +260,10 @@ class Inverter:
 
     async def read_inverter_history(self, start, stop):
         """Read the baseline inverter production."""
-        history = await self._sma.read_history(start, stop)
+        try:
+            history = await self._sma.read_history(start, stop)
+        except SmaException as e:
+            _LOGGER.debug(f"{self._name}: read_inverter_history({start}, {stop}): {e}")
+            return None
         history.insert(0, {'inverter': self._name})
         return history

@@ -131,10 +131,17 @@ class PVSite():
             self._sampling_turtle = config.settings.sampling.get('turtle', _DEFAULT_TURTLE)
             self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
 
-        cached_keys = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
-        if None in cached_keys:
+        inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
+        success = True
+        for inverter in inverters:
+            if inverter.get('keys', None) is None:
+                _LOGGER.error(
+                    f"Connection to inverter '{inverter.get('name')}' failed: {inverter.get('error', 'None')}")
+                success = False
+        if not success:
             return False
-        self._cached_keys = cached_keys[0]
+
+        self._cached_keys = inverters[0].get('keys')
         return True
 
     async def run(self):
