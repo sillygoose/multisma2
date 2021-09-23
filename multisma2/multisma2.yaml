@@ -98,11 +98,11 @@ multisma2:
   #   settings.sampling.medium    sets medium loop sample period (in seconds) (int)
   #   settings.sampling.slow      sets slow loop sample period (in seconds) (int)
   #   settings.sampling.turtle    sets turtle loop sample period (in seconds) (int)
-  #   settings.sampling.night     sets scaling for nighttime sampling (in seconds) (int)
+  #   settings.sampling.night     sets scaling for nighttime sampling (x slower) (int)
   settings:
     sampling:
       fast:   30
       medium: 60
       slow:   120
       turtle: 300
-      night:  10
+      night:  20

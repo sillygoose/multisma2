@@ -92,7 +92,7 @@ class Inverter:
                     _LOGGER.debug(f"Retrying 'read_instantaneous()' to create a new session")
                     self._instantaneous = await self._sma.read_instantaneous()
             return self._instantaneous
-        except Exception as e:
+        except SmaException as e:
             _LOGGER.error(f"read_instantaneous() error: {e}")
             return None
 
