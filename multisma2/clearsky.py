@@ -2,7 +2,6 @@
 # Equations from G. Masters, “Renewable and Efficient Electric Power Systems,” Wiley-IEEE Press, 2004.
 # Section 7.9 TOTAL CLEAR SKY INSOLATION ON A COLLECTING SURFACE
 
-import logging
 import datetime
 from dateutil import tz
 import math
@@ -12,9 +11,6 @@ from config import config_from_yaml
 
 from pysolar.solar import get_altitude, get_azimuth
 from pysolar.radiation import get_radiation_direct
-
-
-logger = logging.getLogger('sbhistory')
 
 
 def current_global_irradiance(site_properties, solar_properties, timestamp):

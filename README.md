@@ -23,11 +23,9 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
 
 **multisma2** is pretty complete for my purposes but there could be small improvements and the inevitable bug fixes. Of course comments and feedback are welcome or you have a question on Sunny Boy inverters (at least the ones I have access to) feel free to ask.
 
-## Using multisma2
-A lot of this is new to me (a few months ago I had never seen Python) but hopefully it is pretty simple to setup **multisma2** to connect to your SMA inverters and MQTT broker (now that the setup has migrated to a YAML configuration file).
 ### Requirements
-- Python 3.8 or later
-- Python packages used
+- Python 3.8 or later (surrently using 3.9.5 from an Ubuntu Hirsute container)
+- Python packages used include (but the list in the `setup.py` file is the definitive list of packages)
     - paho-mqtt
     - aiohttp
     - asyncio
@@ -40,10 +38,10 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     - pyyaml
 
 - SMA Sunny Boy inverter(s) supporting WebConnect
-- Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running InfluxDB, InfluxDB2, Telegraf, and Grafana)
+- Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running instances of Portainer, InfluxDB2, Telegraf, Grafana, and other useful containers)
 
 ### Installation
-1.  First up is to clone this repository and install the packages it needs to operate:
+1.  Clone the **multisma2** repository and install the Python packages it needs to operate:
 
 ```
     git clone https://github.com/sillygoose/multisma2
@@ -51,25 +49,19 @@ A lot of this is new to me (a few months ago I had never seen Python) but hopefu
     pip3 install -e .
 ```
 
-2.  Copy `example.multisma2.yaml` to `multisma2.yaml`
-```
-    cd multisma2
-    cp example.multisma2.yaml multisma2.yaml
-```
+2.  Rename the `example.secrets.yaml` file to `secrets.yaml`, if you plan on using secrets.  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as **multisma2** will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
 
-3.  Edit `multisma2.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the optional login credentials, if interfacing to InfluxDB you need the host address and login credentials.
+Edit `multisma2.yaml` and `secrets.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the optional login credentials, if interfacing to InfluxDB you need the host address and login credentials.
 
-Rename the `example.secrets.yaml` file to `secrets.yaml` and edit to match your site (if you don't wish to use secrets then edit `sbhistory.yaml` to remove the `!secret` references).  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as `sbhistory` will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
+There are some other fields to configure for the log files, time zone, site location, etc, these should be easy to figure out.
 
-    There are some other fields to configure for the log files, time zone, site location, etc, these should be easy to figure out.
-
-4.  Test that **multisma2** connects to your inverters, MQTT broker, and InfluxDB database:
+3.  Test that **multisma2** connects to your inverters, MQTT broker, and InfluxDB database:
 
     `python3 multisma2.py`
 
-5.  Save your `multisma2.yaml` file, because it contains sensitive information it is listed in `.gitignore` and will not become part of the project.
+4.  Save your `multisma2.yaml` file, because it contains sensitive information it is listed in `.gitignore` and will not become part of the project.
 
-6.  Docker setup
+5.  Docker setup
 
 Once you have a working `multisma2.yaml` file you can build a Docker container that runs **multisma2**:
 
