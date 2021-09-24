@@ -83,19 +83,6 @@ class Inverter:
             await self._sma.close_session()
             self._sma = None
 
-    async def read_instantaneous(self):
-        """Update the instantaneous inverter states."""
-        try:
-            async with self._lock:
-                self._instantaneous = await self._sma.read_instantaneous()
-                if self._instantaneous is None:
-                    _LOGGER.debug(f"Retrying 'read_instantaneous()' to create a new session")
-                    self._instantaneous = await self._sma.read_instantaneous()
-            return self._instantaneous
-        except SmaException as e:
-            _LOGGER.error(f"read_instantaneous() error: {e}")
-            return None
-
     def clean(self, raw_results):
         """Clean the raw inverter data and return a dict with the key and result."""
         cleaned = {}
@@ -136,6 +123,16 @@ class Inverter:
         cleaned['name'] = self._name
         return cleaned
 
+    async def read_instantaneous(self):
+        """Update the instantaneous inverter states."""
+        try:
+            async with self._lock:
+                self._instantaneous = await self._sma.read_instantaneous()
+            return {'name': self._name, 'sensors': self._instantaneous, 'error': 'None'}
+        except SmaException as e:
+            _LOGGER.debug(f"{self._name} read_instantaneous() error: {e.name}")
+            return {'name': self._name, 'sensors': None, 'error': e.name}
+
     async def read_keys(self, keys):
         """Read a specified set of inverter keys."""
         results = []
@@ -148,7 +145,7 @@ class Inverter:
         try:
             raw_result = await self._sma.read_values([key])
         except SmaException as e:
-            _LOGGER.debug(f"{self._name}: read_key({key}): {e}")
+            _LOGGER.debug(f"{self._name}: read_key({key}): {e.name}")
             return False
         if raw_result:
             return self.clean({key: raw_result.get(key)})
@@ -158,7 +155,7 @@ class Inverter:
         try:
             history = await self._sma.read_history(start, stop)
         except SmaException as e:
-            _LOGGER.debug(f"{self._name}: read_history({start}, {stop}): {e}")
+            _LOGGER.debug(f"{self._name}: read_history({start}, {stop}): {e.name}")
             return None
         if not history:
             _LOGGER.debug(f"{self._name}: read_history({start}, {stop}) returned 'None' (check your local time)")
@@ -263,7 +260,7 @@ class Inverter:
         try:
             history = await self._sma.read_history(start, stop)
         except SmaException as e:
-            _LOGGER.debug(f"{self._name}: read_inverter_history({start}, {stop}): {e}")
+            _LOGGER.debug(f"{self._name}: read_inverter_history({start}, {stop}): {e.name}")
             return None
         history.insert(0, {'inverter': self._name})
         return history

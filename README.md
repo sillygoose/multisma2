@@ -41,7 +41,7 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
 - Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB that also has containers running instances of Portainer, InfluxDB2, Telegraf, Grafana, and other useful containers)
 
 ### Installation
-1.  Clone the **multisma2** repository and install the Python packages it needs to operate:
+1.  Clone the **multisma2** repository and install the Python packages:
 
 ```
     git clone https://github.com/sillygoose/multisma2

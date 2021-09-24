@@ -309,8 +309,12 @@ class PVSite():
     async def update_instantaneous(self):
         """Update the instantaneous cache from the inverter."""
         results = await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
-        if None in results:
-            _LOGGER.error(f"update_instantaneous(): one more inverters returned no results")
+        inverter_list = []
+        for result in results:
+            if result.get('sensors', None) is None:
+                inverter_list.append(f"{result.get('name')}({result.get('error')})")
+        if len(inverter_list):
+            _LOGGER.error(f"update_instantaneous(), one more inverters returned no results: {inverter_list}")
             return False
         return True
 
