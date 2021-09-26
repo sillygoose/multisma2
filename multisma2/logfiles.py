@@ -58,16 +58,15 @@ def start(config):
     handler.suffix = "%Y-%m-%d"
     handler.setLevel(log_level)
     formatter = logging.Formatter(log_format)
-    # formatter = logging.Formatter(config_log.format)
     handler.setFormatter(formatter)
     _LOGGER.addHandler(handler)
 
     # Add some console output for anyone watching
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(log_level)
     console_handler.setFormatter(logging.Formatter(log_format))
     _LOGGER.addHandler(console_handler)
-    _LOGGER.setLevel(logging.INFO)
+    _LOGGER.setLevel(log_level)
 
     # First entry
     _LOGGER.info("Created application log %s", filename)

@@ -65,10 +65,10 @@ SITE_SNAPSHOT = [       # Instantaneous values
     '6380_40251E00',    # DC power (by inverter/site)
     '6380_40451F00',    # DC voltage (by inverter/string)
     '6380_40452100',    # DC current (by inverter/string)
-    '6180_08416500',    # Status: Reason for derating
-    '6180_08412800',    # Status: General operating status
-    '6180_08416400',    # Status: Grid relay
-    '6180_08414C00',    # Status: Condition
+    #    '6180_08416500',    # Status: Reason for derating
+    #    '6180_08412800',    # Status: General operating status
+    #    '6180_08416400',    # Status: Grid relay
+    #    '6180_08414C00',    # Status: Condition
 ]
 
 
@@ -148,8 +148,8 @@ class PVSite():
         """Run the site and wait for an event to exit."""
         await asyncio.gather(
             self.solar_data_update(),
-            self.update_instantaneous(),
-            self.update_total_production(),
+            self.read_instantaneous(True),
+            self.update_total_production(True),
         )
 
         queues = {
@@ -225,7 +225,7 @@ class PVSite():
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            await self.update_total_production()
+            await self.update_total_production(self._daylight)
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
 
     async def scheduler(self, queues):
@@ -240,8 +240,8 @@ class PVSite():
                 last_tick = tick
                 if tick % self._sampling_fast == 0:
                     await asyncio.gather(
-                        self.update_instantaneous(),
-                        self.update_total_production(),
+                        self.read_instantaneous(self._daylight),
+                        self.update_total_production(self._daylight),
                     )
                     queues.get('fast').put_nowait(timestamp)
                 if tick % self._sampling_medium == 0:
@@ -262,7 +262,8 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                if self._daylight:
+                    self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_medium(self, queue):
         """Work done at a medium sample rate."""
@@ -292,7 +293,8 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                if self._daylight:
+                    self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_turtle(self, queue):
         """Work done a very slow sample rate."""
@@ -304,18 +306,21 @@ class PVSite():
                 self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                if self._daylight:
+                    self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
-    async def update_instantaneous(self):
-        """Update the instantaneous cache from the inverter."""
-        results = await asyncio.gather(*(inverter.read_instantaneous() for inverter in self._inverters))
+    async def read_instantaneous(self, daylight) -> bool:
+        """Read the instantaneous sensors from the inverter."""
+        results = await asyncio.gather(*(inverter.read_instantaneous(daylight) for inverter in self._inverters))
         inverter_list = []
         for result in results:
             if result.get('sensors', None) is None:
                 inverter_list.append(f"{result.get('name')}({result.get('error')})")
         if len(inverter_list):
-            _LOGGER.error(f"update_instantaneous(), one more inverters returned no results: {inverter_list}")
+            _LOGGER.debug(f"read_instantaneous({daylight}), one more inverters returned no results: {inverter_list}")
             return False
+        else:
+            _LOGGER.debug(f"read_instantaneous({daylight}) was successful")
         return True
 
     async def get_yesterday_production(self):
@@ -349,8 +354,11 @@ class PVSite():
         production.append(site_total)
         return production
 
-    async def update_total_production(self) -> None:
+    async def update_total_production(self, daylight) -> None:
         """Get the daily, monthly, yearly, and lifetime production values."""
+        if not daylight:
+            return
+
         total_productions = await self.total_production()
         # [{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total_wh'}]
         # _LOGGER.debug(f"total_productions: {total_productions}")
@@ -487,6 +495,9 @@ class PVSite():
                 inverters = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
             else:
                 inverters = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
+                ###
+                _LOGGER.info(f"get_composite(): non-cached key '{key}'")
+                ###
 
             composite = {}
             total = 0
@@ -518,7 +529,7 @@ class PVSite():
         return sensors
 
     def cached_key(self, key):
-        """Determines if a key in the inverter cache."""
+        """Determines if a key is in the inverter cache."""
         cached = key in self._cached_keys
         return cached
 

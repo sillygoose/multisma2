@@ -70,7 +70,7 @@ class Inverter:
         success = await self.read_inverter_production()
         if not success:
             return {'keys': None, 'name': self._url, 'error': 'read_inverter_production() failed'}
-        success = await self.read_instantaneous()
+        success = await self.read_instantaneous(True)
         if not success:
             return {'keys': None, 'name': self._url, 'error': 'read_instantaneous() failed'}
 
@@ -123,8 +123,10 @@ class Inverter:
         cleaned['name'] = self._name
         return cleaned
 
-    async def read_instantaneous(self):
+    async def read_instantaneous(self, daylight):
         """Update the instantaneous inverter states."""
+        if daylight is False:
+            return {'name': self._name, 'sensors': self._instantaneous, 'error': 'None'}
         try:
             async with self._lock:
                 self._instantaneous = await self._sma.read_instantaneous()

@@ -5,6 +5,7 @@ multisma2:
     file: 'log/multisma2'
     format: '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
     level: 'INFO'
+#    level: 'DEBUG'
 
   # Site location details for solar time calculations (elevation is in meters)
   # Production fuel mix factor (kgCO2e per kWh) which is an estimate of local utility KgCO2e/kWh
@@ -105,4 +106,4 @@ multisma2:
       medium: 60
       slow:   120
       turtle: 300
-      night:  20
+      night:  1
