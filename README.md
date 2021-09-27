@@ -109,8 +109,8 @@ If you are just starting out with **multisma2**, you are collecting data but you
 | Interval | Outputs |
 | --- | --------- |
 | fast | AC production, DC production |
-| medium | inverter efficiency, inverter status|
-| slow | CO2 avoided, solar potential (irradiance), sun position, production totals (Wh), total production (today, month, year, lifetime)|
+| medium | total production (today, month, year, lifetime), production totals (Wh), inverter efficiency, inverter status|
+| slow | CO2 avoided, solar potential (irradiance), sun position|
 
 These may be modified in the YAML file using the `settings.sampling` options:
 
@@ -119,6 +119,9 @@ These may be modified in the YAML file using the `settings.sampling` options:
             fast:   10
             medium: 30
             slow:   60
+
+
+All outputs are broadcast by MQTT, the InfluxDB code only includes selected outputs so not to write data not needed over the long term.
 
 Two other options are supported that permit MQTT and InfluxDB updates to occur at night using the last sampled data (which should be all zeros except in the case of the inverter status).
 

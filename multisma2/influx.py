@@ -17,29 +17,29 @@ from exceptions import FailedInitialization
 _LOGGER = logging.getLogger('multisma2')
 
 LP_LOOKUP = {
-    'ac_measurements/power': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'power'},
-    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'voltage'},
-    'ac_measurements/current': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'current'},
-    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'efficiency'},
-    'dc_measurements/power': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'power'},
-    'dc_measurements/voltage': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'voltage'},
-    'dc_measurements/current': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'current'},
-    'status/reason_for_derating': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'derating'},
-    'status/general_operating_status': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'operating_status'},
-    'status/grid_relay': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'grid_relay'},
-    'status/condition': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'condition'},
-    'production/total_wh': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'total_wh'},
-    'production/midnight': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'midnight'},
-    'production/today': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'today'},
-    'production/month': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'month'},
-    'production/year': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'year'},
-    'production/lifetime': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'lifetime'},
-    'co2avoided/today': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'today'},
-    'co2avoided/month': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'month'},
-    'co2avoided/year': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'year'},
-    'co2avoided/lifetime': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'lifetime'},
-    'sun/position': {'measurement': 'sun', 'tags': None, 'field': None},
-    'sun/irradiance': {'measurement': 'sun', 'tags': ['_type'], 'field': 'irradiance'},
+    'ac_measurements/power': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'power', 'output': True},
+    'ac_measurements/voltage': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'voltage', 'output': True},
+    'ac_measurements/current': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'current', 'output': True},
+    'ac_measurements/efficiency': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'efficiency', 'output': False},
+    'dc_measurements/power': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'power', 'output': True},
+    'dc_measurements/voltage': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'voltage', 'output': True},
+    'dc_measurements/current': {'measurement': 'dc_measurements', 'tags': ['_inverter', '_string'], 'field': 'current', 'output': True},
+    'status/reason_for_derating': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'derating', 'output': True},
+    'status/general_operating_status': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'operating_status', 'output': True},
+    'status/grid_relay': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'grid_relay', 'output': True},
+    'status/condition': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'condition', 'output': True},
+    'production/total_wh': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'total_wh', 'output': True},
+    'production/midnight': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'midnight', 'output': True},
+    'production/today': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'today', 'output': False},
+    'production/month': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'month', 'output': False},
+    'production/year': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'year', 'output': False},
+    'production/lifetime': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'lifetime', 'output': False},
+    'co2avoided/today': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'today', 'output': False},
+    'co2avoided/month': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'month', 'output': False},
+    'co2avoided/year': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'year', 'output': False},
+    'co2avoided/lifetime': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'lifetime', 'output': False},
+    'sun/position': {'measurement': 'sun', 'tags': None, 'field': None, 'output': True},
+    'sun/irradiance': {'measurement': 'sun', 'tags': ['_type'], 'field': 'irradiance', 'output': True},
 }
 
 
@@ -176,6 +176,9 @@ class InfluxDB:
                 lookup = LP_LOOKUP.get(topic, None)
                 if not lookup:
                     _LOGGER.error(f"write_sma_sensors(): unknown topic '{topic}'")
+                    continue
+
+                if not lookup.get('output', False):
                     continue
 
                 measurement = lookup.get('measurement')

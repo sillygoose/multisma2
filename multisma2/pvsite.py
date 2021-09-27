@@ -273,6 +273,8 @@ class PVSite():
             timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
+                self.production_totalwh(),
+                self.production_history(),
                 self.status_snapshot(),
                 self.inverter_efficiency(),
             )
@@ -289,8 +291,6 @@ class PVSite():
             queue.task_done()
             sensors = await asyncio.gather(
                 self.co2_avoided(),
-                self.production_history(),
-                self.total_production(),
                 self.sun_position(),
                 self.sun_irradiance(timestamp=timestamp),
             )
@@ -346,11 +346,11 @@ class PVSite():
         return production
 
     async def update_total_production(self, daylight) -> None:
-        """Get the daily, monthly, yearly, and lifetime production values."""
+        """Get the daily, monthly, yearly, and lifetime total Wh production values."""
         if not daylight:
             return
 
-        total_productions = await self.total_production()
+        total_productions = await self.production_totalwh()
         # [{'sb71': 4376401, 'sb72': 4366596, 'sb51': 3121662, 'site': 11864659, 'topic': 'production/total_wh'}]
         # _LOGGER.debug(f"total_productions: {total_productions}")
         updated_total_production = []
@@ -473,8 +473,8 @@ class PVSite():
         """Get the status values of interest from each inverter."""
         return await self.get_composite(SITE_STATUS)
 
-    async def total_production(self):
-        """Get the total production of each inverter and the total of all inverters."""
+    async def production_totalwh(self):
+        """Get the total wH of each inverter and the total of all inverters."""
         return await self.get_composite(['6400_0046C300'])
 
     async def read_keys(self, keys):
@@ -489,9 +489,7 @@ class PVSite():
                 inverters = await asyncio.gather(*(inverter.get_state(key) for inverter in self._inverters))
             else:
                 inverters = await asyncio.gather(*(inverter.read_key(key) for inverter in self._inverters))
-                ###
-                _LOGGER.info(f"get_composite(): non-cached key '{key}'")
-                ###
+                _LOGGER.warning(f"get_composite(): non-cached key '{key}'")
 
             composite = {}
             total = 0
