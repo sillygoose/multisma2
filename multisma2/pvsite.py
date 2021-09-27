@@ -28,8 +28,8 @@ _LOGGER = logging.getLogger('multisma2')
 _DEFAULT_FAST = 30
 _DEFAULT_MEDIUM = 60
 _DEFAULT_SLOW = 120
-_DEFAULT_TURTLE = 300
-_DEFAULT_NIGHT = 20
+_DEFAULT_MQTT = True
+_DEFAULT_INFLUXDB = False
 
 # Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
@@ -65,10 +65,13 @@ SITE_SNAPSHOT = [       # Instantaneous values
     '6380_40251E00',    # DC power (by inverter/site)
     '6380_40451F00',    # DC voltage (by inverter/string)
     '6380_40452100',    # DC current (by inverter/string)
-    #    '6180_08416500',    # Status: Reason for derating
-    #    '6180_08412800',    # Status: General operating status
-    #    '6180_08416400',    # Status: Grid relay
-    #    '6180_08414C00',    # Status: Condition
+]
+
+SITE_STATUS = [
+    '6180_08416500',    # Status: Reason for derating
+    '6180_08412800',    # Status: General operating status
+    '6180_08416400',    # Status: Grid relay
+    '6180_08414C00',    # Status: Condition
 ]
 
 
@@ -93,9 +96,8 @@ class PVSite():
         self._sampling_fast = _DEFAULT_FAST
         self._sampling_medium = _DEFAULT_MEDIUM
         self._sampling_slow = _DEFAULT_SLOW
-        self._sampling_turtle = _DEFAULT_TURTLE
-        self._sampling_night = _DEFAULT_NIGHT
-        self._scaling = 1
+        self._sampling_mqtt = _DEFAULT_MQTT
+        self._sampling_influxdb = _DEFAULT_INFLUXDB
 
     async def start(self):
         """Initialize the PVSite object."""
@@ -128,8 +130,8 @@ class PVSite():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
             self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
             self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
-            self._sampling_turtle = config.settings.sampling.get('turtle', _DEFAULT_TURTLE)
-            self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
+            self._sampling_mqtt = config.settings.sampling.get('mqtt', _DEFAULT_MQTT)
+            self._sampling_influxdb = config.settings.sampling.get('influxdb', _DEFAULT_INFLUXDB)
 
         inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         success = True
@@ -156,7 +158,6 @@ class PVSite():
             'fast': asyncio.Queue(),
             'medium': asyncio.Queue(),
             'slow': asyncio.Queue(),
-            'turtle': asyncio.Queue(),
         }
         self._task_gather = asyncio.gather(
             self.daylight(),
@@ -165,7 +166,6 @@ class PVSite():
             self.task_fast(queues.get('fast')),
             self.task_medium(queues.get('medium')),
             self.task_slow(queues.get('slow')),
-            self.task_turtle(queues.get('turtle')),
         )
         await self._task_gather
 
@@ -184,31 +184,36 @@ class PVSite():
         self._dawn = astral['dawn']
         self._dusk = astral['dusk']
         self._daylight = self._dawn < astral_now < self._dusk
-        _LOGGER.info(f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
-                     f"noon is at {astral['noon'].strftime('%H:%M')}, "
-                     f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
-                     f"on this {day_of_year()} day of {astral_now.year}")
+        _LOGGER.info(
+            f"Dawn occurs at {self._dawn.strftime('%H:%M')}, "
+            f"noon is at {astral['noon'].strftime('%H:%M')}, "
+            f"and dusk occurs at {self._dusk.strftime('%H:%M')} "
+            f"on this {day_of_year()} day of {astral_now.year}"
+        )
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
-        SAMPLE_PERIOD = [
-            {'scale': self._sampling_night},
-            {'scale': 1},
-        ]
+        ### _LOGGER.info(f"daylight is {self._daylight}")
         while True:
             astral_now = now(tzinfo=self._tzinfo)
-            self._daylight = False
+            previous = self._daylight
             if astral_now < self._dawn:
+                self._daylight = False
                 next_event = self._dawn - astral_now
+                info = f"Nighttime: inverter data collection is inactive"
             elif astral_now > self._dusk:
+                self._daylight = False
                 tomorrow = astral_now + datetime.timedelta(days=1)
                 astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
                 next_event = astral['dawn'] - astral_now
+                info = f"Nighttime: inverter data collection is inactive"
             else:
                 self._daylight = True
                 next_event = self._dusk - astral_now
+                info = f"Daylight: inverter data collection is active"
 
-            self._scaling = SAMPLE_PERIOD[self.is_daylight()].get('scale')
+            if previous != self._daylight:
+                _LOGGER.info(f"{info}")
 
             FUDGE = 60
             await asyncio.sleep(next_event.total_seconds() + FUDGE)
@@ -231,11 +236,9 @@ class PVSite():
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
         SLEEP = 0.5
-        timestamp = time.time_ns() // 1000000000
-        last_tick = timestamp / self._scaling
+        last_tick = time.time_ns() // 1000000000
         while True:
-            timestamp = time.time_ns() // 1000000000
-            tick = timestamp / self._scaling
+            tick = time.time_ns() // 1000000000
             if tick != last_tick:
                 last_tick = tick
                 if tick % self._sampling_fast == 0:
@@ -243,13 +246,11 @@ class PVSite():
                         self.read_instantaneous(self._daylight),
                         self.update_total_production(self._daylight),
                     )
-                    queues.get('fast').put_nowait(timestamp)
+                    queues.get('fast').put_nowait(tick)
                 if tick % self._sampling_medium == 0:
-                    queues.get('medium').put_nowait(timestamp)
+                    queues.get('medium').put_nowait(tick)
                 if tick % self._sampling_slow == 0:
-                    queues.get('slow').put_nowait(timestamp)
-                if tick % self._sampling_turtle == 0:
-                    queues.get('turtle').put_nowait(timestamp)
+                    queues.get('slow').put_nowait(tick)
             await asyncio.sleep(SLEEP)
 
     async def task_fast(self, queue):
@@ -258,23 +259,28 @@ class PVSite():
             timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
-                self.snapshot(),
+                self.production_snapshot(),
             )
             for sensor in sensors:
-                mqtt.publish(sensor)
-                if self._daylight:
+                if self._daylight or self._sampling_mqtt:
+                    mqtt.publish(sensor)
+                if self._daylight or self._sampling_influxdb:
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_medium(self, queue):
         """Work done at a medium sample rate."""
         while True:
-            await queue.get()
+            timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
+                self.status_snapshot(),
                 self.inverter_efficiency(),
             )
             for sensor in sensors:
-                mqtt.publish(sensor)
+                if self._daylight or self._sampling_mqtt:
+                    mqtt.publish(sensor)
+                if self._daylight or self._sampling_influxdb:
+                    self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_slow(self, queue):
         """Work done at a slow sample rate."""
@@ -282,31 +288,16 @@ class PVSite():
             timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
-                self.production_history(),
                 self.co2_avoided(),
-            )
-            for sensor in sensors:
-                mqtt.publish(sensor)
-
-            sensors = await asyncio.gather(
-                self.sun_position(),
-            )
-            for sensor in sensors:
-                mqtt.publish(sensor)
-                if self._daylight:
-                    self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
-
-    async def task_turtle(self, queue):
-        """Work done a very slow sample rate."""
-        while True:
-            timestamp = await queue.get()
-            queue.task_done()
-            sensors = await asyncio.gather(
+                self.production_history(),
                 self.total_production(),
+                self.sun_position(),
                 self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
-                if self._daylight:
+                if self._daylight or self._sampling_mqtt:
+                    mqtt.publish(sensor)
+                if self._daylight or self._sampling_influxdb:
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def read_instantaneous(self, daylight) -> bool:
@@ -456,7 +447,6 @@ class PVSite():
                 co2avoided_period[key] = round(co2, settings['precision']) if settings['precision'] else int(co2)
 
             co2avoided_period['topic'] = 'co2avoided/' + period
-            co2avoided_period['factor'] = settings['factor']
             co2avoided.append(co2avoided_period)
 
         return co2avoided
@@ -475,9 +465,13 @@ class PVSite():
         efficiencies['topic'] = 'ac_measurements/efficiency'
         return [efficiencies]
 
-    async def snapshot(self):
-        """Get the values of interest from each inverter."""
+    async def production_snapshot(self):
+        """Get the production values of interest from each inverter."""
         return await self.get_composite(SITE_SNAPSHOT)
+
+    async def status_snapshot(self):
+        """Get the status values of interest from each inverter."""
+        return await self.get_composite(SITE_STATUS)
 
     async def total_production(self):
         """Get the total production of each inverter and the total of all inverters."""

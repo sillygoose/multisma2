@@ -30,6 +30,14 @@ LP_LOOKUP = {
     'status/condition': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'condition'},
     'production/total_wh': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'total_wh'},
     'production/midnight': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'midnight'},
+    'production/today': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'today'},
+    'production/month': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'month'},
+    'production/year': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'year'},
+    'production/lifetime': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'lifetime'},
+    'co2avoided/today': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'today'},
+    'co2avoided/month': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'month'},
+    'co2avoided/year': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'year'},
+    'co2avoided/lifetime': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'lifetime'},
     'sun/position': {'measurement': 'sun', 'tags': None, 'field': None},
     'sun/irradiance': {'measurement': 'sun', 'tags': ['_type'], 'field': 'irradiance'},
 }
@@ -218,6 +226,7 @@ class InfluxDB:
             result = True
         except Exception as e:
             _LOGGER.error(f"Database write() call failed in write_sma_sensors(): {e}")
+            _LOGGER.error(f": {lps}")
             result = False
         return result
 

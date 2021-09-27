@@ -142,9 +142,9 @@ def start(config):
         client.loop_stop()
         _LOGGER.error(f"Connection failed: {sys.exc_info()[0]}")
 
-    except ConnectionRefusedError:
+    except ConnectionRefusedError as e:
         client.loop_stop()
-        _LOGGER.error(f"Connection refused: {sys.exc_info()[0]}")
+        _LOGGER.error(f"{e}")
 
     except KeyboardInterrupt:
         client.loop_stop()

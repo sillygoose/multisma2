@@ -62,7 +62,7 @@ multisma2:
   #   mqtt.username         set to the username if authentication is used, otherwise an empty string ('str')
   #   mqtt.password         set to the password port if authentication is used, otherwise an empty string ('str')
   mqtt:
-    enable:   False
+    enable:   True
     client:   !secret mqtt_client
     ip:       !secret mqtt_ip
     port:     !secret mqtt_port
@@ -98,12 +98,12 @@ multisma2:
   #   settings.sampling.fast      sets fast loop sample period (in seconds) (int)
   #   settings.sampling.medium    sets medium loop sample period (in seconds) (int)
   #   settings.sampling.slow      sets slow loop sample period (in seconds) (int)
-  #   settings.sampling.turtle    sets turtle loop sample period (in seconds) (int)
-  #   settings.sampling.night     sets scaling for nighttime sampling (x slower) (int)
+  #   settings.sampling.mqtt      enables nighttime output (bool)
+  #   settings.sampling.influxdb  enables nighttime output (bool)
   settings:
     sampling:
-      fast:   30
-      medium: 60
-      slow:   120
-      turtle: 300
-      night:  1
+      fast:     30
+      medium:   60
+      slow:     120
+      mqtt:     False
+      influxdb: False
