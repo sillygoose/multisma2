@@ -283,13 +283,20 @@ class PVSite():
             sensors = await asyncio.gather(
                 self.inverter_efficiency(),
                 self.co2_avoided(),
-                self.sun_position(),
                 self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
                 if self._daylight:
                     mqtt.publish(sensor)
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+
+            # These are valid all day/night
+            sensors = await asyncio.gather(
+                self.sun_position(),
+            )
+            for sensor in sensors:
+                mqtt.publish(sensor)
+                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def read_instantaneous(self, daylight) -> bool:
         """Read the instantaneous sensors from the inverter."""
