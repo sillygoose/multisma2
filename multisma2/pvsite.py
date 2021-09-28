@@ -190,7 +190,6 @@ class PVSite():
 
     async def daylight(self) -> None:
         """Task to determine when it is daylight and daylight changes."""
-        ### _LOGGER.info(f"daylight is {self._daylight}")
         while True:
             astral_now = now(tzinfo=self._tzinfo)
             previous = self._daylight
