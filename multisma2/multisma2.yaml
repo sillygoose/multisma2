@@ -94,12 +94,14 @@ multisma2:
 
   # multisma2 settings
   # Allows some settings to be modified without editing the code
-  # settings.sampling defines how often the event loops run and the slowdown for nighttime
+  # settings.sampling defines how often the event loops run
   #   settings.sampling.fast      sets fast loop sample period (in seconds) (int)
   #   settings.sampling.medium    sets medium loop sample period (in seconds) (int)
   #   settings.sampling.slow      sets slow loop sample period (in seconds) (int)
+  #   settings.sampling.night     sets night time loop sample period (in seconds) (int)
   settings:
     sampling:
       fast:     30
       medium:   60
       slow:     120
+      night:    30

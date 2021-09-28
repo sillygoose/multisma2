@@ -309,6 +309,7 @@ def check_config(config):
                                       {'fast': {'required': False, 'keys': [], 'type': int}},
                                       {'medium': {'required': False, 'keys': [], 'type': int}},
                                       {'slow': {'required': False, 'keys': [], 'type': int}},
+                                      {'night': {'required': False, 'keys': [], 'type': int}},
                                   ]}},
                               ]}},
                           ],
