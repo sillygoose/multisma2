@@ -104,13 +104,14 @@ If you are just starting out with **multisma2**, you are collecting data but you
 
 ### Operation
 
-1.  **multisma2** runs during daylight hours, which is dawn to dusk.  Once dusk occurs, the active inverter sampling ceases until dawn on the following day and if MQTT or database outputs are enabled the last results prior to shut down are used.  The previous version used to slow down sampling at night but logs showed there were many errors required by the inverters and a decision was made to just collect when the inverters have a chance at producing an output.
+1.  **multisma2** runs during daylight hours, which is dawn to dusk.  Once dusk occurs, the active inverter sampling ceases until dawn on the following day.  A night time loop is then turned on to provide MQTT and database updates using the last inverter values (which are all zero).
 
 | Interval | Outputs |
 | --- | --------- |
 | fast | AC production, DC production |
 | medium | total production (today, month, year, lifetime), production totals (Wh), inverter status|
 | slow | inverter efficiency, CO2 avoided, solar potential (irradiance), sun position|
+| night | everything|
 
 The sampling rates may be modified in the YAML file in the `settings.sampling` options:
 
@@ -119,11 +120,9 @@ The sampling rates may be modified in the YAML file in the `settings.sampling` o
             fast:   10
             medium: 30
             slow:   60
+            night:  900
 
-
-All outputs are broadcast by MQTT, the InfluxDB code only includes selected outputs so not to write data not needed over the long term.
-
-You may find it desirable to have MQTT outputs stay active if you are driving displays in HomeAssistant that will not update until active sampling is reestablished.
+All outputs are broadcast by MQTT, the InfluxDB code only includes selected topics, edit the topic table in `influx.py` output the desired sensors.
 
 ## Example Dashboards
 Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.

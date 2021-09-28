@@ -101,7 +101,7 @@ multisma2:
   #   settings.sampling.night     sets night time loop sample period (in seconds) (int)
   settings:
     sampling:
-      fast:     30
-      medium:   60
-      slow:     120
-      night:    30
+      fast:     10
+      medium:   30
+      slow:     60
+      night:    600
