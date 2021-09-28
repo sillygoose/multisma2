@@ -322,9 +322,8 @@ def check_config(config):
         check_unsupported(dict(config), required_keys)
     except FailedInitialization:
         raise
-    except Exception:
-        error_message = "###"
-        raise FailedInitialization(Exception(f"{error_message}"))
+    except Exception as e:
+        raise FailedInitialization(Exception(f"Unexpected exception: {e}"))
     return config if result else None
 
 
