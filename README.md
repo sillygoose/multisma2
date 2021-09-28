@@ -109,10 +109,10 @@ If you are just starting out with **multisma2**, you are collecting data but you
 | Interval | Outputs |
 | --- | --------- |
 | fast | AC production, DC production |
-| medium | total production (today, month, year, lifetime), production totals (Wh), inverter efficiency, inverter status|
-| slow | CO2 avoided, solar potential (irradiance), sun position|
+| medium | total production (today, month, year, lifetime), production totals (Wh), inverter status|
+| slow | inverter efficiency, CO2 avoided, solar potential (irradiance), sun position|
 
-These may be modified in the YAML file using the `settings.sampling` options:
+The sampling rates may be modified in the YAML file in the `settings.sampling` options:
 
     settings:
         sampling:
@@ -122,13 +122,6 @@ These may be modified in the YAML file using the `settings.sampling` options:
 
 
 All outputs are broadcast by MQTT, the InfluxDB code only includes selected outputs so not to write data not needed over the long term.
-
-Two other options are supported that permit MQTT and InfluxDB updates to occur at night using the last sampled data (which should be all zeros except in the case of the inverter status).
-
-    settings:
-        sampling:
-            mqtt:       True
-            influxdb:   False
 
 You may find it desirable to have MQTT outputs stay active if you are driving displays in HomeAssistant that will not update until active sampling is reestablished.
 

@@ -98,12 +98,8 @@ multisma2:
   #   settings.sampling.fast      sets fast loop sample period (in seconds) (int)
   #   settings.sampling.medium    sets medium loop sample period (in seconds) (int)
   #   settings.sampling.slow      sets slow loop sample period (in seconds) (int)
-  #   settings.sampling.mqtt      enables nighttime output (bool)
-  #   settings.sampling.influxdb  enables nighttime output (bool)
   settings:
     sampling:
       fast:     30
       medium:   60
       slow:     120
-      mqtt:     False
-      influxdb: False

@@ -28,8 +28,6 @@ _LOGGER = logging.getLogger('multisma2')
 _DEFAULT_FAST = 30
 _DEFAULT_MEDIUM = 60
 _DEFAULT_SLOW = 120
-_DEFAULT_MQTT = True
-_DEFAULT_INFLUXDB = False
 
 # Unlisted topics will use the key as the MQTT topic name
 MQTT_TOPICS = {
@@ -96,8 +94,6 @@ class PVSite():
         self._sampling_fast = _DEFAULT_FAST
         self._sampling_medium = _DEFAULT_MEDIUM
         self._sampling_slow = _DEFAULT_SLOW
-        self._sampling_mqtt = _DEFAULT_MQTT
-        self._sampling_influxdb = _DEFAULT_INFLUXDB
 
     async def start(self):
         """Initialize the PVSite object."""
@@ -130,8 +126,6 @@ class PVSite():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
             self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
             self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
-            self._sampling_mqtt = config.settings.sampling.get('mqtt', _DEFAULT_MQTT)
-            self._sampling_influxdb = config.settings.sampling.get('influxdb', _DEFAULT_INFLUXDB)
 
         inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         success = True
@@ -262,9 +256,8 @@ class PVSite():
                 self.production_snapshot(),
             )
             for sensor in sensors:
-                if self._daylight or self._sampling_mqtt:
+                if self._daylight:
                     mqtt.publish(sensor)
-                if self._daylight or self._sampling_influxdb:
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_medium(self, queue):
@@ -276,12 +269,10 @@ class PVSite():
                 self.production_totalwh(),
                 self.production_history(),
                 self.status_snapshot(),
-                self.inverter_efficiency(),
             )
             for sensor in sensors:
-                if self._daylight or self._sampling_mqtt:
+                if self._daylight:
                     mqtt.publish(sensor)
-                if self._daylight or self._sampling_influxdb:
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_slow(self, queue):
@@ -290,14 +281,14 @@ class PVSite():
             timestamp = await queue.get()
             queue.task_done()
             sensors = await asyncio.gather(
+                self.inverter_efficiency(),
                 self.co2_avoided(),
                 self.sun_position(),
                 self.sun_irradiance(timestamp=timestamp),
             )
             for sensor in sensors:
-                if self._daylight or self._sampling_mqtt:
+                if self._daylight:
                     mqtt.publish(sensor)
-                if self._daylight or self._sampling_influxdb:
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def read_instantaneous(self, daylight) -> bool:
