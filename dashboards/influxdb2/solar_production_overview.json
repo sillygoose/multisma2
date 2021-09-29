@@ -1,1462 +1,1462 @@
 {
     "meta": {
-     "version": "1",
-     "type": "dashboard",
-     "name": "Solar Production Overview-Template",
-     "description": "template created from dashboard: Solar Production Overview"
+        "version": "1",
+        "type": "dashboard",
+        "name": "Solar Production Overview-Template",
+        "description": "template created from dashboard: Solar Production Overview"
     },
     "content": {
-     "data": {
-      "type": "dashboard",
-      "attributes": {
-       "name": "Solar Production Overview",
-       "description": "Dashboard displaying the Parker Lane solar production statistics."
-      },
-      "relationships": {
-       "label": {
-        "data": [
-         {
-          "type": "label",
-          "id": "072f6516235ba000"
-         }
+        "data": {
+            "type": "dashboard",
+            "attributes": {
+                "name": "Solar Production Overview",
+                "description": "Dashboard displaying the Parker Lane solar production statistics."
+            },
+            "relationships": {
+                "label": {
+                    "data": [
+                        {
+                            "type": "label",
+                            "id": "072f6516235ba000"
+                        }
+                    ]
+                },
+                "cell": {
+                    "data": [
+                        {
+                            "type": "cell",
+                            "id": "072f65162739d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651627b9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162879d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651628f9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651629f9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162ab9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162b79d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162c39d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162cf9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162e39d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65162fb9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651634f9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f65163639d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651636f9d000"
+                        },
+                        {
+                            "type": "cell",
+                            "id": "072f651637f9d000"
+                        }
+                    ]
+                },
+                "variable": {
+                    "data": []
+                }
+            }
+        },
+        "included": [
+            {
+                "type": "label",
+                "id": "072f6516235ba000",
+                "attributes": {
+                    "name": "multisma2",
+                    "properties": {
+                        "color": "#9bf445",
+                        "description": ""
+                    }
+                }
+            },
+            {
+                "id": "072f65162739d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 0,
+                    "y": 4,
+                    "w": 5,
+                    "h": 3
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162739d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651627b9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 0,
+                    "y": 7,
+                    "w": 5,
+                    "h": 3
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651627b9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162879d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 5,
+                    "h": 4
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162879d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651628f9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 2,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651628f9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651629f9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 4,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651629f9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162ab9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 6,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162ab9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162b79d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 8,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162b79d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162c39d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 0,
+                    "y": 10,
+                    "w": 2,
+                    "h": 1
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162c39d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162cf9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 0,
+                    "y": 11,
+                    "w": 2,
+                    "h": 1
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162cf9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162e39d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 10,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162e39d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65162fb9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 2,
+                    "y": 10,
+                    "w": 8,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65162fb9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651634f9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 5,
+                    "y": 0,
+                    "w": 5,
+                    "h": 4
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651634f9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f65163639d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 5,
+                    "y": 7,
+                    "w": 5,
+                    "h": 3
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f65163639d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651636f9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 10,
+                    "y": 0,
+                    "w": 2,
+                    "h": 2
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651636f9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "072f651637f9d000",
+                "type": "cell",
+                "attributes": {
+                    "x": 5,
+                    "y": 4,
+                    "w": 5,
+                    "h": 3
+                },
+                "relationships": {
+                    "view": {
+                        "data": {
+                            "type": "view",
+                            "id": "072f651637f9d000"
+                        }
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162739d000",
+                "attributes": {
+                    "name": "Site Power",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "gauge",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> last()\n  |> drop(columns: [\"_start\", \"_stop\"])\n  |> yield(name: \"site_power\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "false",
+                        "suffix": " W",
+                        "tickSuffix": "true",
+                        "colors": [
+                            {
+                                "id": "0",
+                                "type": "min",
+                                "hex": "#DC4E58",
+                                "name": "fire",
+                                "value": 0
+                            },
+                            {
+                                "id": "1",
+                                "type": "max",
+                                "hex": "#4ED8A0",
+                                "name": "rainforest",
+                                "value": 25000
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651627b9d000",
+                "attributes": {
+                    "name": "Site Efficiency",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "gauge",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => \n  \t(r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and\n    r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"percent\", _value: \n        if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n        else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n        else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 \n  }))",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " %",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "0",
+                                "type": "min",
+                                "hex": "#BF3D5E",
+                                "name": "ruby",
+                                "value": 0
+                            },
+                            {
+                                "id": "1",
+                                "type": "max",
+                                "hex": "#4ED8A0",
+                                "name": "rainforest",
+                                "value": 100
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162879d000",
+                "attributes": {
+                    "name": "Clearsky Irradiance",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "queries": [
+                            {
+                                "text": "panel_area = 144.0\npanel_efficiency = 0.1725\n\n// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"clearsky_production\")\n\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\" and r._type == \"modeled\")\n  |> map(fn: (r) => ({ r with _value: r._value * panel_area * panel_efficiency }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"irradiance_modeled\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "axes": {
+                            "x": {
+                                "bounds": [
+                                    "",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "",
+                                "base": "10",
+                                "scale": "linear"
+                            },
+                            "y": {
+                                "bounds": [
+                                    "",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "W",
+                                "base": "10",
+                                "scale": "linear"
+                            }
+                        },
+                        "type": "xy",
+                        "legend": {},
+                        "geom": "line",
+                        "colors": [
+                            {
+                                "id": "1ffcd091-2cd0-4a00-9872-5132d9249e8b",
+                                "type": "scale",
+                                "hex": "#31C0F6",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            },
+                            {
+                                "id": "0e2118b8-e8d0-4a2d-bf78-f4aa9cbf3282",
+                                "type": "scale",
+                                "hex": "#A500A5",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            },
+                            {
+                                "id": "48d81aeb-47e7-4e72-b484-d4e672397854",
+                                "type": "scale",
+                                "hex": "#FF7E27",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            }
+                        ],
+                        "note": "",
+                        "showNoteWhenEmpty": false,
+                        "xColumn": "_time",
+                        "generateXAxisTicks": null,
+                        "xTotalTicks": 0,
+                        "xTickStart": 0,
+                        "xTickStep": 0,
+                        "yColumn": "_value",
+                        "generateYAxisTicks": null,
+                        "yTotalTicks": 0,
+                        "yTickStart": 0,
+                        "yTickStep": 0,
+                        "shadeBelow": false,
+                        "position": "overlaid",
+                        "timeFormat": "",
+                        "hoverDimension": "",
+                        "legendColorizeRows": false,
+                        "legendOpacity": 0,
+                        "legendOrientationThreshold": 0
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651628f9d000",
+                "attributes": {
+                    "name": "This Month",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "import \"experimental\"\nimport \"date\"\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_month\")\n",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " kWh",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651629f9d000",
+                "attributes": {
+                    "name": "This Year",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "import \"experimental\"\nimport \"date\"\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")\n",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " MWh",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 2
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162ab9d000",
+                "attributes": {
+                    "name": "Lifetime",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._value) * 0.000001 }))\n//  |> yield(\"production_lifetime\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " MWh",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 2
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162b79d000",
+                "attributes": {
+                    "name": "CO2 Avoided Today",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "import \"experimental\"\nimport \"date\"\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kgco2e: float(v: r._total_wh) * 0.18991 * 0.001 }))\n  |> yield(name: \"this_day\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " kg",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 2
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162c39d000",
+                "attributes": {
+                    "name": "Elevation",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n  |> yield(name: \"sun_elevation\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": "º",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162cf9d000",
+                "attributes": {
+                    "name": "Azimuth",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n  |> yield(name: \"sun_azimuthelevation\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": "º",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162e39d000",
+                "attributes": {
+                    "name": "CO2 Avoided - Lifetime",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: float(v: r._value) * 0.001 * 0.18991 * 0.001 }))",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " mt",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 2
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65162fb9d000",
+                "attributes": {
+                    "name": "Inverter Status",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "table",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"status\")\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group(columns: [\"_inverter\"])\n  |> drop(columns: [\"_start\", \"_stop\",\"_time\",\"_field\",\"_value\",\"_measurement\"])\n  |> group()\n  |> yield(name: \"status\")\n",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#ffffff",
+                                "name": "white",
+                                "value": 0
+                            }
+                        ],
+                        "tableOptions": {
+                            "verticalTimeAxis": true,
+                            "sortBy": {
+                                "internalName": "_inverter",
+                                "displayName": "_inverter",
+                                "visible": true
+                            },
+                            "wrapping": "",
+                            "fixFirstColumn": false
+                        },
+                        "fieldOptions": [
+                            {
+                                "internalName": "_inverter",
+                                "displayName": "Inverter",
+                                "visible": true
+                            },
+                            {
+                                "internalName": "condition",
+                                "displayName": "Condition",
+                                "visible": true
+                            },
+                            {
+                                "internalName": "derating",
+                                "displayName": "Derating",
+                                "visible": true
+                            },
+                            {
+                                "internalName": "grid_relay",
+                                "displayName": "Grid Relay",
+                                "visible": true
+                            },
+                            {
+                                "internalName": "operating_status",
+                                "displayName": "Operating Status",
+                                "visible": true
+                            }
+                        ],
+                        "timeFormat": "YYYY-MM-DD HH:mm:ss",
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 0
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651634f9d000",
+                "attributes": {
+                    "name": "Inverter Output",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "queries": [
+                            {
+                                "text": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"production\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "axes": {
+                            "x": {
+                                "bounds": [
+                                    "",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "",
+                                "base": "10",
+                                "scale": "linear"
+                            },
+                            "y": {
+                                "bounds": [
+                                    "0",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "W",
+                                "base": "10",
+                                "scale": "linear"
+                            }
+                        },
+                        "type": "xy",
+                        "legend": {},
+                        "geom": "line",
+                        "colors": [
+                            {
+                                "id": "1ffcd091-2cd0-4a00-9872-5132d9249e8b",
+                                "type": "scale",
+                                "hex": "#31C0F6",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            },
+                            {
+                                "id": "0e2118b8-e8d0-4a2d-bf78-f4aa9cbf3282",
+                                "type": "scale",
+                                "hex": "#A500A5",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            },
+                            {
+                                "id": "48d81aeb-47e7-4e72-b484-d4e672397854",
+                                "type": "scale",
+                                "hex": "#FF7E27",
+                                "name": "Nineteen Eighty Four",
+                                "value": 0
+                            }
+                        ],
+                        "note": "",
+                        "showNoteWhenEmpty": false,
+                        "xColumn": "_time",
+                        "generateXAxisTicks": null,
+                        "xTotalTicks": 0,
+                        "xTickStart": 0,
+                        "xTickStep": 0,
+                        "yColumn": "_value",
+                        "generateYAxisTicks": null,
+                        "yTotalTicks": 0,
+                        "yTickStart": 0,
+                        "yTickStep": 0,
+                        "shadeBelow": false,
+                        "position": "overlaid",
+                        "timeFormat": "",
+                        "hoverDimension": "",
+                        "legendColorizeRows": false,
+                        "legendOpacity": 0,
+                        "legendOrientationThreshold": 0
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f65163639d000",
+                "attributes": {
+                    "name": "Last 12 Months",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "queries": [
+                            {
+                                "text": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0d\n\n// Extract the last 12 months of production\npast_12 = from(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> yield(name: \"past_12\")\n\npast_400 = from(bucket: \"multisma2\")\n  |> range(start: -400d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"past_400\")\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> yield(name: \"this_month\")\n\nunion(tables: [past_12, this_month])\n  |> sort(columns: [\"_time\"], desc: false)\n  |> map(fn: (r) => ({ time12: r._time, _value: r._kwh }))\n  |> timeShift(duration: timeAxisShift, columns: [\"time12\"])\n  |> yield(name: \"combined\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "axes": {
+                            "x": {
+                                "bounds": [
+                                    "",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "",
+                                "base": "10",
+                                "scale": "linear"
+                            },
+                            "y": {
+                                "bounds": [
+                                    "0",
+                                    "3500"
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "Wh",
+                                "base": "",
+                                "scale": "linear"
+                            }
+                        },
+                        "type": "xy",
+                        "legend": {},
+                        "geom": "step",
+                        "colors": [
+                            {
+                                "id": "7076d5eb-09d0-461a-b39f-4fbba56a15bf",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            },
+                            {
+                                "id": "af447988-d876-49f1-81aa-2ebcbe34f2cc",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            },
+                            {
+                                "id": "f13f9576-fa3f-4c4f-b9a3-604975132a43",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            }
+                        ],
+                        "note": "",
+                        "showNoteWhenEmpty": false,
+                        "xColumn": "time12",
+                        "generateXAxisTicks": null,
+                        "xTotalTicks": 0,
+                        "xTickStart": 0,
+                        "xTickStep": 0,
+                        "yColumn": "_value",
+                        "generateYAxisTicks": null,
+                        "yTotalTicks": 0,
+                        "yTickStart": 0,
+                        "yTickStep": 0,
+                        "shadeBelow": false,
+                        "position": "overlaid",
+                        "timeFormat": "MMMM D, YYYY HH:mm:ss",
+                        "hoverDimension": "",
+                        "legendColorizeRows": false,
+                        "legendOpacity": 0,
+                        "legendOrientationThreshold": 0
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651636f9d000",
+                "attributes": {
+                    "name": "Today",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "type": "single-stat",
+                        "queries": [
+                            {
+                                "text": "import \"experimental\"\nimport \"date\"\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n  \nright_now = from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: true, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: (float(v: r._total_wh) * 0.001) }))\n  |> yield(name: \"this_day\")\n  ",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "prefix": "",
+                        "tickPrefix": "",
+                        "suffix": " kWh",
+                        "tickSuffix": "",
+                        "colors": [
+                            {
+                                "id": "base",
+                                "type": "text",
+                                "hex": "#00C9FF",
+                                "name": "laser",
+                                "value": 0
+                            }
+                        ],
+                        "decimalPlaces": {
+                            "isEnforced": true,
+                            "digits": 2
+                        },
+                        "note": "",
+                        "showNoteWhenEmpty": false
+                    }
+                }
+            },
+            {
+                "type": "view",
+                "id": "072f651637f9d000",
+                "attributes": {
+                    "name": "Last 30 Days",
+                    "properties": {
+                        "shape": "chronograf-v2",
+                        "queries": [
+                            {
+                                "text": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -8h\n\npast_60 = from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> yield(name: \"past_60\")\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\ntoday = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> yield(name: \"today\")\n\nunion(tables: [past_60, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> map(fn: (r) => ({ time30: r._time, _value: r._kwh }))\n  |> limit(n: 31)\n  |> sort(columns: [\"time30\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"time30\"])\n  |> yield(name: \"kwh_per_day\")",
+                                "editMode": "advanced",
+                                "name": "",
+                                "builderConfig": {
+                                    "buckets": [],
+                                    "tags": [
+                                        {
+                                            "key": "_measurement",
+                                            "values": [],
+                                            "aggregateFunctionType": "filter"
+                                        }
+                                    ],
+                                    "functions": [
+                                        {
+                                            "name": "mean"
+                                        }
+                                    ],
+                                    "aggregateWindow": {
+                                        "period": "auto",
+                                        "fillValues": false
+                                    }
+                                }
+                            }
+                        ],
+                        "axes": {
+                            "x": {
+                                "bounds": [
+                                    "",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": "",
+                                "base": "10",
+                                "scale": "linear"
+                            },
+                            "y": {
+                                "bounds": [
+                                    "0",
+                                    ""
+                                ],
+                                "label": "",
+                                "prefix": "",
+                                "suffix": " kWh",
+                                "base": "",
+                                "scale": "linear"
+                            }
+                        },
+                        "type": "xy",
+                        "legend": {},
+                        "geom": "step",
+                        "colors": [
+                            {
+                                "id": "7076d5eb-09d0-461a-b39f-4fbba56a15bf",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            },
+                            {
+                                "id": "af447988-d876-49f1-81aa-2ebcbe34f2cc",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            },
+                            {
+                                "id": "f13f9576-fa3f-4c4f-b9a3-604975132a43",
+                                "type": "scale",
+                                "hex": "#FFD255",
+                                "name": "Solid Yellow",
+                                "value": 0
+                            }
+                        ],
+                        "note": "",
+                        "showNoteWhenEmpty": false,
+                        "xColumn": "time30",
+                        "generateXAxisTicks": null,
+                        "xTotalTicks": 0,
+                        "xTickStart": 0,
+                        "xTickStep": 0,
+                        "yColumn": "_value",
+                        "generateYAxisTicks": null,
+                        "yTotalTicks": 0,
+                        "yTickStart": 0,
+                        "yTickStep": 0,
+                        "shadeBelow": false,
+                        "position": "overlaid",
+                        "timeFormat": "",
+                        "hoverDimension": "",
+                        "legendColorizeRows": false,
+                        "legendOpacity": 0,
+                        "legendOrientationThreshold": 0
+                    }
+                }
+            }
         ]
-       },
-       "cell": {
-        "data": [
-         {
-          "type": "cell",
-          "id": "072f65162739d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651627b9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162879d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651628f9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651629f9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162ab9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162b79d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162c39d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162cf9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162e39d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65162fb9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651634f9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f65163639d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651636f9d000"
-         },
-         {
-          "type": "cell",
-          "id": "072f651637f9d000"
-         }
-        ]
-       },
-       "variable": {
-        "data": []
-       }
-      }
-     },
-     "included": [
-      {
-       "type": "label",
-       "id": "072f6516235ba000",
-       "attributes": {
-        "name": "multisma2",
-        "properties": {
-         "color": "#9bf445",
-         "description": ""
-        }
-       }
-      },
-      {
-       "id": "072f65162739d000",
-       "type": "cell",
-       "attributes": {
-        "x": 0,
-        "y": 4,
-        "w": 5,
-        "h": 3
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162739d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651627b9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 0,
-        "y": 7,
-        "w": 5,
-        "h": 3
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651627b9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162879d000",
-       "type": "cell",
-       "attributes": {
-        "x": 0,
-        "y": 0,
-        "w": 5,
-        "h": 4
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162879d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651628f9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 2,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651628f9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651629f9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 4,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651629f9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162ab9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 6,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162ab9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162b79d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 8,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162b79d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162c39d000",
-       "type": "cell",
-       "attributes": {
-        "x": 0,
-        "y": 10,
-        "w": 2,
-        "h": 1
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162c39d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162cf9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 0,
-        "y": 11,
-        "w": 2,
-        "h": 1
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162cf9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162e39d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 10,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162e39d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65162fb9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 2,
-        "y": 10,
-        "w": 8,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65162fb9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651634f9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 5,
-        "y": 0,
-        "w": 5,
-        "h": 4
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651634f9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f65163639d000",
-       "type": "cell",
-       "attributes": {
-        "x": 5,
-        "y": 7,
-        "w": 5,
-        "h": 3
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f65163639d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651636f9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 10,
-        "y": 0,
-        "w": 2,
-        "h": 2
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651636f9d000"
-         }
-        }
-       }
-      },
-      {
-       "id": "072f651637f9d000",
-       "type": "cell",
-       "attributes": {
-        "x": 5,
-        "y": 4,
-        "w": 5,
-        "h": 3
-       },
-       "relationships": {
-        "view": {
-         "data": {
-          "type": "view",
-          "id": "072f651637f9d000"
-         }
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162739d000",
-       "attributes": {
-        "name": "Site Power",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "gauge",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> last()\n  |> drop(columns: [\"_start\", \"_stop\"])\n  |> yield(name: \"site_power\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "false",
-         "suffix": " W",
-         "tickSuffix": "true",
-         "colors": [
-          {
-           "id": "0",
-           "type": "min",
-           "hex": "#DC4E58",
-           "name": "fire",
-           "value": 0
-          },
-          {
-           "id": "1",
-           "type": "max",
-           "hex": "#4ED8A0",
-           "name": "rainforest",
-           "value": 25000
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651627b9d000",
-       "attributes": {
-        "name": "Site Efficiency",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "gauge",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => \n  \t(r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and\n    r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"percent\", _value: \n        if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n        else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n        else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 \n  }))",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " %",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "0",
-           "type": "min",
-           "hex": "#BF3D5E",
-           "name": "ruby",
-           "value": 0
-          },
-          {
-           "id": "1",
-           "type": "max",
-           "hex": "#4ED8A0",
-           "name": "rainforest",
-           "value": 100
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162879d000",
-       "attributes": {
-        "name": "Clearsky Irradiance",
-        "properties": {
-         "shape": "chronograf-v2",
-         "queries": [
-          {
-           "text": "panel_area = 144.0\npanel_efficiency = 0.1725\n\n// Collect the site total production data\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ r with _value: float(v: r._value) * 3600.0 / float(v: r.elapsed) }))\n  |> drop(columns: [\"elapsed\", \"_start\", \"_stop\", \"_field\", \"_inverter\", \"_measurement\"])\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"clearsky_production\")\n\nfrom(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ r with _value: r._value * panel_area * panel_efficiency }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"clearsky_irradiance\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "axes": {
-          "x": {
-           "bounds": [
-            "",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "",
-           "base": "10",
-           "scale": "linear"
-          },
-          "y": {
-           "bounds": [
-            "",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "W",
-           "base": "10",
-           "scale": "linear"
-          }
-         },
-         "type": "xy",
-         "legend": {},
-         "geom": "line",
-         "colors": [
-          {
-           "id": "1ffcd091-2cd0-4a00-9872-5132d9249e8b",
-           "type": "scale",
-           "hex": "#31C0F6",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          },
-          {
-           "id": "0e2118b8-e8d0-4a2d-bf78-f4aa9cbf3282",
-           "type": "scale",
-           "hex": "#A500A5",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          },
-          {
-           "id": "48d81aeb-47e7-4e72-b484-d4e672397854",
-           "type": "scale",
-           "hex": "#FF7E27",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          }
-         ],
-         "note": "",
-         "showNoteWhenEmpty": false,
-         "xColumn": "_time",
-         "generateXAxisTicks": null,
-         "xTotalTicks": 0,
-         "xTickStart": 0,
-         "xTickStep": 0,
-         "yColumn": "_value",
-         "generateYAxisTicks": null,
-         "yTotalTicks": 0,
-         "yTickStart": 0,
-         "yTickStep": 0,
-         "shadeBelow": false,
-         "position": "overlaid",
-         "timeFormat": "",
-         "hoverDimension": "",
-         "legendColorizeRows": false,
-         "legendOpacity": 0,
-         "legendOrientationThreshold": 0
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651628f9d000",
-       "attributes": {
-        "name": "This Month",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_month = union(tables: [first_of_month, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_month\")\n",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " kWh",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651629f9d000",
-       "attributes": {
-        "name": "This Year",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// Extract the current months of production\nfirst_of_year = from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1 and date.month(t: r._time) == 1 )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_year\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_year = union(tables: [first_of_year, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _mwh: float(v: r._total_wh) * 0.000001 }))\n  |> yield(name: \"this_year\")\n",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " MWh",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 2
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162ab9d000",
-       "attributes": {
-        "name": "Lifetime",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: float(v: r._value) * 0.000001 }))\n//  |> yield(\"production_lifetime\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " MWh",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 2
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162b79d000",
-       "attributes": {
-        "name": "CO2 Avoided Today",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "import \"experimental\"\nimport \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = 0h\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time) )\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_total_wh\"], desc: false)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kgco2e: float(v: r._total_wh) * 0.18991 * 0.001 }))\n  |> yield(name: \"this_day\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " kg",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 2
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162c39d000",
-       "attributes": {
-        "name": "Elevation",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n  |> yield(name: \"sun_elevation\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": "º",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162cf9d000",
-       "attributes": {
-        "name": "Azimuth",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -30m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n  |> yield(name: \"sun_azimuthelevation\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": "º",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162e39d000",
-       "attributes": {
-        "name": "CO2 Avoided - Lifetime",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: float(v: r._value) * 0.001 * 0.18991 * 0.001 }))",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " mt",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 2
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65162fb9d000",
-       "attributes": {
-        "name": "Inverter Status",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "table",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r._measurement == \"status\")\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_field\"], valueColumn: \"_value\")\n  |> group(columns: [\"_inverter\"])\n  |> drop(columns: [\"_start\", \"_stop\",\"_time\",\"_field\",\"_value\",\"_measurement\"])\n  |> group()\n  |> yield(name: \"status\")\n",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#ffffff",
-           "name": "white",
-           "value": 0
-          }
-         ],
-         "tableOptions": {
-          "verticalTimeAxis": true,
-          "sortBy": {
-           "internalName": "_inverter",
-           "displayName": "_inverter",
-           "visible": true
-          },
-          "wrapping": "",
-          "fixFirstColumn": false
-         },
-         "fieldOptions": [
-          {
-           "internalName": "_inverter",
-           "displayName": "Inverter",
-           "visible": true
-          },
-          {
-           "internalName": "condition",
-           "displayName": "Condition",
-           "visible": true
-          },
-          {
-           "internalName": "derating",
-           "displayName": "Derating",
-           "visible": true
-          },
-          {
-           "internalName": "grid_relay",
-           "displayName": "Grid Relay",
-           "visible": true
-          },
-          {
-           "internalName": "operating_status",
-           "displayName": "Operating Status",
-           "visible": true
-          }
-         ],
-         "timeFormat": "YYYY-MM-DD HH:mm:ss",
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 0
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651634f9d000",
-       "attributes": {
-        "name": "Inverter Output",
-        "properties": {
-         "shape": "chronograf-v2",
-         "queries": [
-          {
-           "text": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> yield(name: \"production\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "axes": {
-          "x": {
-           "bounds": [
-            "",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "",
-           "base": "10",
-           "scale": "linear"
-          },
-          "y": {
-           "bounds": [
-            "0",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "W",
-           "base": "10",
-           "scale": "linear"
-          }
-         },
-         "type": "xy",
-         "legend": {},
-         "geom": "line",
-         "colors": [
-          {
-           "id": "1ffcd091-2cd0-4a00-9872-5132d9249e8b",
-           "type": "scale",
-           "hex": "#31C0F6",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          },
-          {
-           "id": "0e2118b8-e8d0-4a2d-bf78-f4aa9cbf3282",
-           "type": "scale",
-           "hex": "#A500A5",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          },
-          {
-           "id": "48d81aeb-47e7-4e72-b484-d4e672397854",
-           "type": "scale",
-           "hex": "#FF7E27",
-           "name": "Nineteen Eighty Four",
-           "value": 0
-          }
-         ],
-         "note": "",
-         "showNoteWhenEmpty": false,
-         "xColumn": "_time",
-         "generateXAxisTicks": null,
-         "xTotalTicks": 0,
-         "xTickStart": 0,
-         "xTickStep": 0,
-         "yColumn": "_value",
-         "generateYAxisTicks": null,
-         "yTotalTicks": 0,
-         "yTickStart": 0,
-         "yTickStep": 0,
-         "shadeBelow": false,
-         "position": "overlaid",
-         "timeFormat": "",
-         "hoverDimension": "",
-         "legendColorizeRows": false,
-         "legendOpacity": 0,
-         "legendOrientationThreshold": 0
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f65163639d000",
-       "attributes": {
-        "name": "Last 12 Months",
-        "properties": {
-         "shape": "chronograf-v2",
-         "queries": [
-          {
-           "text": "import \"date\"\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -0d\n\n// Extract the last 12 months of production\npast_12 = from(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> yield(name: \"past_12\")\n\npast_400 = from(bucket: \"multisma2\")\n  |> range(start: -400d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"past_400\")\n\n// Extract the current months of production\nfirst_of_month = from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == 1)\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"first_of_month\")\n\ntoday = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"today\")\n\nthis_month = union(tables: [first_of_month, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> yield(name: \"this_month\")\n\nunion(tables: [past_12, this_month])\n  |> sort(columns: [\"_time\"], desc: false)\n  |> map(fn: (r) => ({ time12: r._time, _value: r._kwh }))\n  |> timeShift(duration: timeAxisShift, columns: [\"time12\"])\n  |> yield(name: \"combined\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "axes": {
-          "x": {
-           "bounds": [
-            "",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "",
-           "base": "10",
-           "scale": "linear"
-          },
-          "y": {
-           "bounds": [
-            "0",
-            "3500"
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "Wh",
-           "base": "",
-           "scale": "linear"
-          }
-         },
-         "type": "xy",
-         "legend": {},
-         "geom": "step",
-         "colors": [
-          {
-           "id": "7076d5eb-09d0-461a-b39f-4fbba56a15bf",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          },
-          {
-           "id": "af447988-d876-49f1-81aa-2ebcbe34f2cc",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          },
-          {
-           "id": "f13f9576-fa3f-4c4f-b9a3-604975132a43",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          }
-         ],
-         "note": "",
-         "showNoteWhenEmpty": false,
-         "xColumn": "time12",
-         "generateXAxisTicks": null,
-         "xTotalTicks": 0,
-         "xTickStart": 0,
-         "xTickStep": 0,
-         "yColumn": "_value",
-         "generateYAxisTicks": null,
-         "yTotalTicks": 0,
-         "yTickStart": 0,
-         "yTickStep": 0,
-         "shadeBelow": false,
-         "position": "overlaid",
-         "timeFormat": "MMMM D, YYYY HH:mm:ss",
-         "hoverDimension": "",
-         "legendColorizeRows": false,
-         "legendOpacity": 0,
-         "legendOrientationThreshold": 0
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651636f9d000",
-       "attributes": {
-        "name": "Today",
-        "properties": {
-         "shape": "chronograf-v2",
-         "type": "single-stat",
-         "queries": [
-          {
-           "text": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\nthis_day = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: false)\n  |> difference(nonNegative: true, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: experimental.addDuration(d: 1h, to: r._time), _kwh: float(v: r._total_wh) * 0.001 }))\n  |> yield(name: \"this_day\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "prefix": "",
-         "tickPrefix": "",
-         "suffix": " kWh",
-         "tickSuffix": "",
-         "colors": [
-          {
-           "id": "base",
-           "type": "text",
-           "hex": "#00C9FF",
-           "name": "laser",
-           "value": 0
-          }
-         ],
-         "decimalPlaces": {
-          "isEnforced": true,
-          "digits": 2
-         },
-         "note": "",
-         "showNoteWhenEmpty": false
-        }
-       }
-      },
-      {
-       "type": "view",
-       "id": "072f651637f9d000",
-       "attributes": {
-        "name": "Last 30 Days",
-        "properties": {
-         "shape": "chronograf-v2",
-         "queries": [
-          {
-           "text": "import \"experimental\"\nimport \"date\"\n\nlocal_time = experimental.addDuration(d: -5h, to: now())\n\n// This can be used to align results with x-axis labels\ntimeAxisShift = -8h\n\npast_60 = from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference()\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._value) * -0.001 }))\n  |> sort(columns: [\"_time\"], desc: false)\n  |> yield(name: \"past_60\")\n\nmidnight = from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"midnight\")\n  |> filter(fn: (r) => date.monthDay(t: r._time) == date.monthDay(t: local_time))\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"midnight\")\n\nright_now = from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _total_wh: r._value }))\n  |> yield(name: \"right_now\")\n\ntoday = union(tables: [midnight, right_now])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> difference(nonNegative: false, columns: [\"_total_wh\"])\n  |> map(fn: (r) => ({ _time: r._time, _kwh: float(v: r._total_wh) * -0.001 }))\n  |> yield(name: \"today\")\n\nunion(tables: [past_60, today])\n  |> sort(columns: [\"_time\"], desc: true)\n  |> map(fn: (r) => ({ time30: r._time, _value: r._kwh }))\n  |> limit(n: 31)\n  |> sort(columns: [\"time30\"], desc: false)\n  |> timeShift(duration: timeAxisShift, columns: [\"time30\"])\n  |> yield(name: \"kwh_per_day\")",
-           "editMode": "advanced",
-           "name": "",
-           "builderConfig": {
-            "buckets": [],
-            "tags": [
-             {
-              "key": "_measurement",
-              "values": [],
-              "aggregateFunctionType": "filter"
-             }
-            ],
-            "functions": [
-             {
-              "name": "mean"
-             }
-            ],
-            "aggregateWindow": {
-             "period": "auto",
-             "fillValues": false
-            }
-           }
-          }
-         ],
-         "axes": {
-          "x": {
-           "bounds": [
-            "",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": "",
-           "base": "10",
-           "scale": "linear"
-          },
-          "y": {
-           "bounds": [
-            "0",
-            ""
-           ],
-           "label": "",
-           "prefix": "",
-           "suffix": " kWh",
-           "base": "",
-           "scale": "linear"
-          }
-         },
-         "type": "xy",
-         "legend": {},
-         "geom": "step",
-         "colors": [
-          {
-           "id": "7076d5eb-09d0-461a-b39f-4fbba56a15bf",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          },
-          {
-           "id": "af447988-d876-49f1-81aa-2ebcbe34f2cc",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          },
-          {
-           "id": "f13f9576-fa3f-4c4f-b9a3-604975132a43",
-           "type": "scale",
-           "hex": "#FFD255",
-           "name": "Solid Yellow",
-           "value": 0
-          }
-         ],
-         "note": "",
-         "showNoteWhenEmpty": false,
-         "xColumn": "time30",
-         "generateXAxisTicks": null,
-         "xTotalTicks": 0,
-         "xTickStart": 0,
-         "xTickStep": 0,
-         "yColumn": "_value",
-         "generateYAxisTicks": null,
-         "yTotalTicks": 0,
-         "yTickStart": 0,
-         "yTickStep": 0,
-         "shadeBelow": false,
-         "position": "overlaid",
-         "timeFormat": "",
-         "hoverDimension": "",
-         "legendColorizeRows": false,
-         "legendOpacity": 0,
-         "legendOrientationThreshold": 0
-        }
-       }
-      }
-     ]
     },
     "labels": []
-   }
+}
