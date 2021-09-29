@@ -56,14 +56,14 @@ There are some other fields to configure for the log files, time zone, site loca
 
 3.  Test that **multisma2** connects to your inverters, MQTT broker, and InfluxDB database:
 
-    `python3 multisma2.py`
+    `python3 multisma2/multisma2.py`
 
 ### Docker setup
 Once you have a working `multisma2.yaml` file you can build a Docker container that runs **multisma2**:
 
 ```
     sudo docker build --no-cache -t multisma2:your-tag .
-    sudo docker image tag multisma2:your-tag multisma2:latest        (optional)
+    sudo docker image tag multisma2:your-tag multisma2:latest
     sudo docker-compose up -d
 ```
 
