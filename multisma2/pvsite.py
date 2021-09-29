@@ -128,7 +128,7 @@ class PVSite():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
             self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
             self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
-            self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
+            self._sampling_night = config.settings.sampling.get('nighty', _DEFAULT_NIGHT)
 
         inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         success = True
@@ -226,7 +226,7 @@ class PVSite():
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            await self.update_total_production(self._daylight)
+            await self.update_total_production(True)
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
 
     async def scheduler(self, queues):
