@@ -196,13 +196,13 @@ class PVSite():
             if astral_now < self._dawn:
                 self._daylight = False
                 next_event = self._dawn - astral_now
-                info = f"Night: inverter data collection is inactive, cached updated every {self._sampling_night} seconds"
+                info = f"Night: inverter data collection is inactive, cached updates every {self._sampling_night} seconds"
             elif astral_now > self._dusk:
                 self._daylight = False
                 tomorrow = astral_now + datetime.timedelta(days=1)
                 astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
                 next_event = astral['dawn'] - astral_now
-                info = f"Night: inverter data collection is inactive, cached updated every {self._sampling_night} seconds"
+                info = f"Night: inverter data collection is inactive, cached updates every {self._sampling_night} seconds"
             else:
                 self._daylight = True
                 next_event = self._dusk - astral_now
