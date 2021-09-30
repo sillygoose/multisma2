@@ -128,7 +128,7 @@ class PVSite():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
             self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
             self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
-            self._sampling_night = config.settings.sampling.get('nighty', _DEFAULT_NIGHT)
+            self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
 
         inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         success = True
