@@ -224,10 +224,20 @@ class PVSite():
 
             # Update internal sun info and the daily production
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-            await self.solar_data_update()
+            await asyncio.gather(
+                self.solar_data_update(),
+                self.read_instantaneous(True),
+                self.update_total_production(True),
+            )
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            await self.update_total_production(True)
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
+
+            sensors = await asyncio.gather(
+                self.production_history(),
+            )
+            for sensor in sensors:
+                mqtt.publish(sensor)
+                self._influx.write_sma_sensors(sensor=sensor)
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -379,10 +389,10 @@ class PVSite():
     async def production_history(self):
         """Get the daily, monthly, yearly, and lifetime production values."""
         PRODUCTION_SETTINGS = {
-            'today': {'unit': 'kWh', 'scale': 0.001, 'precision': 2},
-            'month': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
-            'year': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
-            'lifetime': {'unit': 'kWh', 'scale': 0.001, 'precision': 0},
+            'today': {'unit': 'kWh', 'scale': 0.001, 'precision': 3},
+            'month': {'unit': 'kWh', 'scale': 0.001, 'precision': 3},
+            'year': {'unit': 'kWh', 'scale': 0.001, 'precision': 3},
+            'lifetime': {'unit': 'kWh', 'scale': 0.001, 'precision': 3},
         }
 
         histories = []

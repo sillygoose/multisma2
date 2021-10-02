@@ -1,4 +1,9 @@
-# multisma2
+## What's new
+#### 1.1.0
+- added day/month/year kWh totals to the InfluxDB2 output to simplify queries. These are located at midnight each day for daily production. midnight on the first of the month for the monthly total, and at midnight on January 1st for the annual total. These data points are current so reflext year-to-date,month-to-date, and day-to-date results.
+
+#
+## multisma2
 Improved Python application for real-time monitoring one or more SMA Sunny Boy inverters.
 
 Now features a wider range of outputs, basically anything you see in your browser when connected to an SMA inverter with WebConnect can be pulled and sent to your InfluxDB database or as an MQTT message (or both).
@@ -15,6 +20,7 @@ Now features a wider range of outputs, basically anything you see in your browse
 - InfluxDB interface (writes production data and status direct to InfluxDB 1.8.x and 2.x)
 - utility available to extract historical inverter production data to InfluxDB (sbhistory)
 
+#
 ## Rationale for multisma2
 **multisma2** is driven by my desire to see what is happening in my ground mount solar array which uses three Sunny Boy inverters tied to eight strings of nine panels each (total 24.84 kWp).  SMA offers Sunny Portal which is a non-real time window of the AC production and this quickly proved to be inadequate.  It also uses an unknown and less than robust averaging algorithm which guarantees that I never see my peak production where there is the chance of the inverter limiting the output.  There is more data available using the WebConnect interface but you need to log into each inverter to get it, with three inverters to check, **multisma2** fixes this by working with one or many Sunny Boy inverters and combines the data intelligently for easy display or analysis.
 
@@ -39,7 +45,7 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
 - SMA Sunny Boy inverter(s) supporting WebConnect
 - Docker (a Dockerfile is supplied to allow running in a Docker container, I run this on a Raspberry Pi4 with 8GB memory that also has containers running instances of Portainer, InfluxDB2, Telegraf, Grafana, and other useful applications)
 
-### Installation
+## Installation
 1.  Clone the **multisma2** repository and install the Python packages:
 
 ```
@@ -50,7 +56,7 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
 
 2.  Rename the `example.secrets.yaml` file to `secrets.yaml`, if you plan on using secrets.  The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as **multisma2** will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
 
-Edit `multisma2.yaml` and `secrets.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the login credentials, if interfacing to InfluxDB you need the host addressm site name, bucket, and login credentials.
+    Edit `multisma2.yaml` and `secrets.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials.  If you are using MQTT then you need the IP address of your MQTT broker and the login credentials, if interfacing to InfluxDB you need the host addressm site name, bucket, and login credentials.
 
 There are some other fields to configure for the log files, time zone, site location, etc, these should be easy to figure out.
 
@@ -58,6 +64,7 @@ There are some other fields to configure for the log files, time zone, site loca
 
     `python3 multisma2/multisma2.py`
 
+#
 ### Docker setup
 Once you have a working `multisma2.yaml` file you can build a Docker container that runs **multisma2**:
 
@@ -72,12 +79,12 @@ where `your-tag` is a string of your choosing (the `--no-cache` option will forc
 As an example, suppose you download the current **multisma2** build of 1.1.0.  Then to create and run the Docker container you would use
 
 ```
-    sudo docker build --no-cache -t multisma2:1.1.0 .
-    sudo docker image tag multisma2:1.1.0 multisma2:latest
+    sudo docker build --no-cache -t multisma2:1.1.1 .
+    sudo docker image tag multisma2:1.1.1 multisma2:latest
     sudo docker-compose up -d
 ```
 
-### Sunny Boy History Utility (sbhistory)
+## Sunny Boy History Utility (sbhistory)
 There is a useful utility that complements **multisma2** in the **sbhistory** repo:
 
 ```
@@ -102,9 +109,8 @@ If you are just starting out with **multisma2**, you are collecting data but you
         ...
 ```
 
-### Operation
-
-1.  **multisma2** runs during daylight hours, which is dawn to dusk.  Once dusk occurs, the active inverter sampling ceases until dawn on the following day.  A night time loop is then turned on to provide MQTT and database updates using the last inverter values (which are all zero).
+## Operation
+**multisma2** runs during daylight hours, which is dawn to dusk.  Once dusk occurs, the active inverter sampling ceases until dawn on the following day.  A night time loop is then turned on to provide MQTT and database updates using the last inverter values (which are all zero).
 
 | Interval | Outputs |
 | --- | --------- |
@@ -112,6 +118,7 @@ If you are just starting out with **multisma2**, you are collecting data but you
 | medium | total production (today, month, year, lifetime), production totals (Wh), inverter status|
 | slow | inverter efficiency, CO2 avoided, solar potential (irradiance), sun position|
 | night | everything|
+|   |  |
 
 The sampling rates may be modified in the YAML file in the `settings.sampling` options:
 
@@ -124,6 +131,43 @@ The sampling rates may be modified in the YAML file in the `settings.sampling` o
 
 All outputs are broadcast by MQTT, the InfluxDB code only includes selected topics, edit the topic table in `influx.py` output the desired sensors.
 
+## InfluxDB2 Schemas
+Data is organized in InfluxDB2 using the following schemas, refer to the Flux queries for examples of pulling data from InfluxDB2 for dashboard or other use.
+
+    AC production measurements:
+        _measurement    ac_production
+        _inverter       inverter name(s), site
+        _field          power (W), current (A), voltage (V)
+
+    DC production measurements:
+        _measurement    dc_production
+        _inverter       inverter name(s), site
+        _field          power (W), current (A), voltage (V)
+
+    Production measurements:
+        _measurement    production
+        _inverter       inverter name(s), site
+        _field          total_wh, midnight (inverter total Wh meter)
+
+    Status measurements:
+        _measurement    status
+        _inverter       inverter name(s), site
+        _field          condition, derating, grid_relay, operating_status
+
+    Sun/irradiance measurements:
+        _measurement    sun
+        _field          position
+        _type           azimuth (degrees), elevation (degrees)
+
+        _measurement    sun
+        _field          irradiance
+        _type           modeled (W/m²), measured (W/m²)
+
+        _measurement    sun
+        _field          temperature
+        _type           working (°C), ambient (°C)
+
+#
 ## Example Dashboards
 Example dashboards are provided for Grafana and InfluxDB2, the dashboards contain the Flux scripts used to query an InfluxDB2 bucket so be sure to examine them.  If you are using InfluxDB 1.8.x it is supported by **multisma2** but you will have to slightly modify the Grafana Flux scripts if you want to work in the InfluxDB 1.8 UI.
 
@@ -159,6 +203,7 @@ If you happen to make errors and get locked out of your inverters (confirm by be
 - restore DC power via each rotary switch
 - restore grid power via breakers
 
+#
 ## Thanks
 Thanks for the following packages used to build this software:
 - PYSMA library for WebConnect

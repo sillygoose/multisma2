@@ -3,8 +3,9 @@
 # InfluxDB Line Protocol Reference
 # https://docs.influxdata.com/influxdb/v2.0/reference/syntax/line-protocol/
 
-import time
 import os
+import time
+import datetime
 import logging
 from config import config_from_yaml
 
@@ -30,9 +31,9 @@ LP_LOOKUP = {
     'status/condition': {'measurement': 'status', 'tags': ['_inverter'], 'field': 'condition', 'output': True},
     'production/total_wh': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'total_wh', 'output': True},
     'production/midnight': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'midnight', 'output': True},
-    'production/today': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'today', 'output': False},
-    'production/month': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'month', 'output': False},
-    'production/year': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'year', 'output': False},
+    'production/today': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'today', 'output': True},
+    'production/month': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'month', 'output': True},
+    'production/year': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'year', 'output': True},
     'production/lifetime': {'measurement': 'production', 'tags': ['_inverter'], 'field': 'lifetime', 'output': False},
     'co2avoided/today': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'today', 'output': False},
     'co2avoided/month': {'measurement': 'co2avoided', 'tags': ['_inverter'], 'field': 'month', 'output': False},
@@ -180,6 +181,19 @@ class InfluxDB:
 
                 if not lookup.get('output', False):
                     continue
+
+                if topic == 'production/today':
+                    day = datetime.datetime.fromtimestamp(ts).date()
+                    dt = datetime.datetime.combine(day, datetime.time(0, 0))
+                    ts = int(dt.timestamp())
+                elif topic == 'production/month':
+                    month = datetime.date.fromtimestamp(ts).replace(day=1)
+                    dt = datetime.datetime.combine(month, datetime.time(0, 0))
+                    ts = int(dt.timestamp())
+                elif topic == 'production/year':
+                    year = datetime.date.fromtimestamp(ts).replace(month=1, day=1)
+                    dt = datetime.datetime.combine(year, datetime.time(0, 0))
+                    ts = int(dt.timestamp())
 
                 measurement = lookup.get('measurement')
                 tags = lookup.get('tags', None)
