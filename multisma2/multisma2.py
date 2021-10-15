@@ -29,7 +29,7 @@ class Multisma2():
         self._config = config
         self._loop = asyncio.new_event_loop()
         self._session = None
-        self._site = None
+        self._pvsite = None
         signal.signal(signal.SIGTERM, self.catch)
         signal.siginterrupt(signal.SIGTERM, False)
 
@@ -81,20 +81,20 @@ class Multisma2():
         """Asynchronous initialization code."""
         config = self._config.multisma2
         self._session = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False))
-        self._site = PVSite(self._session, config)
-        result = await self._site.start()
+        self._pvsite = PVSite(self._session, config)
+        result = await self._pvsite.start()
         if not result:
             raise FailedInitialization
 
     async def _arun(self):
         """Asynchronous run code."""
-        await self._site.run()
+        await self._pvsite.run()
 
     async def _astop(self):
         """Asynchronous closing code."""
         _LOGGER.info("Closing multisma2 application")
-        if self._site:
-            await self._site.stop()
+        if self._pvsite:
+            await self._pvsite.stop()
         if self._session:
             await self._session.close()
 
