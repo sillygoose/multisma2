@@ -113,12 +113,12 @@ class SMA:
         msg = f"Could not start session, {body}, got {{}}"
         if err:
             if err == 503:
-                _LOGGER.debug(msg, "Max amount of sessions reached")
+                _LOGGER.debug(f"{msg}: max amount of sessions reached")
                 raise SmaException(SmaException.MAX_SESSIONS)
             _LOGGER.debug(msg, err)
-            raise SmaException(SmaException.START_SESSION, msg)
+            raise SmaException(SmaException.START_SESSION)
         else:
-            _LOGGER.debug(msg, "Session ID expected [result.sid]")
+            _LOGGER.debug(f"{msg}: session ID expected [result.sid]")
             raise SmaException(SmaException.SESSION_ID_EXPECTED)
 
     async def close_session(self):
