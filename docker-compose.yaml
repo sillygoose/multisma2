@@ -9,3 +9,6 @@ services:
     volumes:
       - ./volumes/multisma2/log:/sillygoose/log
 
+networks:
+  default:
+    name: ${HOSTNAME}
