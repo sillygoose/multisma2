@@ -1,6 +1,9 @@
 ## What's new
+#### 1.1.2
+- Bug fixes.
+
 #### 1.1.1
-- added day/month/year kWh totals to the InfluxDB2 output to simplify queries. These are located at midnight each day for daily production. midnight on the first of the month for the monthly total, and at midnight on January 1st for the annual total. These data points are current so reflext year-to-date,month-to-date, and day-to-date results.
+- added day/month/year kWh totals to the InfluxDB2 output to simplify queries. These are located at midnight each day for daily production. midnight on the first of the month for the monthly total, and at midnight on January 1st for the annual total. These data points are current so reflect year-to-date,month-to-date, and day-to-date results.
 
 #
 ## multisma2

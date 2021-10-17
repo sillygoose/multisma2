@@ -158,6 +158,7 @@ class InfluxDB:
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
+            _LOGGER.debug(f"write_history({site}, {topic}): {lps}")
             return True
         except Exception as e:
             _LOGGER.error(f"Database write() call failed in write_history(): {e}")

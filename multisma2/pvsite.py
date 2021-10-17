@@ -147,8 +147,8 @@ class PVSite():
         """Run the site and wait for an event to exit."""
         await asyncio.gather(
             self.solar_data_update(),
-            self.read_instantaneous(True),
-            self.update_total_production(True),
+            self.read_instantaneous(daylight=True),
+            self.update_total_production(daylight=True),
         )
 
         queues = {
@@ -217,27 +217,31 @@ class PVSite():
     async def midnight(self) -> None:
         """Task to wake up after midnight and update the solar data for the new day."""
         while True:
-            now = datetime.datetime.now()
-            tomorrow = now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 5))
-            await asyncio.sleep((midnight - now).total_seconds())
+            right_now = datetime.datetime.now()
+            tomorrow = right_now + datetime.timedelta(days=1)
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 10))
+            await asyncio.sleep((midnight - right_now).total_seconds())
 
-            # Update internal sun info and the daily production
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-            await asyncio.gather(
-                self.solar_data_update(),
-                self.read_instantaneous(True),
-                self.update_total_production(True),
-            )
+            await self.solar_data_update()
+            if not await self.read_instantaneous(daylight=True):
+                _RETRY = 30
+                _LOGGER.info(f"No response from inverter(s), will wait and try again in {_RETRY} seconds")
+                await asyncio.sleep(_RETRY)
+                if not await self.read_instantaneous(daylight=True):
+                    _LOGGER.warning("Unable to wake inverter(s)")
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
 
+            await self.update_total_production(daylight=True)
             sensors = await asyncio.gather(
+                self.production_totalwh(),
                 self.production_history(),
             )
             for sensor in sensors:
-                mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor)
+                if sensor:
+                    mqtt.publish(sensor)
+                    self._influx.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
@@ -251,7 +255,7 @@ class PVSite():
                     if tick % self._sampling_fast == 0:
                         await asyncio.gather(
                             self.read_instantaneous(self._daylight),
-                            self.update_total_production(self._daylight),
+                            self.update_total_production(daylight=self._daylight),
                         )
                         queues.get('fast').put_nowait(tick)
                     if tick % self._sampling_medium == 0:
@@ -322,11 +326,13 @@ class PVSite():
 
     async def get_yesterday_production(self):
         """Get the total production meter values for the previous day."""
-        now = datetime.datetime.now()
-        yesterday = now - datetime.timedelta(days=1)
-        start = datetime.datetime.combine(yesterday.date(), datetime.time(0, 0))
-        stop = datetime.datetime.combine(now.date(), datetime.time(0, 0))
+        td_fudge = datetime.timedelta(minutes=10)
+        right_now = datetime.datetime.now()
+        yesterday = right_now - datetime.timedelta(days=1)
+        start = datetime.datetime.combine(yesterday.date(), datetime.time(0, 0)) - td_fudge
+        stop = datetime.datetime.combine(right_now.date(), datetime.time(0, 0)) - td_fudge
         production = await self.get_production_history(int(start.timestamp()), int(stop.timestamp()))
+        _LOGGER.debug(f"get_yesterday_production(start={start}, stop={stop}): {production}")
         return production
 
     async def get_production_history(self, start, stop):
@@ -379,7 +385,7 @@ class PVSite():
 
                 updated_total_production.append(period_stats)
 
-        _LOGGER.debug(f"update_total_production()/updated_total_production: {updated_total_production}")
+        _LOGGER.debug(f"update_total_production(): {updated_total_production}")
         # [{'sb71': 157, 'site': 442, 'period': 'today', 'sb72': 176, 'sb51': 109},
         #  {'sb71': 97028, 'site': 260611, 'period': 'month', 'sb72': 97827, 'sb51': 65756},
         #  {'sb71': 97028, 'site': 260611, 'period': 'year', 'sb72': 97827, 'sb51': 65756},
@@ -408,7 +414,7 @@ class PVSite():
             history['topic'] = 'production/' + period
             histories.append(history)
 
-        _LOGGER.debug(f"production_history()/histories: {histories}")
+        _LOGGER.debug(f"production_history(): {histories}")
         # [{'sb71': 0.21, 'site': 0.6, 'sb72': 0.24, 'sb51': 0.15, 'topic': 'production/today'},
         #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/month'},
         #  {'sb71': 97, 'site': 260, 'sb72': 97, 'sb51': 65, 'topic': 'production/year'},

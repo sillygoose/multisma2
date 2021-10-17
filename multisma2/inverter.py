@@ -167,17 +167,17 @@ class Inverter:
 
     async def read_inverter_production(self):
         """Read the baseline inverter production for select periods."""
-        one_hour = 60 * 60 * 1
-        three_hours = 60 * 60 * 3
-        today_start = int(datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)).timestamp())
-        month_start = int(datetime.datetime.combine(
-            datetime.date.today().replace(day=1), datetime.time(0, 0)).timestamp())
-        year_start = int(datetime.datetime.combine(datetime.date.today().replace(
-            month=1, day=1), datetime.time(0, 0)).timestamp())
+        before_delta = datetime.timedelta(hours=1)
+        after_delta = datetime.timedelta(hours=1)
+        stop = datetime.datetime.now() + after_delta
+        today = datetime.datetime.combine(datetime.date.today(), datetime.time(0, 0)) - before_delta
+        month = datetime.datetime.combine(datetime.date.today().replace(day=1), datetime.time(0, 0)) - before_delta
+        year = datetime.datetime.combine(datetime.date.today().replace(
+            month=1, day=1), datetime.time(0, 0)) - before_delta
         results = await asyncio.gather(
-            self.read_history(today_start - one_hour, today_start + three_hours),
-            self.read_history(month_start - one_hour, today_start),
-            self.read_history(year_start - one_hour, today_start),
+            self.read_history(int(today.timestamp()), int(stop.timestamp())),
+            self.read_history(int(month.timestamp()), int(stop.timestamp())),
+            self.read_history(int(year.timestamp()), int(stop.timestamp())),
         )
         if None in results:
             return False
@@ -189,7 +189,7 @@ class Inverter:
         #  'month': {'t': 1609477200, 'v': 3055878},
         #  'year': {'t': 1609477200, 'v': 3055878},
         #  'lifetime': {'t': 0, 'v': 0}}
-        _LOGGER.debug(f"{self._name}/read_inverter_production()/_history: {self._history}")
+        _LOGGER.debug(f"{self._name}/read_inverter_production({today}/{stop}): {self._history}")
         return True
 
     def display_metadata(self, key):
@@ -255,12 +255,14 @@ class Inverter:
     async def start_production(self, period):
         """Return production value for the start of the specified period."""
         history = self._history.get(period)
+        _LOGGER.debug(f"{self._name}/start_production({period}): {history['v']}")
         return {self.name(): history['v']}
 
     async def read_inverter_history(self, start, stop):
         """Read the baseline inverter production."""
         try:
             history = await self._sma.read_history(start, stop)
+            _LOGGER.debug(f"{self._name}/read_inverter_history({start}, {stop}): {history}")
         except SmaException as e:
             _LOGGER.debug(f"{self._name}: read_inverter_history({start}, {stop}): {e.name}")
             return None
