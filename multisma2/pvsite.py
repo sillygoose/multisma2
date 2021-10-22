@@ -219,21 +219,24 @@ class PVSite():
         while True:
             right_now = datetime.datetime.now()
             tomorrow = right_now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 10))
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
             await asyncio.sleep((midnight - right_now).total_seconds())
 
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
-            if not await self.read_instantaneous(daylight=True):
+
+            saved_daylight = self._daylight
+            self._daylight = True
+            if not await self.read_instantaneous(self._daylight):
                 _RETRY = 30
                 _LOGGER.info(f"No response from inverter(s), will wait and try again in {_RETRY} seconds")
                 await asyncio.sleep(_RETRY)
-                if not await self.read_instantaneous(daylight=True):
+                if not await self.read_instantaneous(self._daylight):
                     _LOGGER.warning("Unable to wake inverter(s)")
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
 
-            await self.update_total_production(daylight=True)
+            await self.update_total_production(daylight=self._daylight)
             sensors = await asyncio.gather(
                 self.production_totalwh(),
                 self.production_history(),
@@ -242,6 +245,9 @@ class PVSite():
                 if sensor:
                     mqtt.publish(sensor)
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
+
+            await asyncio.sleep(600)
+            self._daylight = saved_daylight
 
     async def scheduler(self, queues):
         """Task to schedule actions at regular intervals."""
