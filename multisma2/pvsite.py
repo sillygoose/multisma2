@@ -225,14 +225,15 @@ class PVSite():
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
 
-            saved_daylight = self._daylight
-            self._daylight = True
-            if not await self.read_instantaneous(self._daylight):
+            if not await self.read_instantaneous(True):
                 _RETRY = 30
                 _LOGGER.info(f"No response from inverter(s), will wait and try again in {_RETRY} seconds")
                 await asyncio.sleep(_RETRY)
-                if not await self.read_instantaneous(self._daylight):
+                if not await self.read_instantaneous(True):
                     _LOGGER.warning("Unable to wake inverter(s)")
+
+            saved_daylight = self._daylight
+            self._daylight = True
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
             self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
 
