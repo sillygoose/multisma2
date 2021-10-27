@@ -13,13 +13,13 @@ multisma2:
   #
   # 'name', 'region', and 'tz' are type 'str', the rest are type 'float'
   site:
-    name:         !secret site_name
-    region:       !secret site_region
-    tz:           !secret site_tz
-    latitude:     !secret site_latitude
-    longitude:    !secret site_longitude
-    elevation:    !secret site_elevation
-    co2_avoided:  !secret site_co2_avoided
+    name: !secret site_name
+    region: !secret site_region
+    tz: !secret site_tz
+    latitude: !secret site_latitude
+    longitude: !secret site_longitude
+    elevation: !secret site_elevation
+    co2_avoided: !secret site_co2_avoided
 
   # Solar array properties for predicting potential solar radiation, azimuth and tilt are degrees,
   # area is in square meters, efficiency can be found from your solar panel data sheet and does
@@ -29,11 +29,11 @@ multisma2:
   #
   # All values are type 'float'
   solar_properties:
-    azimuth:    !secret solar_properties_azimuth
-    tilt:       !secret solar_properties_tilt
-    area:       !secret solar_properties_area
+    azimuth: !secret solar_properties_azimuth
+    tilt: !secret solar_properties_tilt
+    area: !secret solar_properties_area
     efficiency: !secret solar_properties_efficiency
-    rho:        !secret solar_properties_rho
+    rho: !secret solar_properties_rho
 
   # InfluxDB setup
   # The InfluxDB interface uses the newer 2.0 client which supports both the 2.0 and 1.8.x InfluxDB versions
@@ -47,10 +47,10 @@ multisma2:
   #   influxdb2.token         set to a valid v2 token or v1.8.x 'username:password' ('str')
   influxdb2:
     enable: True
-    org:    !secret influxdb2_org
-    url:    !secret influxdb2_url
+    org: !secret influxdb2_org
+    url: !secret influxdb2_url
     bucket: !secret influxdb2_bucket
-    token:  !secret influxdb2_token
+    token: !secret influxdb2_token
 
   # MQTT setup
   # The MQTT interface uses the following options to configure the interface:
@@ -61,10 +61,10 @@ multisma2:
   #   mqtt.username         set to the username if authentication is used, otherwise an empty string ('str')
   #   mqtt.password         set to the password port if authentication is used, otherwise an empty string ('str')
   mqtt:
-    enable:   True
-    client:   !secret mqtt_client
-    ip:       !secret mqtt_ip
-    port:     !secret mqtt_port
+    enable: True
+    client: !secret mqtt_client
+    ip: !secret mqtt_ip
+    port: !secret mqtt_port
     username: !secret mqtt_username
     password: !secret mqtt_password
 
@@ -76,18 +76,18 @@ multisma2:
   #   inverter.password     set to the inverter login password ('str')
   inverters:
     - inverter:
-        name:     !secret sb71_name
-        url:      !secret sb71_url
+        name: !secret sb71_name
+        url: !secret sb71_url
         username: !secret sb71_username
         password: !secret sb71_password
     - inverter:
-        name:     !secret sb72_name
-        url:      !secret sb72_url
+        name: !secret sb72_name
+        url: !secret sb72_url
         username: !secret sb72_username
         password: !secret sb72_password
     - inverter:
-        name:     !secret sb51_name
-        url:      !secret sb51_url
+        name: !secret sb51_name
+        url: !secret sb51_url
         username: !secret sb51_username
         password: !secret sb51_password
 
@@ -100,7 +100,7 @@ multisma2:
   #   settings.sampling.night     sets night time loop sample period (in seconds) (int)
   settings:
     sampling:
-      fast:     10
-      medium:   30
-      slow:     60
-      night:    600
+      fast: 20
+      medium: 40
+      slow: 60
+      night: 300

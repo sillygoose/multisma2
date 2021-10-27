@@ -225,12 +225,16 @@ class PVSite():
             _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
 
-            if not await self.read_instantaneous(True):
-                _RETRY = 30
-                _LOGGER.info(f"No response from inverter(s), will wait and try again in {_RETRY} seconds")
+            retries = 0
+            while True:
+                if await self.read_instantaneous(True):
+                    break
+                if retries == 10:
+                    _LOGGER.error(f"No response from inverter(s) after {retries} retries, giving up for now")
+                    break
+                _RETRY = 5
+                retries += 1
                 await asyncio.sleep(_RETRY)
-                if not await self.read_instantaneous(True):
-                    _LOGGER.warning("Unable to wake inverter(s)")
 
             saved_daylight = self._daylight
             self._daylight = True
@@ -247,7 +251,7 @@ class PVSite():
                     mqtt.publish(sensor)
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
 
-            await asyncio.sleep(600)
+            # await asyncio.sleep(600)
             self._daylight = saved_daylight
 
     async def scheduler(self, queues):
