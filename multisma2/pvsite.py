@@ -145,6 +145,10 @@ class PVSite():
 
     async def run(self):
         """Run the site and wait for an event to exit."""
+        _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
+        fast = self._sampling_fast, medium = self._sampling_medium, slow = self._sampling_slow, night = self._sampling_night
+        _LOGGER.info(f"multisma2 sampling at {fast}/{medium}/{slow}/{night} second intervals")
+
         await asyncio.gather(
             self.solar_data_update(),
             self.read_instantaneous(daylight=True),
@@ -222,7 +226,6 @@ class PVSite():
             midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
             await asyncio.sleep((midnight - right_now).total_seconds())
 
-            _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
             await self.solar_data_update()
 
             retries = 0
@@ -234,6 +237,7 @@ class PVSite():
                     break
                 _RETRY = 5
                 retries += 1
+                _LOGGER.info(f"No response from inverter(s), will retry in {_RETRY} seconds")
                 await asyncio.sleep(_RETRY)
 
             saved_daylight = self._daylight
