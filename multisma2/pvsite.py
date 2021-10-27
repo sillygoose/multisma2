@@ -146,7 +146,7 @@ class PVSite():
     async def run(self):
         """Run the site and wait for an event to exit."""
         _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-        fast = self._sampling_fast, medium = self._sampling_medium, slow = self._sampling_slow, night = self._sampling_night
+        fast, medium, slow, night = self._sampling_fast, self._sampling_medium, self._sampling_slow, self._sampling_night
         _LOGGER.info(f"multisma2 sampling at {fast}/{medium}/{slow}/{night} second intervals")
 
         await asyncio.gather(
