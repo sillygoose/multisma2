@@ -95,7 +95,6 @@ class PVSite():
         self._sampling_fast = _DEFAULT_FAST
         self._sampling_medium = _DEFAULT_MEDIUM
         self._sampling_slow = _DEFAULT_SLOW
-        self._sampling_night = _DEFAULT_NIGHT
 
     async def start(self):
         """Initialize the PVSite object."""
@@ -128,7 +127,6 @@ class PVSite():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)
             self._sampling_medium = config.settings.sampling.get('medium', _DEFAULT_MEDIUM)
             self._sampling_slow = config.settings.sampling.get('slow', _DEFAULT_SLOW)
-            self._sampling_night = config.settings.sampling.get('night', _DEFAULT_NIGHT)
 
         inverters = await asyncio.gather(*(inverter.start() for inverter in self._inverters))
         success = True
@@ -146,8 +144,8 @@ class PVSite():
     async def run(self):
         """Run the site and wait for an event to exit."""
         _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
-        fast, medium, slow, night = self._sampling_fast, self._sampling_medium, self._sampling_slow, self._sampling_night
-        _LOGGER.info(f"multisma2 sampling at {fast}/{medium}/{slow}/{night} second intervals")
+        fast, medium, slow = self._sampling_fast, self._sampling_medium, self._sampling_slow
+        _LOGGER.info(f"multisma2 sampling at {fast}/{medium}/{slow} second intervals")
 
         await asyncio.gather(
             self.solar_data_update(),
@@ -200,13 +198,13 @@ class PVSite():
             if astral_now < self._dawn:
                 self._daylight = False
                 next_event = self._dawn - astral_now
-                info = f"Night: inverter data collection is inactive, cached updates every {self._sampling_night} seconds"
+                info = f"Night: inverter data collection is inactive, cached updates being used"
             elif astral_now > self._dusk:
                 self._daylight = False
                 tomorrow = astral_now + datetime.timedelta(days=1)
                 astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
                 next_event = astral['dawn'] - astral_now
-                info = f"Night: inverter data collection is inactive, cached updates every {self._sampling_night} seconds"
+                info = f"Night: inverter data collection is inactive, cached updates being used"
             else:
                 self._daylight = True
                 next_event = self._dusk - astral_now
@@ -240,6 +238,7 @@ class PVSite():
                 _LOGGER.info(f"No response from inverter(s), will retry in {_RETRY} seconds")
                 await asyncio.sleep(_RETRY)
 
+            # fake daylight and update everything
             saved_daylight = self._daylight
             self._daylight = True
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
@@ -254,8 +253,6 @@ class PVSite():
                 if sensor:
                     mqtt.publish(sensor)
                     self._influx.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
-
-            # await asyncio.sleep(600)
             self._daylight = saved_daylight
 
     async def scheduler(self, queues):
@@ -266,22 +263,16 @@ class PVSite():
             tick = time.time_ns() // 1000000000
             if tick != last_tick:
                 last_tick = tick
-                if self._daylight:
-                    if tick % self._sampling_fast == 0:
-                        await asyncio.gather(
-                            self.read_instantaneous(self._daylight),
-                            self.update_total_production(daylight=self._daylight),
-                        )
-                        queues.get('fast').put_nowait(tick)
-                    if tick % self._sampling_medium == 0:
-                        queues.get('medium').put_nowait(tick)
-                    if tick % self._sampling_slow == 0:
-                        queues.get('slow').put_nowait(tick)
-                else:
-                    if tick % self._sampling_night == 0:
-                        queues.get('fast').put_nowait(tick)
-                        queues.get('medium').put_nowait(tick)
-                        queues.get('slow').put_nowait(tick)
+                if tick % self._sampling_fast == 0:
+                    await asyncio.gather(
+                        self.read_instantaneous(self._daylight),
+                        self.update_total_production(daylight=self._daylight),
+                    )
+                    queues.get('fast').put_nowait(tick)
+                if tick % self._sampling_medium == 0:
+                    queues.get('medium').put_nowait(tick)
+                if tick % self._sampling_slow == 0:
+                    queues.get('slow').put_nowait(tick)
             await asyncio.sleep(SLEEP)
 
     async def task_fast(self, queue):

@@ -5,7 +5,6 @@ import os
 import sys
 
 from config.configuration import Configuration
-from dateutil.parser import parse
 from pathlib import Path
 import yaml
 from config import config_from_yaml
@@ -17,7 +16,7 @@ from exceptions import FailedInitialization
 
 
 CONFIG_YAML = "multisma2.yaml"
-SECRET_YAML = "secrets.yaml"
+SECRET_YAML = "multisma2_secrets.yaml"
 
 JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
 DICT_T = TypeVar("DICT_T", bound=Dict)  # pylint: disable=invalid-name
@@ -309,7 +308,6 @@ def check_config(config):
                                       {'fast': {'required': False, 'keys': [], 'type': int}},
                                       {'medium': {'required': False, 'keys': [], 'type': int}},
                                       {'slow': {'required': False, 'keys': [], 'type': int}},
-                                      {'night': {'required': False, 'keys': [], 'type': int}},
                                   ]}},
                               ]}},
                           ],
