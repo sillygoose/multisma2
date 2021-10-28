@@ -1,5 +1,6 @@
 """Interface with SMA inverters using JSON."""
 
+
 import atexit
 import os
 import sys
