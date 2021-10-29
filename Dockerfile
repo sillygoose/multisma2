@@ -20,7 +20,7 @@ RUN pip3 install -e .
 
 # add the site-specific configuration/secrets file
 WORKDIR /sillygoose/multisma2/multisma2
-ADD secrets.yaml .
+ADD multisma2_secrets.yaml .
 
 # run multisma2
 WORKDIR /sillygoose

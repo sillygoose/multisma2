@@ -1,4 +1,4 @@
-"""Module handling the application and production log files/"""
+"""Module handling the application and production log files"""
 
 import os
 import sys
@@ -14,35 +14,15 @@ _DEFAULT_LOG_FORMAT = '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
 _DEFAULT_LOG_LEVEL = 'INFO'
 
 
-def check_config(options):
-    """Check that the the proper log option but don't check the keys."""
-
-    if 'multisma2' not in options.keys():
-        return None
-    if 'log' not in options.multisma2.keys():
-        return None
-
-    return dict(options.multisma2.log)
-
-
-def start(config):
+def start():
     """Create the application log."""
 
-    log_options = check_config(config)
-    if not log_options:
-        log_file = _DEFAULT_LOG_FILE
-        log_format = _DEFAULT_LOG_FORMAT
-        log_level = _DEFAULT_LOG_LEVEL
-    else:
-        log_file = log_options.get('file', None)
-        if not log_file:
-            log_file = _DEFAULT_LOG_FILE
-        log_format = log_options.get('format', None)
-        if not log_format:
-            log_format = _DEFAULT_LOG_FORMAT
-        log_level = log_options.get('level', None)
-        if not log_level:
-            log_level = _DEFAULT_LOG_LEVEL
+    _DEBUG_ENV_VAR = 'CS_ESPHOME_DEBUG'
+    debug_mode = os.getenv(_DEBUG_ENV_VAR, 'False').lower() in ('true', '1', 't')
+
+    log_file = _DEFAULT_LOG_FILE
+    log_format = _DEFAULT_LOG_FORMAT
+    log_level = _DEFAULT_LOG_LEVEL if not debug_mode else 'DEBUG'
 
     now = datetime.now()
     filename = os.path.expanduser(log_file + "_" + now.strftime("%Y-%m-%d") + ".log")

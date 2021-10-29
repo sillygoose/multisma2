@@ -79,19 +79,19 @@ class PVSite():
 
     def __init__(self, session, config):
         """Create a new PVSite object."""
+        self._session = session
         self._config = config
         self._inverters = []
-        self._session = session
         self._siteinfo = None
         self._tzinfo = None
         self._tasks = None
+        self._task_gather = None
         self._total_production = None
         self._cached_keys = []
         self._daylight = None
-        self._task_gather = None
         self._dawn = None
         self._dusk = None
-        self._influx = InfluxDB()
+        self._influxdb_client = InfluxDB(config)
         self._sampling_fast = _DEFAULT_FAST
         self._sampling_medium = _DEFAULT_MEDIUM
         self._sampling_slow = _DEFAULT_SLOW
@@ -115,7 +115,7 @@ class PVSite():
 
         if 'influxdb2' in config.keys():
             try:
-                self._influx.start(config=config.influxdb2)
+                self._influxdb_client.start()
             except FailedInitialization:
                 return False
 
@@ -165,6 +165,7 @@ class PVSite():
             self.task_fast(queues.get('fast')),
             self.task_medium(queues.get('medium')),
             self.task_slow(queues.get('slow')),
+            self.task_deletions(),
         )
         await self._task_gather
 
@@ -174,7 +175,7 @@ class PVSite():
             self._task_gather.cancel()
 
         await asyncio.gather(*(inverter.stop() for inverter in self._inverters))
-        self._influx.stop()
+        self._influxdb_client.stop()
 
     async def solar_data_update(self) -> None:
         """Update the sun data used to sequence operaton."""
@@ -198,13 +199,13 @@ class PVSite():
             if astral_now < self._dawn:
                 self._daylight = False
                 next_event = self._dawn - astral_now
-                info = f"Night: inverter data collection is inactive, cached updates being used"
+                info = "Night: inverter data collection is inactive, cached updates being used"
             elif astral_now > self._dusk:
                 self._daylight = False
                 tomorrow = astral_now + datetime.timedelta(days=1)
                 astral = sun(date=tomorrow.date(), observer=self._siteinfo.observer, tzinfo=self._tzinfo)
                 next_event = astral['dawn'] - astral_now
-                info = f"Night: inverter data collection is inactive, cached updates being used"
+                info = "Night: inverter data collection is inactive, cached updates being used"
             else:
                 self._daylight = True
                 next_event = self._dusk - astral_now
@@ -242,7 +243,7 @@ class PVSite():
             saved_daylight = self._daylight
             self._daylight = True
             await asyncio.gather(*(inverter.read_inverter_production() for inverter in self._inverters))
-            self._influx.write_history(await self.get_yesterday_production(), 'production/midnight')
+            self._influxdb_client.write_history(await self.get_yesterday_production(), 'production/midnight')
 
             await self.update_total_production(daylight=self._daylight)
             sensors = await asyncio.gather(
@@ -252,7 +253,7 @@ class PVSite():
             for sensor in sensors:
                 if sensor:
                     mqtt.publish(sensor)
-                    self._influx.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
+                    self._influxdb_client.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
             self._daylight = saved_daylight
 
     async def scheduler(self, queues):
@@ -282,10 +283,11 @@ class PVSite():
             queue.task_done()
             sensors = await asyncio.gather(
                 self.production_snapshot(),
+                self.status_snapshot(),
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                self._influxdb_client.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_medium(self, queue):
         """Work done at a medium sample rate."""
@@ -295,11 +297,10 @@ class PVSite():
             sensors = await asyncio.gather(
                 self.production_totalwh(),
                 self.production_history(),
-                self.status_snapshot(),
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                self._influxdb_client.write_sma_sensors(sensor=sensor, timestamp=timestamp)
 
     async def task_slow(self, queue):
         """Work done at a slow sample rate."""
@@ -314,7 +315,42 @@ class PVSite():
             )
             for sensor in sensors:
                 mqtt.publish(sensor)
-                self._influx.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+                self._influxdb_client.write_sma_sensors(sensor=sensor, timestamp=timestamp)
+
+    async def task_deletions(self) -> None:
+        """Task to remove older database entries."""
+        delete_api = self._influxdb_client.delete_api()
+        bucket = self._influxdb_client.bucket()
+        org = self._influxdb_client.org()
+
+        pruning_tasks = []
+        config = self._config
+        if 'influxdb2' in config.keys():
+            if 'pruning' in config.influxdb2.keys():
+                for pruning_task in config.influxdb2.pruning:
+                    for task in pruning_task.values():
+                        name = task.get('name', None)
+                        keep_last = task.get('keep_last', 30)
+                        predicate = task.get('predicate', None)
+                        if name and predicate:
+                            new_task = {'name': name, 'predicate': predicate, 'keep_last': keep_last}
+                            pruning_tasks.append(new_task)
+                            _LOGGER.debug(f"Added database pruning task: {new_task}")
+
+        while True:
+            right_now = datetime.datetime.now()
+            midnight = datetime.datetime.combine(right_now + datetime.timedelta(days=1), datetime.time(2, 30))
+            await asyncio.sleep((midnight - right_now).total_seconds())
+
+            try:
+                start = datetime.datetime(1970, 1, 1).isoformat() + 'Z'
+                for task in pruning_tasks:
+                    stop = datetime.datetime.combine(datetime.datetime.now(
+                    ) - datetime.timedelta(days=keep_last), datetime.time(0, 0)).isoformat() + 'Z'
+                    delete_api.delete(start, stop, predicate, bucket=bucket, org=org)
+                    _LOGGER.debug(f"Pruned database '{bucket}': {predicate}, kept last {keep_last} days")
+            except Exception as e:
+                _LOGGER.debug(f"Unexpected exception in task_deletions(): {e}")
 
     async def read_instantaneous(self, daylight) -> bool:
         """Read the instantaneous sensors from the inverter."""

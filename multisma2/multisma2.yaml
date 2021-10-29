@@ -45,12 +45,20 @@ multisma2:
   #   influxdb2.url           set to the InfluxDB server URL and port ('str')
   #   influxdb2.org           set to the v2 organization or '-' if using v1.8.x ('str')
   #   influxdb2.token         set to a valid v2 token or v1.8.x 'username:password' ('str')
+  #
+  # The following settings are optional:
+  #  influxdb2.pruning          entries to run once a day and prune the database of old data
   influxdb2:
-    enable: True
+    enable: !secret influxdb2_enable
     org: !secret influxdb2_org
     url: !secret influxdb2_url
     bucket: !secret influxdb2_bucket
     token: !secret influxdb2_token
+    pruning:
+      - task:
+          name: 'status'
+          predicate: '_measurement="status"'
+          keep_last: 3
 
   # MQTT setup
   # The MQTT interface uses the following options to configure the interface:
@@ -61,7 +69,7 @@ multisma2:
   #   mqtt.username         set to the username if authentication is used, otherwise an empty string ('str')
   #   mqtt.password         set to the password port if authentication is used, otherwise an empty string ('str')
   mqtt:
-    enable: False
+    enable: !secret mqtt_enable
     client: !secret mqtt_client
     ip: !secret mqtt_ip
     port: !secret mqtt_port

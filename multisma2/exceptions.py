@@ -19,6 +19,30 @@ class TerminateSignal(Exception):
     """SIGTERM."""
 
 
+class InfluxDBWriteError(Exception):
+    """InfluxDB write error."""
+
+
+class InfluxDBQueryError(Exception):
+    """InfluxDB query error."""
+
+
+class InfluxDBBucketError(Exception):
+    """InfluxDB bucket error."""
+
+
+class InfluxDBFormatError(Exception):
+    """Illegal or unsupported database output format."""
+
+
+class InfluxDBInitializationError(Exception):
+    """InfluxDB is not properly initialized."""
+
+
+class InternalError(Exception):
+    """Unexpected/inconsistant state."""
+
+
 class SmaException(Exception, Enum):
     """Base exception of the pysma library."""
     PASSWORD_REQUIRED = auto()

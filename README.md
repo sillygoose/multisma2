@@ -11,6 +11,7 @@
 - [Sunny Boy History Utility](#sbhistory)
 - [Operation](#operation)
 - [InfluxDB2 Schemas](#schemas)
+- [Pruning database entries](#pruning-database)
 - [Sample Dashboards](#dashboards)
 - [Errors](#errors)
 - [Thanks](#thanks)
@@ -38,6 +39,11 @@ Now features a wider range of outputs, basically anything you see in your browse
 <a id='whats-new'></a>
 
 ## What's new
+
+#### 1.1.5
+
+- Updated code with improvements made in cs_esphome
+- added database pruning by YAML file tasks in the InfluxDB options
 
 #### 1.1.2 - 1.1.4
 
@@ -213,6 +219,26 @@ Data is organized in InfluxDB2 using the following schemas, refer to the Flux qu
         _measurement    sun
         _field          temperature
         _type           working (°C), ambient (°C)
+
+<a id='pruning-database'></a>
+
+## Pruning database entries
+
+Some data points get stale quickly and can be deleted, the pruning tasks can be used to remove them. Here is an example pruning task that keeps the last 3 days of the status measurement:
+
+```
+  influxdb2:
+    ...
+    pruning:
+      - task:
+          name: 'status'
+          predicate: '_measurement="pstatus"'
+          keep_last: 3
+```
+
+You can have as many of these as desired, the sample YAML file has entries for the data that isn't needed to be stored for the long term.
+
+#
 
 #
 

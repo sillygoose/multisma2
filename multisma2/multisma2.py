@@ -40,7 +40,7 @@ class Multisma2():
 
     def run(self):
         """Code to handle the start(), run(), and stop() interfaces."""
-        # ERROR_DELAY might be non-zero when SMA errors are detected *for now not implemented)
+        # ERROR_DELAY might be non-zero when some errors are detected *for now not implemented)
         ERROR_DELAY = 0
         delay = 0
         try:
@@ -57,10 +57,10 @@ class Multisma2():
         except (KeyboardInterrupt, NormalCompletion, TerminateSignal):
             pass
         except AbnormalCompletion:
-            # _LOGGER.critical("Received AbnormalCompletion exception detected")
+            _LOGGER.critical("Received AbnormalCompletion exception")
             delay = ERROR_DELAY
         except FailedInitialization:
-            # _LOGGER.critical("Received FailedInitialization exception detected")
+            # _LOGGER.critical("Received FailedInitialization exception")
             delay = ERROR_DELAY
         except Exception as e:
             _LOGGER.error(f"Unexpected exception caught: {e}")
@@ -73,7 +73,7 @@ class Multisma2():
                 _LOGGER.critical("Received KeyboardInterrupt during shutdown")
             finally:
                 if delay > 0:
-                    print(
+                    _LOGGER.info(
                         f"multisma2 is delaying restart for {delay} seconds (Docker will restart multisma2, otherwise exits)")
                     time.sleep(delay)
 
@@ -113,18 +113,11 @@ class Multisma2():
 
 def main():
     """Set up and start multisma2."""
-
-    try:
-        config = read_config(checking=False)
-    except FailedInitialization as e:
-        print(f"{e}")
-        return
-
-    logfiles.start(config)
+    logfiles.start()
     _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
 
     try:
-        config = read_config(checking=True)
+        config = read_config()
         if config:
             multisma2 = Multisma2(config)
             multisma2.run()

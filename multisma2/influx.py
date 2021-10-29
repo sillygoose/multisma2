@@ -11,11 +11,30 @@ from config import config_from_yaml
 
 from influxdb_client import InfluxDBClient, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
+from influxdb_client.rest import ApiException
+
+from readconfig import retrieve_options
 
 from exceptions import FailedInitialization
+from exceptions import InfluxDBWriteError, InfluxDBBucketError
+
+from urllib3.exceptions import NewConnectionError
 
 
 _LOGGER = logging.getLogger('multisma2')
+
+_INFLUXDB2_OPTIONS = {
+    'url': {'type': str, 'required': True},
+    'token': {'type': str, 'required': True},
+    'bucket': {'type': str, 'required': True},
+    'org': {'type': str, 'required': True},
+}
+
+_DEBUG_ENV_VAR = 'MULTISMA2_DEBUG'
+_DEBUG_OPTIONS = {
+    'create_bucket': {'type': bool, 'required': False},
+    'delete_bucket': {'type': bool, 'required': False},
+}
 
 LP_LOOKUP = {
     'ac_measurements/power': {'measurement': 'ac_measurements', 'tags': ['_inverter'], 'field': 'power', 'output': True},
@@ -45,65 +64,72 @@ LP_LOOKUP = {
 
 
 class InfluxDB:
-    def __init__(self):
+    def __init__(self, config):
+        self._config = config
         self._client = None
         self._write_api = None
         self._query_api = None
-        self._enabled = False
+        self._delete_api = None
+        self._tasks_api = None
+        self._organizations_api = None
+        self._token = None
+        self._org = None
+        self._url = None
+        self._bucket = None
 
-    def __del__(self):
-        if self._client:
-            self._client.close()
-
-    def check_config(self, influxdb2):
-        """Check that the needed YAML options exist."""
-        errors = False
-        required = {'enable': bool, 'url': str, 'token': str, 'bucket': str, 'org': str}
-        options = dict(influxdb2)
-        for key in required:
-            if key not in options.keys():
-                _LOGGER.error(f"Missing required 'influxdb2' option in YAML file: '{key}'")
-                errors = True
-            else:
-                v = options.get(key, None)
-                if not isinstance(v, required.get(key)):
-                    _LOGGER.error(f"Expected type '{required.get(key).__name__}' for option 'influxdb2.{key}'")
-                    errors = True
-        if errors:
-            raise FailedInitialization(Exception("Errors detected in 'influxdb2' YAML options"))
-        return options
-
-    def start(self, config):
-        self.check_config(config)
-        if not config.enable:
-            return True
-
+    def start(self):
+        """Initialize the InfluxDB client."""
         try:
-            self._bucket = config.bucket
-            self._client = InfluxDBClient(url=config.url, token=config.token, org=config.org)
-            if not self._client:
-                raise Exception(
-                    f"Failed to get InfluxDBClient from {config.url} (check url, token, and/or organization)")
-
-            self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
-            if not self._write_api:
-                raise Exception(f"Failed to get client write_api() object from {config.url}")
-
-            query_api = self._client.query_api()
-            if not query_api:
-                raise Exception(f"Failed to get client query_api() object from {config.url}")
-            try:
-                query_api.query(f'from(bucket: "{self._bucket}") |> range(start: -1m)')
-                _LOGGER.info(f"Connected to the InfluxDB database at {config.url}, bucket '{self._bucket}'")
-            except Exception:
-                raise Exception(f"Unable to access bucket '{self._bucket}' at {config.url}")
-
-        except Exception as e:
+            influxdb_options = retrieve_options(self._config, 'influxdb2', _INFLUXDB2_OPTIONS)
+            debug_options = retrieve_options(self._config, 'debug', _DEBUG_OPTIONS)
+        except FailedInitialization as e:
             _LOGGER.error(f"{e}")
-            self.stop()
             return False
 
-        return True
+        result = False
+        try:
+            self._bucket = influxdb_options.get('bucket')
+            self._url = influxdb_options.get('url')
+            self._token = influxdb_options.get('token')
+            self._org = influxdb_options.get('org')
+            self._client = InfluxDBClient(url=self._url, token=self._token, org=self._org, enable_gzip=True)
+            if not self._client:
+                raise FailedInitialization(
+                    f"failed to get InfluxDBClient from '{self._url}' (check url, token, and/or organization)")
+            self._write_api = self._client.write_api(write_options=SYNCHRONOUS)
+            self._query_api = self._client.query_api()
+            self._delete_api = self._client.delete_api()
+            self._tasks_api = self._client.tasks_api()
+            self._organizations_api = self._client.organizations_api()
+
+            multisma2_debug = os.getenv(_DEBUG_ENV_VAR, 'False').lower() in ('true', '1', 't')
+            try:
+                if multisma2_debug and debug_options.get('delete_bucket', False):
+                    self.delete_bucket()
+                    _LOGGER.info(f"Deleted bucket '{self._bucket}' at '{self._url}'")
+            except InfluxDBBucketError as e:
+                raise FailedInitialization(f"{e}")
+
+            try:
+                if not self.connect_bucket(multisma2_debug and debug_options.get('create_bucket', False)):
+                    raise FailedInitialization(f"Unable to access (or create) bucket '{self._bucket}' at '{self._url}'")
+            except InfluxDBBucketError as e:
+                raise FailedInitialization(f"{e}")
+
+            _LOGGER.info(f"Connected to InfluxDB: '{self._url}', bucket '{self._bucket}'")
+            result = True
+
+        except FailedInitialization as e:
+            _LOGGER.error(f" client {e}")
+            self._client = None
+        except NewConnectionError:
+            _LOGGER.error(f"InfluxDB client unable to connect to host at {self._url}")
+        except ApiException as e:
+            _LOGGER.error(f"InfluxDB client unable to access bucket '{self._bucket}' at {self._url}: {e.reason}")
+        except Exception as e:
+            _LOGGER.error(f"Unexpected exception: {e}")
+        finally:
+            return result
 
     def stop(self):
         if self._write_api:
@@ -113,16 +139,37 @@ class InfluxDB:
             self._client.close()
             self._client = None
 
+    def bucket(self):
+        return self._bucket
+
+    def org(self):
+        return self._org
+
+    def write_api(self):
+        return self._write_api
+
+    def query_api(self):
+        return self._query_api
+
+    def delete_api(self):
+        return self._delete_api
+
+    def tasks_api(self):
+        return self._tasks_api
+
+    def organizations_api(self):
+        return self._organizations_api
+
     def write_points(self, points):
         if not self._write_api:
             return False
         try:
             self._write_api.write(bucket=self._bucket, record=points, write_precision=WritePrecision.S)
-            result = True
+            return True
+        except ApiException as e:
+            raise InfluxDBWriteError(f"InfluxDB client unable to write to '{self._bucket}' at {self._url}: {e.reason}")
         except Exception as e:
-            _LOGGER.error(f"Database write() call failed in write_points(): {e}")
-            result = False
-        return result
+            raise InfluxDBWriteError(f"Unexpected failure in write_points(): {e}")
 
     def write_history(self, site, topic):
         if not self._write_api:
@@ -160,9 +207,10 @@ class InfluxDB:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
             _LOGGER.debug(f"write_history({site}, {topic}): {lps}")
             return True
+        except ApiException as e:
+            raise InfluxDBWriteError(f"InfluxDB client unable to write to '{self._bucket}' at {self._url}: {e.reason}")
         except Exception as e:
-            _LOGGER.error(f"Database write() call failed in write_history(): {e}")
-            return False
+            raise InfluxDBWriteError(f"Unexpected failure in write_history(): {e}")
 
     def write_sma_sensors(self, sensor, timestamp=None):
         if not self._client:
@@ -241,12 +289,46 @@ class InfluxDB:
 
         try:
             self._write_api.write(bucket=self._bucket, record=lps, write_precision=WritePrecision.S)
-            result = True
+            return True
+        except ApiException as e:
+            raise InfluxDBWriteError(f"InfluxDB client unable to write to '{self._bucket}' at {self._url}: {e.reason}")
         except Exception as e:
-            _LOGGER.error(f"Database write() call failed in write_sma_sensors(): {e}")
-            _LOGGER.error(f": {lps}")
-            result = False
-        return result
+            raise InfluxDBWriteError(f"Unexpected failure in write_sma_sensors(): {e}")
+
+    def delete_bucket(self):
+        try:
+            buckets_api = self._client.buckets_api()
+            found_bucket = buckets_api.find_bucket_by_name(self._bucket)
+            if found_bucket:
+                buckets_api.delete_bucket(found_bucket)
+                bucket = buckets_api.find_bucket_by_name(self._bucket)
+                if not bucket:
+                    return True
+            return False
+        except ApiException as e:
+            raise InfluxDBBucketError(
+                f"InfluxDB client unable to delete bucket '{self._bucket}' at {self._url}: {e.reason}")
+        except Exception as e:
+            raise InfluxDBBucketError(f"Unexpected exception in delete_bucket(): {e}")
+
+    def connect_bucket(self, create_bucket=False):
+        try:
+            buckets_api = self._client.buckets_api()
+            bucket = buckets_api.find_bucket_by_name(self._bucket)
+            if bucket:
+                return True
+            if create_bucket:
+                bucket = buckets_api.create_bucket(
+                    bucket_name=self._bucket, org_id=self._org, retention_rules=None, org=None)
+                if bucket:
+                    _LOGGER.info(f"Created bucket '{self._bucket}' at {self._url}")
+                    return True
+            return False
+        except ApiException as e:
+            raise InfluxDBBucketError(
+                f"InfluxDB client unable to create bucket '{self._bucket}' at {self._url}: {e.reason}")
+        except Exception as e:
+            raise InfluxDBBucketError(f"Unexpected exception in connect_bucket(): {e}")
 
 
 #
