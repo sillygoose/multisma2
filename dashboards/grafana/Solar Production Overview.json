@@ -24,116 +24,83 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 10,
-  "iteration": 1635287560759,
+  "iteration": 1635561835666,
   "links": [],
   "liveNow": false,
   "panels": [
     {
-      "aliasColors": {
-        "site": "green"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": "${datasource}",
-      "decimals": 2,
       "description": "",
       "fieldConfig": {
         "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "max": 25000,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
           "unit": "watt"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "site"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Site"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sb71"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "SB71"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sb72"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "SB72"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "sb51"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "SB51"
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 0,
       "gridPos": {
         "h": 12,
         "w": 12,
         "x": 0,
         "y": 0
       },
-      "hiddenSeries": false,
       "id": 11,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": false,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null as zero",
       "options": {
-        "alertThreshold": false
-      },
-      "percentage": false,
-      "pluginVersion": "8.2.2",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "Site",
-          "color": "#73BF69"
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
         }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
+      },
+      "pluginVersion": "8.2.2",
       "targets": [
         {
           "groupBy": [
@@ -152,8 +119,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", _value: r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\n  |> yield(name: \"production_site\")",
-          "refId": "A",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", \"Site\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Site\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "Site",
           "resultFormat": "time_series",
           "select": [
             [
@@ -188,8 +155,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"production_sb71\")",
-          "refId": "B",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", \"SB71\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB71\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "SB71",
           "resultFormat": "time_series",
           "select": [
             [
@@ -224,8 +191,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"production_sb72\")",
-          "refId": "C",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", \"SB72\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB72\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "SB72",
           "resultFormat": "time_series",
           "select": [
             [
@@ -260,8 +227,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"production_sb51\")",
-          "refId": "D",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", \"SB51\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB51\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "SB51",
           "resultFormat": "time_series",
           "select": [
             [
@@ -280,47 +247,10 @@
           "tags": []
         }
       ],
-      "thresholds": [],
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
       "title": "Inverter Production",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "watt",
-          "label": "",
-          "logBase": 1,
-          "max": "25000",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "type": "timeseries"
     },
     {
       "datasource": "${datasource}",
@@ -406,7 +336,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> filter(fn: (r) => r._inverter == \"site\")\n  |> last()\n  |> yield(name: \"current_production\")",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> filter(fn: (r) => r._inverter == \"site\")\n  |> last()\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -502,7 +432,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"Site\", _value:\n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"Site\":\n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))",
           "refId": "Site",
           "resultFormat": "time_series",
           "select": [
@@ -538,7 +468,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (\n            (r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\") or\n            (r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb71\" and r._string == \"sb71\")\n        )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"SB71\", _value: \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb71\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB71\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
           "refId": "SB71",
           "resultFormat": "time_series",
           "select": [
@@ -574,7 +504,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (\n            (r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\") or\n            (r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb72\" and r._string == \"sb72\")\n        )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"SB72\", _value: \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb72\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB72\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
           "refId": "SB72",
           "resultFormat": "time_series",
           "select": [
@@ -610,7 +540,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (\n            (r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\") or\n            (r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb51\" and r._string == \"sb51\")\n        )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"SB51\", _value: \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb51\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB51\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
           "refId": "SB51",
           "resultFormat": "time_series",
           "select": [
@@ -749,7 +679,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"today\")\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -835,7 +765,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"month_to_date\")\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -921,7 +851,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"year\")\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.001) }))\n  |> yield(name: \"year_to_date\")\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"year\")\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.001) }))\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1200,7 +1130,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n  |> yield(name: \"sun_elevation\")\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1286,7 +1216,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n  |> yield(name: \"sun_azimuth\")",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1373,7 +1303,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: (float(v: r._value) * 0.18991) }))\n  |> yield(name: \"co2_today\")\n",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: (float(v: r._value) * 0.18991) }))\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1459,7 +1389,7 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ r with _value: (float(v: r._value) * 0.001 * 0.18991 * 0.001) }))\n  |> yield(name: \"co2_lifetime\")",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ r with _value: (float(v: r._value) * 0.001 * 0.18991 * 0.001) }))\n",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1528,71 +1458,12 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           },
           "unit": "watt"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "_irradiance"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Irradiance"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "_site_w"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Site"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Site"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#73BF69",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Irradiance"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#FF9830",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 8,
@@ -1608,7 +1479,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
       "pluginVersion": "8.1.5",
@@ -1630,8 +1501,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, _value: (float(v: r._value) * 3600.0 / float(v: r.elapsed)) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"clearsky_production\")\n",
-          "refId": "A",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Actual Production\": (float(v: r._value) * 3600.0 / float(v: r.elapsed)) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Actual Production\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "Actual Production",
           "resultFormat": "time_series",
           "select": [
             [
@@ -1666,8 +1537,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, _value: (r._value * float(v: ${panel_area}) * float(v: ${panel_efficiency})) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"clearsky_irradiance\")\n",
-          "refId": "B",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, \"Clearsky Potential\": (r._value * float(v: ${panel_area}) * float(v: ${panel_efficiency})) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"Clearsky Potential\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+          "refId": "Clearsky Potential",
           "resultFormat": "time_series",
           "select": [
             [
@@ -1792,6 +1663,7 @@
         "x": 12,
         "y": 16
       },
+      "hideTimeOverride": true,
       "highlightCards": true,
       "id": 52,
       "interval": null,
@@ -2028,7 +1900,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
       "pluginVersion": "8.1.5",
@@ -2136,7 +2008,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "_movavg"
+              "options": "Moving Average"
             },
             "properties": [
               {
@@ -2171,37 +2043,6 @@
                 "value": 0
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "_last_30"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Past 30"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "_current"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Today"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
           }
         ]
       },
@@ -2220,7 +2061,7 @@
           "placement": "bottom"
         },
         "tooltip": {
-          "mode": "single"
+          "mode": "multi"
         }
       },
       "pluginVersion": "8.1.5",
@@ -2243,8 +2084,8 @@
           "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> limit(n: 30)\n  |> map(fn: (r) => ({ _time: r._time, _last_30: r._value }))\n  |> yield(name: \"last_30\")\n",
-          "refId": "A",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, \"Production\": r._value }))\n",
+          "refId": "Last 30",
           "resultFormat": "time_series",
           "select": [
             [
@@ -2263,11 +2104,6 @@
           "tags": []
         },
         {
-          "hide": false,
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _current: r._value }))\n  |> yield(name: \"current\")",
-          "refId": "B"
-        },
-        {
           "groupBy": [
             {
               "params": [
@@ -2284,8 +2120,8 @@
           ],
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> movingAverage(n: 30)\n  |> map(fn: (r) => ({ _time: r._time, _movavg: r._value }))\n  |> yield(name: \"moving-average\")\n",
-          "refId": "C",
+          "query": "from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> movingAverage(n: 30)\n  |> map(fn: (r) => ({ _time: r._time, \"Moving Average\": r._value }))\n",
+          "refId": "Moving Average",
           "resultFormat": "time_series",
           "select": [
             [
@@ -2359,6 +2195,7 @@
         "x": 12,
         "y": 20
       },
+      "hideTimeOverride": true,
       "highlightCards": true,
       "id": 54,
       "interval": null,
@@ -2555,6 +2392,7 @@
         "x": 12,
         "y": 24
       },
+      "hideTimeOverride": true,
       "highlightCards": true,
       "id": 56,
       "interval": null,
@@ -2709,7 +2547,7 @@
       }
     }
   ],
-  "refresh": "10s",
+  "refresh": "",
   "schemaVersion": 31,
   "style": "dark",
   "tags": [],
@@ -2759,7 +2597,7 @@
     ]
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-2d",
     "to": "now"
   },
   "timepicker": {
@@ -2773,5 +2611,5 @@
   "timezone": "",
   "title": "Solar Production",
   "uid": "zoZVB5Nnz",
-  "version": 27
+  "version": 31
 }

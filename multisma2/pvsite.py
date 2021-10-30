@@ -177,7 +177,7 @@ class PVSite():
         self._influxdb_client.stop()
 
     async def solar_data_update(self) -> None:
-        """Update the sun data used to sequence operaton."""
+        """Update the sun data used to sequence operation."""
         astral_now = now(tzinfo=self._tzinfo)
         astral = sun(observer=self._siteinfo.observer, tzinfo=self._tzinfo)
         self._dawn = astral['dawn']
@@ -221,7 +221,7 @@ class PVSite():
         while True:
             right_now = datetime.datetime.now()
             tomorrow = right_now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 0))
             await asyncio.sleep((midnight - right_now).total_seconds())
 
             await self.solar_data_update()
@@ -235,7 +235,7 @@ class PVSite():
                     break
                 _RETRY = 5
                 retries += 1
-                _LOGGER.info(f"No response from inverter(s), will retry in {_RETRY} seconds")
+                _LOGGER.debug(f"No response from inverter(s), will retry in {_RETRY} seconds")
                 await asyncio.sleep(_RETRY)
 
             # fake daylight and update everything

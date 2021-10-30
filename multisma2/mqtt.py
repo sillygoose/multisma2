@@ -51,8 +51,8 @@ def on_connect(client, userdata, flags, result_code):
     # pylint: disable=unused-argument
     if result_code == mqtt.MQTT_ERR_SUCCESS:
         client.connected = True
-        _LOGGER.info(
-            f"MQTT {userdata['Type']} client successfully connected to {userdata['IP']}:{userdata['Port']} using topics '{_LOCAL_VARS['client']}/#'")
+        type, ip, port, topic = userdata['Type'], userdata['IP'], userdata['Port'], _LOCAL_VARS['client']
+        _LOGGER.info(f"{type} client successfully connected to {ip}:{port} using topic '{topic}/#'")
     else:
         client.connection_failed = True
         _LOGGER.info(f"MQTT client connection failed: {error_msg(result_code)}")
@@ -62,7 +62,7 @@ def mqtt_exit():
     """Close the MQTT connection when exiting using atexit()."""
     # Disconnect the MQTT client from the broker
     _LOCAL_VARS['mqtt_client'].loop_stop()
-    _LOGGER.info("MQTT client disconnect being called")
+    _LOGGER.debug("MQTT client disconnect being called")
     _LOCAL_VARS['mqtt_client'].disconnect()
 
 
@@ -118,7 +118,7 @@ def start(config):
     )
 
     # Setup and try to connect to the broker
-    _LOGGER.info(f"Attempting {connection_type} MQTT client connection to {config.ip}:{config.port}")
+    _LOGGER.debug(f"Attempting {connection_type} MQTT client connection to {config.ip}:{config.port}")
 
     client.on_connect = on_connect
     client.username_pw_set(username=config.username, password=config.password)
