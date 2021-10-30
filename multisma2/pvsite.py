@@ -1,19 +1,15 @@
 """Code to interface with the SMA inverters and return the results."""
 
-import os
 import asyncio
 import datetime
 import time
 import logging
-
-# from pprint import pprint
 from dateutil import tz
 
 from astral.sun import sun, elevation, azimuth
 from astral import LocationInfo, now
 
 import clearsky
-import version
 
 from inverter import Inverter
 from influx import InfluxDB
@@ -147,7 +143,6 @@ class PVSite():
 
     async def run(self):
         """Run the site and wait for an event to exit."""
-        _LOGGER.info(f"multisma2 inverter collection utility {version.get_version()}, PID is {os.getpid()}")
         fast, medium, slow = self._sampling_fast, self._sampling_medium, self._sampling_slow
         _LOGGER.info(f"multisma2 sampling at {fast}/{medium}/{slow} second intervals")
 
