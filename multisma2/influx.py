@@ -86,12 +86,16 @@ class InfluxDB:
             _LOGGER.error(f"{e}")
             return False
 
+        if not influxdb_options.get('enable', None):
+            _LOGGER.warning("InfluxDB support is disabled in the YAML configuration file")
+            return True
+
         result = False
         try:
-            self._bucket = influxdb_options.get('bucket')
-            self._url = influxdb_options.get('url')
-            self._token = influxdb_options.get('token')
-            self._org = influxdb_options.get('org')
+            self._bucket = influxdb_options.get('bucket', None)
+            self._url = influxdb_options.get('url', None)
+            self._token = influxdb_options.get('token', None)
+            self._org = influxdb_options.get('org', None)
             self._client = InfluxDBClient(url=self._url, token=self._token, org=self._org, enable_gzip=True)
             if not self._client:
                 raise FailedInitialization(
@@ -296,6 +300,8 @@ class InfluxDB:
             raise InfluxDBWriteError(f"Unexpected failure in write_sma_sensors(): {e}")
 
     def delete_bucket(self):
+        if not self._client:
+            return False
         try:
             buckets_api = self._client.buckets_api()
             found_bucket = buckets_api.find_bucket_by_name(self._bucket)
@@ -312,6 +318,8 @@ class InfluxDB:
             raise InfluxDBBucketError(f"Unexpected exception in delete_bucket(): {e}")
 
     def connect_bucket(self, create_bucket=False):
+        if not self._client:
+            return False
         try:
             buckets_api = self._client.buckets_api()
             bucket = buckets_api.find_bucket_by_name(self._bucket)

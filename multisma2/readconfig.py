@@ -150,7 +150,7 @@ def check_required_keys(yaml, required, path='') -> bool:
 
             if not yaml:
                 raise FailedInitialization(
-                    Exception(f"YAML file is corrupt or truncated, expecting to find '{rk}' and found nothing"))
+                    f"YAML file is corrupt or truncated, expecting to find '{rk}' and found nothing")
 
             if isinstance(yaml, list):
                 for index, element in enumerate(yaml):
@@ -203,47 +203,49 @@ def check_required_keys(yaml, required, path='') -> bool:
 
 
 def check_unsupported(yaml, required, path=''):
-    passed = True
+    try:
+        passed = True
+        if not yaml:
+            raise FailedInitialization("YAML file is corrupt or truncated, nothing left to parse")
+        if isinstance(yaml, list):
+            for index, element in enumerate(yaml):
+                for yk in element.keys():
+                    listpath = f"{path}.{yk}[{index}]"
 
-    if not yaml:
-        raise FailedInitialization(Exception("YAML file is corrupt or truncated, nothong left to parse"))
+                    yamlValue = dict(element).get(yk, None)
+                    for rk in required:
+                        supportedSubkeys = rk.get(yk, None)
+                        if supportedSubkeys:
+                            break
+                    if not supportedSubkeys:
+                        _LOGGER.info(f"'{listpath}' option is unsupported")
+                        return
 
-    if isinstance(yaml, list):
-        for index, element in enumerate(yaml):
-            for yk in element.keys():
-                listpath = f"{path}.{yk}[{index}]"
+                    subkeyList = supportedSubkeys.get('keys', None)
+                    if subkeyList:
+                        passed = check_unsupported(yamlValue, subkeyList, listpath) and passed
+        elif isinstance(yaml, dict) or isinstance(yaml, Configuration):
+            for yk in yaml.keys():
+                currentpath = path + yk if path == '' else path + '.' + yk
 
-                yamlValue = dict(element).get(yk, None)
+                yamlValue = dict(yaml).get(yk, None)
                 for rk in required:
                     supportedSubkeys = rk.get(yk, None)
                     if supportedSubkeys:
                         break
                 if not supportedSubkeys:
-                    _LOGGER.info(f"'{listpath}' option is unsupported")
+                    _LOGGER.info(f"'{currentpath}' option is unsupported")
                     return
 
                 subkeyList = supportedSubkeys.get('keys', None)
                 if subkeyList:
-                    passed = check_unsupported(yamlValue, subkeyList, listpath) and passed
-    elif isinstance(yaml, dict) or isinstance(yaml, Configuration):
-        for yk in yaml.keys():
-            currentpath = path + yk if path == '' else path + '.' + yk
-
-            yamlValue = dict(yaml).get(yk, None)
-            for rk in required:
-                supportedSubkeys = rk.get(yk, None)
-                if supportedSubkeys:
-                    break
-            if not supportedSubkeys:
-                _LOGGER.info(f"'{currentpath}' option is unsupported")
-                return
-
-            subkeyList = supportedSubkeys.get('keys', None)
-            if subkeyList:
-                passed = check_unsupported(yamlValue, subkeyList, currentpath) and passed
-
-    else:
-        raise FailedInitialization(Exception('Unexpected YAML checking error'))
+                    passed = check_unsupported(yamlValue, subkeyList, currentpath) and passed
+        else:
+            raise FailedInitialization('Unexpected YAML checking error')
+    except FailedInitialization:
+        raise
+    except Exception as e:
+        raise FailedInitialization(f"Unexpected exception: {e}")
     return passed
 
 
@@ -323,7 +325,7 @@ def check_config(config):
     except FailedInitialization:
         raise
     except Exception as e:
-        raise FailedInitialization(Exception(f"Unexpected exception: {e}"))
+        raise FailedInitialization(f"Unexpected exception: {e}")
     return config if result else None
 
 
@@ -335,13 +337,14 @@ def read_config():
         config = config_from_yaml(data=yaml_file, read_from_file=True)
         if config:
             config = check_config(config)
-
+        return config
     except ConfigError as e:
-        raise FailedInitialization(f"{e}")
+        raise FailedInitialization(f"ConfigError exception: {e}")
+    except FailedInitialization:
+        raise
     except Exception as e:
         error_message = buildYAMLExceptionString(exception=e, file=yaml_file)
-        raise FailedInitialization(Exception(f"{error_message}"))
-    return config
+        raise FailedInitialization(f"Unexpected exception: {error_message}")
 
 
 def retrieve_options(config, key, option_list) -> dict:

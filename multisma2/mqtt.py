@@ -97,10 +97,8 @@ def start(config):
         return False
 
     if config.enable is False:
+        _LOGGER.warning("MQTT support is disabled in the YAML configuration file")
         return True
-
-    if check_config(config) is False:
-        return False
 
     result = False
 

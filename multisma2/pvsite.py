@@ -110,7 +110,7 @@ class PVSite():
                 invObject = Inverter(i.get('name'), i.get('url'), i.get('username'), i.get('password'), self._session)
                 self._inverters.append(invObject)
             except Exception as e:
-                _LOGGER.error(f"An error occurred while setting up the inverters: {e} ")
+                _LOGGER.error(f"An error occurred while setting up the inverters: {e}")
                 return False
 
         if 'influxdb2' in config.keys():
@@ -118,10 +118,14 @@ class PVSite():
                 self._influxdb_client.start()
             except FailedInitialization:
                 return False
+        else:
+            _LOGGER.warning("No support for InfluxDB included in YAML file")
 
         if 'mqtt' in config.keys():
             if not mqtt.start(config=config.mqtt):
                 return False
+        else:
+            _LOGGER.warning("No support for MQTT included in YAML file")
 
         if 'settings' in config.keys() and 'sampling' in config.settings.keys():
             self._sampling_fast = config.settings.sampling.get('fast', _DEFAULT_FAST)

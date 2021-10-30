@@ -40,6 +40,10 @@ Now features a wider range of outputs, basically anything you see in your browse
 
 ## What's new
 
+#### 1.1.6
+
+- Warning messages issued if either MQTT or InfluxDB are disabled in the YAML configuration file
+
 #### 1.1.5
 
 - Updated code with improvements made in cs_esphome
