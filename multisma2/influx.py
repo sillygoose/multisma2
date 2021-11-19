@@ -132,7 +132,6 @@ class InfluxDB:
         except Exception as e:
             _LOGGER.error(f"Unexpected exception: {e}")
         finally:
-            self._client = None
             return result
 
     def stop(self):
