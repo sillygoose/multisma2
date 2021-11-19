@@ -41,7 +41,7 @@ class Multisma2():
     def run(self):
         """Code to handle the start(), run(), and stop() interfaces."""
         # ERROR_DELAY might be non-zero when some errors are detected *for now not implemented)
-        ERROR_DELAY = 0
+        ERROR_DELAY = 10
         delay = 0
         try:
             try:
@@ -60,11 +60,11 @@ class Multisma2():
             _LOGGER.critical("Received AbnormalCompletion exception")
             delay = ERROR_DELAY
         except FailedInitialization:
-            # _LOGGER.critical("Received FailedInitialization exception")
+            _LOGGER.debug("Received FailedInitialization exception")
             delay = ERROR_DELAY
         except Exception as e:
             _LOGGER.error(f"Unexpected exception caught: {e}")
-            delay = 0
+            delay = ERROR_DELAY
         finally:
             try:
                 with DelayedKeyboardInterrupt():

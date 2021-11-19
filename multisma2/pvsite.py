@@ -92,7 +92,7 @@ class PVSite():
         self._sampling_medium = _DEFAULT_MEDIUM
         self._sampling_slow = _DEFAULT_SLOW
 
-    async def start(self):
+    async def start(self) -> bool:
         """Initialize the PVSite object."""
         config = self._config
 
@@ -111,7 +111,9 @@ class PVSite():
 
         if 'influxdb2' in config.keys():
             try:
-                self._influxdb_client.start()
+                result = self._influxdb_client.start()
+                if result == False:
+                    return False
             except FailedInitialization:
                 return False
         else:

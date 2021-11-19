@@ -77,7 +77,7 @@ class InfluxDB:
         self._url = None
         self._bucket = None
 
-    def start(self):
+    def start(self) -> bool:
         """Initialize the InfluxDB client."""
         try:
             influxdb_options = retrieve_options(self._config, 'influxdb2', _INFLUXDB2_OPTIONS)
@@ -124,8 +124,7 @@ class InfluxDB:
             result = True
 
         except FailedInitialization as e:
-            _LOGGER.error(f" client {e}")
-            self._client = None
+            _LOGGER.error(f"{e}")
         except NewConnectionError:
             _LOGGER.error(f"InfluxDB client unable to connect to host at {self._url}")
         except ApiException as e:
@@ -133,6 +132,7 @@ class InfluxDB:
         except Exception as e:
             _LOGGER.error(f"Unexpected exception: {e}")
         finally:
+            self._client = None
             return result
 
     def stop(self):
@@ -335,6 +335,8 @@ class InfluxDB:
         except ApiException as e:
             raise InfluxDBBucketError(
                 f"InfluxDB client unable to create bucket '{self._bucket}' at {self._url}: {e.reason}")
+        except NewConnectionError as e:
+            raise
         except Exception as e:
             raise InfluxDBBucketError(f"Unexpected exception in connect_bucket(): {e}")
 
