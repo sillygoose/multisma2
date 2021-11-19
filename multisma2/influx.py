@@ -335,7 +335,7 @@ class InfluxDB:
         except ApiException as e:
             raise InfluxDBBucketError(
                 f"InfluxDB client unable to create bucket '{self._bucket}' at {self._url}: {e.reason}")
-        except NewConnectionError as e:
+        except NewConnectionError:
             raise
         except Exception as e:
             raise InfluxDBBucketError(f"Unexpected exception in connect_bucket(): {e}")

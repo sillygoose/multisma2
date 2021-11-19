@@ -112,7 +112,7 @@ class PVSite():
         if 'influxdb2' in config.keys():
             try:
                 result = self._influxdb_client.start()
-                if result == False:
+                if result is False:
                     return False
             except FailedInitialization:
                 return False
