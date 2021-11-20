@@ -256,11 +256,6 @@ def check_config(config):
         {
             'multisma2': {'required': True, 'keys':
                           [
-                              {'log': {'required': True, 'keys': [
-                                  {'file': {'required': True, 'keys': [], 'type': str}},
-                                  {'format': {'required': True, 'keys': [], 'type': str}},
-                                  {'level': {'required': True, 'keys': [], 'type': str}},
-                              ]}},
                               {'site': {'required': True, 'keys': [
                                   {'name': {'required': True, 'keys': [], 'type': str}},
                                   {'region': {'required': True, 'keys': [], 'type': str}},

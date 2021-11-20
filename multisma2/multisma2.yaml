@@ -1,11 +1,5 @@
 # Copy this file to 'multisma2.yaml' and complete with your site details.
 multisma2:
-  # Application log file customization, logging levels are 'INFO', 'WARN', and 'ERROR'
-  log:
-    file: 'log/multisma2'
-    format: '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
-    level: 'INFO'
-
   # Site location details for solar time calculations (elevation is in meters)
   # Production fuel mix factor (kgCO2e per kWh) which is an estimate of local utility KgCO2e/kWh
   # You can get these estimates from the EPA, your utility company

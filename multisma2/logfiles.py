@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 
 _LOGGER = logging.getLogger('multisma2')
 
-_DEFAULT_LOG_FILE = 'multisma2'
+_DEFAULT_LOG_FILE = 'log/multisma2'
 _DEFAULT_LOG_FORMAT = '[%(asctime)s] [%(module)s] [%(levelname)s] %(message)s'
 _DEFAULT_LOG_LEVEL = 'INFO'
 
