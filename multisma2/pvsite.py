@@ -223,7 +223,7 @@ class PVSite():
         while True:
             right_now = datetime.datetime.now()
             tomorrow = right_now + datetime.timedelta(days=1)
-            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 0))
+            midnight = datetime.datetime.combine(tomorrow, datetime.time(0, 1))
             await asyncio.sleep((midnight - right_now).total_seconds())
 
             await self.solar_data_update()
@@ -255,6 +255,8 @@ class PVSite():
                 if sensor:
                     mqtt.publish(sensor)
                     self._influxdb_client.write_sma_sensors(sensor=sensor, timestamp=int(midnight.timestamp()))
+
+            await asyncio.sleep(600)
             self._daylight = saved_daylight
 
     async def scheduler(self, queues):
