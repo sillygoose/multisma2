@@ -18,13 +18,13 @@
       }
     ]
   },
-  "description": "Solar Production Dashboard",
+  "description": "Solar Production Dashboard by multisma2",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 0,
   "id": 10,
-  "iteration": 1635561835666,
+  "iteration": 1637692625198,
   "links": [],
   "liveNow": false,
   "panels": [
@@ -317,7 +317,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -413,7 +413,7 @@
         "showUnfilled": true,
         "text": {}
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -660,7 +660,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -746,7 +746,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -832,7 +832,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -918,7 +918,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -1111,7 +1111,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -1197,7 +1197,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -1284,7 +1284,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -1370,7 +1370,7 @@
         "text": {},
         "textMode": "value"
       },
-      "pluginVersion": "8.2.2",
+      "pluginVersion": "8.2.4",
       "targets": [
         {
           "groupBy": [
@@ -2548,9 +2548,11 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 31,
+  "schemaVersion": 32,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "multisma2"
+  ],
   "templating": {
     "list": [
       {
@@ -2611,5 +2613,5 @@
   "timezone": "",
   "title": "Solar Production",
   "uid": "zoZVB5Nnz",
-  "version": 31
+  "version": 32
 }
