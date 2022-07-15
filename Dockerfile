@@ -1,5 +1,5 @@
-# Ubuntu Hirsute gets Python 3.9.5
-FROM ubuntu:hirsute
+# Ubuntu Hirsute gets Python 3.10.4
+FROM ubuntu:jammy
 
 # tzdata setup
 ENV TZ America/New_York
