@@ -1,2617 +1,2991 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": "-- Grafana --",
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
-  },
-  "description": "Solar Production Dashboard by multisma2",
-  "editable": true,
-  "fiscalYearStartMonth": 0,
-  "gnetId": null,
-  "graphTooltip": 0,
-  "id": 10,
-  "iteration": 1637692625198,
-  "links": [],
-  "liveNow": false,
-  "panels": [
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "datasource",
+                    "uid": "grafana"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
             }
-          },
-          "mappings": [],
-          "max": 25000,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "watt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 11,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "8.2.2",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", \"Site\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Site\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "Site",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", \"SB71\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB71\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "SB71",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", \"SB72\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB72\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "SB72",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", \"SB51\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB51\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "SB51",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Inverter Production",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "light-green",
-            "mode": "fixed"
-          },
-          "decimals": 0,
-          "mappings": [],
-          "max": 25000,
-          "min": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "#EAB839",
-                "value": 5000
-              },
-              {
-                "color": "#EF843C",
-                "value": 10000
-              },
-              {
-                "color": "#6ED0E0",
-                "value": 15000
-              },
-              {
-                "color": "red",
-                "value": 20000
-              }
-            ]
-          },
-          "unit": "W"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 5,
-        "x": 12,
-        "y": 0
-      },
-      "id": 64,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> filter(fn: (r) => r._inverter == \"site\")\n  |> last()\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Current Production",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "continuous-RdYlGr"
-          },
-          "mappings": [],
-          "max": 100,
-          "min": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "light-orange",
-                "value": 80
-              },
-              {
-                "color": "green",
-                "value": 95
-              }
-            ]
-          },
-          "unit": "percent"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 7,
-        "x": 17,
-        "y": 0
-      },
-      "id": 65,
-      "options": {
-        "displayMode": "lcd",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "showUnfilled": true,
-        "text": {}
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"Site\":\n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))",
-          "refId": "Site",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb71\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB71\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
-          "refId": "SB71",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb72\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB72\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
-          "refId": "SB72",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb51\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB51\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
-          "refId": "SB51",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Efficiency",
-      "type": "bargauge"
-    },
-    {
-      "datasource": null,
-      "description": "",
-      "gridPos": {
-        "h": 1,
-        "w": 12,
-        "x": 12,
-        "y": 6
-      },
-      "id": 47,
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "queryType": "randomWalk",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Production History",
-      "type": "mxswat-separator-panel"
-    },
-    {
-      "datasource": "${datasource}",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 1,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kwatth"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 12,
-        "y": 7
-      },
-      "id": 70,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^_kwh$/",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Today",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kWh"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 15,
-        "y": 7
-      },
-      "id": 69,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "/^_kwh$/",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "This Month",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "MWh"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 18,
-        "y": 7
-      },
-      "id": 68,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^_mwh$/",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"year\")\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.001) }))\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "This Year",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "MWh"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 21,
-        "y": 7
-      },
-      "id": 66,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "/^_mwh$/",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.000001) }))",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Lifetime",
-      "type": "stat"
-    },
-    {
-      "datasource": null,
-      "description": "",
-      "gridPos": {
-        "h": 1,
-        "w": 6,
-        "x": 12,
-        "y": 10
-      },
-      "id": 77,
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Sun Position",
-      "type": "mxswat-separator-panel"
-    },
-    {
-      "datasource": "multisma2",
-      "description": "",
-      "gridPos": {
-        "h": 1,
-        "w": 6,
-        "x": 18,
-        "y": 10
-      },
-      "id": 59,
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "queryType": "randomWalk",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "CO2 Avoided",
-      "type": "mxswat-separator-panel"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "degree"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 12,
-        "y": 11
-      },
-      "id": 74,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Elevation",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 0,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "degree"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 15,
-        "y": 11
-      },
-      "id": 75,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Azimuth",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 2,
-          "mappings": [],
-          "min": 0,
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kg"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 18,
-        "y": 11
-      },
-      "id": 71,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "/^_kgco2e$/",
-          "values": true
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: (float(v: r._value) * 0.18991) }))\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Today",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "decimals": 2,
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "mt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 3,
-        "x": 21,
-        "y": 11
-      },
-      "id": 73,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": true
-        },
-        "text": {},
-        "textMode": "value"
-      },
-      "pluginVersion": "8.2.4",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ r with _value: (float(v: r._value) * 0.001 * 0.18991 * 0.001) }))\n",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Lifetime",
-      "type": "stat"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "watt"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "8.1.5",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Actual Production\": (float(v: r._value) * 3600.0 / float(v: r.elapsed)) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Actual Production\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "Actual Production",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, \"Clearsky Potential\": (r._value * float(v: ${panel_area}) * float(v: ${panel_efficiency})) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"Clearsky Potential\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
-          "refId": "Clearsky Potential",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Clear Sky Irradiance",
-      "type": "timeseries"
-    },
-    {
-      "datasource": null,
-      "description": "",
-      "gridPos": {
-        "h": 2,
-        "w": 12,
-        "x": 12,
-        "y": 14
-      },
-      "id": 58,
-      "pluginVersion": "7.3.7",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "type": "mxswat-separator-panel"
-    },
-    {
-      "cards": {
-        "cardHSpacing": 2,
-        "cardMinWidth": 5,
-        "cardRound": null,
-        "cardVSpacing": 2
-      },
-      "color": {
-        "cardColor": "#b4ff00",
-        "colorScale": "sqrt",
-        "colorScheme": "interpolateRdYlGn",
-        "defaultColor": "#757575",
-        "exponent": 0.5,
-        "mode": "discrete",
-        "thresholds": [
-          {
-            "$$hashKey": "object:282",
-            "color": "#FFB357",
-            "tooltip": "Start",
-            "value": "1467"
-          },
-          {
-            "$$hashKey": "object:283",
-            "color": "#73BF69",
-            "tooltip": "MPP",
-            "value": "295"
-          },
-          {
-            "$$hashKey": "object:284",
-            "color": "#CA95E5",
-            "tooltip": "Unavailable",
-            "value": "16777213"
-          },
-          {
-            "$$hashKey": "object:285",
-            "color": "#8F3BB8",
-            "tooltip": "No data",
-            "value": "0"
-          }
         ]
-      },
-      "datasource": "${datasource}",
-      "description": "",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 16
-      },
-      "hideTimeOverride": true,
-      "highlightCards": true,
-      "id": 52,
-      "interval": null,
-      "legend": {
-        "show": true
-      },
-      "maxDataPoints": 2000,
-      "nullPointMode": "as empty",
-      "pageSize": 15,
-      "pluginVersion": "7.3.6",
-      "seriesFilterIndex": -1,
-      "statusmap": {
-        "ConfigVersion": "v1"
-      },
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": "4h",
-      "timeShift": null,
-      "title": "Operating Status",
-      "tooltip": {
-        "extraInfo": "",
-        "freezeOnClick": false,
-        "items": [],
-        "show": true,
-        "showExtraInfo": false,
-        "showItems": true
-      },
-      "type": "flant-statusmap-panel",
-      "useMax": true,
-      "usingPagination": false,
-      "xAxis": {
-        "show": false
-      },
-      "yAxis": {
-        "maxWidth": -1,
-        "minWidth": -1,
-        "show": false
-      },
-      "yAxisSort": "metrics",
-      "yLabel": {
-        "delimiter": "",
-        "labelTemplate": "",
-        "usingSplitLabel": false
-      }
     },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
+    "description": "Solar Production Dashboard by multisma2",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 10,
+    "iteration": 1658030959409,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": {
+                "uid": "${datasource}"
             },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "max": 25000,
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "watt"
+                },
+                "overrides": []
             },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
+            "gridPos": {
+                "h": 12,
+                "w": 12,
+                "x": 0,
+                "y": 0
             },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kWh"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Current Month"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
+            "id": 11,
+            "options": {
+                "legend": {
+                    "calcs": [
+                        "lastNotNull",
+                        "max"
+                    ],
+                    "displayMode": "table",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
                 }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 20
-      },
-      "hideTimeOverride": true,
-      "id": 49,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "hidden",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "8.1.5",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
             },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "\nfrom(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> limit(n:12, offset: 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Previous Month\": r._value }))\n",
-          "refId": "Previous",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "hide": false,
-          "query": "  from(bucket: \"multisma2\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, \"Current Month\": r._value }))\n",
-          "refId": "Current"
-        }
-      ],
-      "timeFrom": "13M",
-      "timeShift": "10d",
-      "title": "12 Month Production",
-      "transformations": [],
-      "type": "timeseries"
-    },
-    {
-      "datasource": "${datasource}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 100,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "kWh"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Moving Average"
-            },
-            "properties": [
-              {
-                "id": "custom.drawStyle",
-                "value": "line"
-              },
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "#F2495C",
-                  "mode": "fixed"
+            "pluginVersion": "8.2.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"site\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"site\", \"Site\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Site\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "Site",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb71\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", \"SB71\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB71\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "SB71",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb72\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", \"SB72\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB72\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "SB72",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\" and r._inverter == \"sb51\")\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", \"SB51\": r._value }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"SB51\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "SB51",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
                 }
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 0
-              },
-              {
-                "id": "custom.lineWidth",
-                "value": 6
-              },
-              {
-                "id": "displayName",
-                "value": "Moving Average"
-              },
-              {
-                "id": "custom.lineInterpolation",
-                "value": "smooth"
-              },
-              {
-                "id": "custom.fillOpacity",
-                "value": 0
-              }
-            ]
-          }
+            ],
+            "title": "Inverter Production",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "light-green",
+                        "mode": "fixed"
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "max": 25000,
+                    "min": 0,
+                    "noValue": "0",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 5000
+                            },
+                            {
+                                "color": "#EF843C",
+                                "value": 10000
+                            },
+                            {
+                                "color": "#6ED0E0",
+                                "value": 15000
+                            },
+                            {
+                                "color": "red",
+                                "value": 20000
+                            }
+                        ]
+                    },
+                    "unit": "W"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 5,
+                "x": 12,
+                "y": 0
+            },
+            "id": 64,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "auto"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"ac_measurements\" and r._field == \"power\")\n  |> filter(fn: (r) => r._inverter == \"site\")\n  |> last()\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Current Production",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "continuous-RdYlGr"
+                    },
+                    "mappings": [],
+                    "max": 100,
+                    "min": 0,
+                    "noValue": "0",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "light-orange",
+                                "value": 80
+                            },
+                            {
+                                "color": "green",
+                                "value": 95
+                            }
+                        ]
+                    },
+                    "unit": "percent"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 6,
+                "w": 7,
+                "x": 17,
+                "y": 0
+            },
+            "id": 65,
+            "options": {
+                "displayMode": "lcd",
+                "minVizHeight": 10,
+                "minVizWidth": 0,
+                "orientation": "horizontal",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "showUnfilled": true,
+                "text": {}
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"site\" )\n  |> last()\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"Site\":\n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))",
+                    "refId": "Site",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb71\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB71\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+                    "refId": "SB71",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb72\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB72\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+                    "refId": "SB72",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => (r._measurement == \"ac_measurements\" or r._measurement == \"dc_measurements\") and r._field == \"power\" and r._inverter == \"sb51\" )\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _measurement: r._measurement, _value: r._value}))\n  |> pivot(rowKey:[\"_time\"], columnKey: [\"_measurement\"], valueColumn: \"_value\")\n  |> map(fn: (r) => ({ _time: r._time, \"SB51\": \n      if not exists r.dc_measurements or r.dc_measurements == 0.0 then 0.0\n      else if not exists r.ac_measurements or r.ac_measurements == 0.0 then 0.0\n      else float(v: r.ac_measurements) / float(v: r.dc_measurements) * 100.0 } ))\n",
+                    "refId": "SB51",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Efficiency",
+            "type": "bargauge"
+        },
+        {
+            "datasource": {
+                "type": "datasource",
+                "uid": "grafana"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 1,
+                "w": 12,
+                "x": 12,
+                "y": 6
+            },
+            "id": 47,
+            "pluginVersion": "7.3.7",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "datasource",
+                        "uid": "grafana"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "queryType": "randomWalk",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "This Year Production",
+            "type": "mxswat-separator-panel"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 1,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "kwatth"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 12,
+                "y": 7
+            },
+            "id": 70,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^_kwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Today",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 0,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "kWh"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 15,
+                "y": 7
+            },
+            "id": 69,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "fields": "/^_kwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -32d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Month-To-Date",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 2,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "MWh"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 18,
+                "y": 7
+            },
+            "id": 68,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^_mwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"year\")\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.001) }))\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Year-To-Date",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 2,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "MWh"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 21,
+                "y": 7
+            },
+            "id": 66,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^_mwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.000001) }))",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Lifetime",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "datasource",
+                "uid": "grafana"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 1,
+                "w": 12,
+                "x": 12,
+                "y": 10
+            },
+            "id": 78,
+            "pluginVersion": "7.3.7",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "datasource",
+                        "uid": "grafana"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "queryType": "randomWalk",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Change from Last Year",
+            "type": "mxswat-separator-panel"
+        },
+        {
+            "datasource": {
+                "type": "influxdb",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 0,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0
+                            }
+                        ]
+                    },
+                    "unit": "kWh"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 4,
+                "x": 13,
+                "y": 11
+            },
+            "id": 80,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "fields": "/^_delta_kwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "import \"experimental\"\nimport \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"America/New_York\")\n\nlastYear = experimental.subDuration(d: 1y, from: now())\nthisYear = now()\n\nlastYearStart = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\nlastYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: lastYear, unit: 1d))))\n\nlastYearOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearStart, stop: lastYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearOutput\")\n\nthisYearStart = time(v: string(v: date.truncate(t: thisYear, unit: 1mo)))\nthisYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: thisYear, unit: 1d))))\n\nthisYearOutput = from(bucket: \"multisma2\")\n  |> range(start: thisYearStart, stop: thisYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"thisYearOutput\")\n\nunion(tables: [lastYearOutput, thisYearOutput])\n  |> sum(column: \"_kwh\")\n  |> map(fn: (r) => ({ _delta_kwh: r._kwh }))\n  |> yield(name: \"difference\")\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Month-To-Date",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "influxdb",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 3,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0
+                            }
+                        ]
+                    },
+                    "unit": "MWh"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 4,
+                "x": 18,
+                "y": 11
+            },
+            "id": 79,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/^_delta_mwh$/",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "import \"experimental\"\nimport \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"America/New_York\")\n\nlastYear = experimental.subDuration(d: 1y, from: now())\nthisYear = now()\n\nlastYearMonthStart = time(v: string(v: date.truncate(t: lastYear, unit: 1y)))\nlastYearMonthStop = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\n\nlastYearTodayStart = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\nlastYearTodayStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: lastYear, unit: 1d))))\n\nthisYearStart = time(v: string(v: date.truncate(t: thisYear, unit: 1y)))\nthisYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: thisYear, unit: 1d))))\n\nthisYearOutput = from(bucket: \"multisma2\")\n  |> range(start: thisYearStart, stop: thisYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"thisYearOutput\")\n\nlastYearMonthlyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearMonthStart, stop: lastYearMonthStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearMonthlyOutput\")\n\nlastYearDailyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearTodayStart, stop: lastYearTodayStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearDailyOutput\")\n\nunion(tables: [thisYearOutput, lastYearMonthlyOutput, lastYearDailyOutput])\n  |> sum(column: \"_kwh\")\n  |> map(fn: (r) => ({ _delta_mwh: r._kwh * 0.001 }))\n  |> yield(name: \"difference\")\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Year-To-Date",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "watt"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 12
+            },
+            "id": 8,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "hidden",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"total_wh\")\n  |> elapsed(unit: 1s)\n  |> difference(nonNegative: true, columns: [\"_value\"])\n  |> filter(fn: (r) => r._value > 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Actual Production\": (float(v: r._value) * 3600.0 / float(v: r.elapsed)) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false, column: \"Actual Production\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "Actual Production",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field == \"irradiance\")\n  |> map(fn: (r) => ({ _time: r._time, \"Clearsky Potential\": (r._value * float(v: ${panel_area}) * float(v: ${panel_efficiency})) }))\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false, column: \"Clearsky Potential\")\n  |> drop(columns: [\"_start\", \"_stop\", \"_field\"])\n",
+                    "refId": "Clearsky Potential",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Clear Sky Irradiance",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "datasource",
+                "uid": "grafana"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 1,
+                "w": 6,
+                "x": 12,
+                "y": 14
+            },
+            "id": 77,
+            "pluginVersion": "7.3.7",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "datasource",
+                        "uid": "grafana"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Sun Position",
+            "type": "mxswat-separator-panel"
+        },
+        {
+            "datasource": {
+                "uid": "multisma2"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 1,
+                "w": 6,
+                "x": 18,
+                "y": 14
+            },
+            "id": 59,
+            "pluginVersion": "7.3.7",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "multisma2"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "queryType": "randomWalk",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "CO2 Avoided",
+            "type": "mxswat-separator-panel"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 0,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "degree"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 12,
+                "y": 15
+            },
+            "id": 74,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"elevation\")\n  |> last()\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Elevation",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 0,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "degree"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 15,
+                "y": 15
+            },
+            "id": 75,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -15m)\n  |> filter(fn: (r) => r._measurement == \"sun\" and r._field== \"azimuth\")\n  |> last()\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Azimuth",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 2,
+                    "mappings": [],
+                    "min": 0,
+                    "noValue": "0",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "kg"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 18,
+                "y": 15
+            },
+            "id": 71,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "last"
+                    ],
+                    "fields": "/^_kgco2e$/",
+                    "values": true
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kgco2e: (float(v: r._value) * 0.18991) }))\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Today",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "decimals": 2,
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "mt"
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 3,
+                "w": 3,
+                "x": 21,
+                "y": 15
+            },
+            "id": 73,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": true
+                },
+                "text": {},
+                "textMode": "value"
+            },
+            "pluginVersion": "9.0.2",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter== \"site\" and r._field == \"total_wh\")\n  |> last()\n  |> map(fn: (r) => ({ r with _value: (float(v: r._value) * 0.001 * 0.18991 * 0.001) }))\n",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "title": "Lifetime",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "datasource",
+                "uid": "grafana"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 2,
+                "w": 12,
+                "x": 12,
+                "y": 18
+            },
+            "id": 58,
+            "pluginVersion": "7.3.7",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "datasource",
+                        "uid": "grafana"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "type": "mxswat-separator-panel"
+        },
+        {
+            "datasource": {
+                "type": "influxdb",
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "bars",
+                        "fillOpacity": 100,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "kWh"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Current Month"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 0,
+                "y": 20
+            },
+            "hideTimeOverride": true,
+            "id": 49,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "hidden",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                    "datasource": {
+                        "type": "influxdb",
+                        "uid": "PK8DPv8Gz"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "hide": false,
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "\nfrom(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n//  |> limit(n:12, offset: 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Previous Month\": r._value }))\n",
+                    "refId": "Previous",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "type": "influxdb",
+                        "uid": "PK8DPv8Gz"
+                    },
+                    "hide": true,
+                    "query": "  from(bucket: \"multisma2\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, \"Current Month\": r._value }))\n",
+                    "refId": "Current"
+                }
+            ],
+            "timeFrom": "13M",
+            "timeShift": "0d",
+            "title": "12 Month Production",
+            "transformations": [],
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "axisLabel": "",
+                        "axisPlacement": "auto",
+                        "barAlignment": 0,
+                        "drawStyle": "bars",
+                        "fillOpacity": 100,
+                        "gradientMode": "none",
+                        "hideFrom": {
+                            "legend": false,
+                            "tooltip": false,
+                            "viz": false
+                        },
+                        "lineInterpolation": "linear",
+                        "lineWidth": 1,
+                        "pointSize": 5,
+                        "scaleDistribution": {
+                            "type": "linear"
+                        },
+                        "showPoints": "never",
+                        "spanNulls": false,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        },
+                        "thresholdsStyle": {
+                            "mode": "off"
+                        }
+                    },
+                    "decimals": 0,
+                    "mappings": [],
+                    "min": 0,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    },
+                    "unit": "kWh"
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Moving Average"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.drawStyle",
+                                "value": "line"
+                            },
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "#F2495C",
+                                    "mode": "fixed"
+                                }
+                            },
+                            {
+                                "id": "custom.lineWidth",
+                                "value": 0
+                            },
+                            {
+                                "id": "custom.lineWidth",
+                                "value": 6
+                            },
+                            {
+                                "id": "displayName",
+                                "value": "Moving Average"
+                            },
+                            {
+                                "id": "custom.lineInterpolation",
+                                "value": "smooth"
+                            },
+                            {
+                                "id": "custom.fillOpacity",
+                                "value": 0
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 6,
+                "x": 6,
+                "y": 20
+            },
+            "hideTimeOverride": true,
+            "id": 76,
+            "options": {
+                "legend": {
+                    "calcs": [],
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "none"
+                }
+            },
+            "pluginVersion": "8.1.5",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "hide": false,
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, \"Production\": r._value }))\n",
+                    "refId": "Last 30",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> movingAverage(n: 30)\n  |> map(fn: (r) => ({ _time: r._time, \"Moving Average\": r._value }))\n",
+                    "refId": "Moving Average",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "timeFrom": "31d",
+            "timeShift": "12h",
+            "title": "30 Day Production",
+            "transformations": [],
+            "type": "timeseries"
+        },
+        {
+            "cards": {
+                "cardHSpacing": 2,
+                "cardMinWidth": 5,
+                "cardVSpacing": 2
+            },
+            "color": {
+                "cardColor": "#b4ff00",
+                "colorScale": "sqrt",
+                "colorScheme": "interpolateRdYlGn",
+                "defaultColor": "#757575",
+                "exponent": 0.5,
+                "mode": "discrete",
+                "thresholds": [
+                    {
+                        "$$hashKey": "object:282",
+                        "color": "#FFB357",
+                        "tooltip": "Start",
+                        "value": "1467"
+                    },
+                    {
+                        "$$hashKey": "object:283",
+                        "color": "#73BF69",
+                        "tooltip": "MPP",
+                        "value": "295"
+                    },
+                    {
+                        "$$hashKey": "object:284",
+                        "color": "#CA95E5",
+                        "tooltip": "Unavailable",
+                        "value": "16777213"
+                    },
+                    {
+                        "$$hashKey": "object:285",
+                        "color": "#8F3BB8",
+                        "tooltip": "No data",
+                        "value": "0"
+                    }
+                ]
+            },
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 12,
+                "y": 20
+            },
+            "hideBranding": false,
+            "hideTimeOverride": true,
+            "highlightCards": true,
+            "id": 52,
+            "legend": {
+                "show": true
+            },
+            "maxDataPoints": 2000,
+            "nullPointMode": "as empty",
+            "pageSize": 15,
+            "pluginVersion": "7.3.6",
+            "seriesFilterIndex": -1,
+            "statusmap": {
+                "ConfigVersion": "v1"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
+                    "refId": "B",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
+                    "refId": "C",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "timeFrom": "4h",
+            "title": "Operating Status",
+            "tooltip": {
+                "extraInfo": "",
+                "freezeOnClick": false,
+                "items": [],
+                "show": true,
+                "showExtraInfo": false,
+                "showItems": true
+            },
+            "type": "flant-statusmap-panel",
+            "useMax": true,
+            "usingPagination": false,
+            "xAxis": {
+                "show": false
+            },
+            "yAxis": {
+                "maxWidth": -1,
+                "minWidth": -1,
+                "show": false
+            },
+            "yAxisSort": "metrics",
+            "yLabel": {
+                "delimiter": "",
+                "labelTemplate": "",
+                "usingSplitLabel": false
+            }
+        },
+        {
+            "cards": {
+                "cardHSpacing": 2,
+                "cardMinWidth": 5,
+                "cardVSpacing": 2
+            },
+            "color": {
+                "cardColor": "#b4ff00",
+                "colorScale": "sqrt",
+                "colorScheme": "interpolateRdYlGn",
+                "defaultColor": "#757575",
+                "exponent": 0.5,
+                "mode": "discrete",
+                "thresholds": [
+                    {
+                        "$$hashKey": "object:329",
+                        "color": "#73BF69",
+                        "tooltip": "Ok",
+                        "value": "307"
+                    },
+                    {
+                        "$$hashKey": "object:330",
+                        "color": "#FFB357",
+                        "tooltip": "Warning",
+                        "value": "455"
+                    },
+                    {
+                        "$$hashKey": "object:331",
+                        "color": "#CA95E5",
+                        "tooltip": "Unavailable",
+                        "value": "16777213"
+                    },
+                    {
+                        "$$hashKey": "object:332",
+                        "color": "#8F3BB8",
+                        "tooltip": "No data",
+                        "value": "0"
+                    }
+                ]
+            },
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 12,
+                "y": 24
+            },
+            "hideBranding": false,
+            "hideTimeOverride": true,
+            "highlightCards": true,
+            "id": 54,
+            "legend": {
+                "show": true
+            },
+            "maxDataPoints": 2000,
+            "nullPointMode": "as empty",
+            "pageSize": 15,
+            "pluginVersion": "7.3.6",
+            "seriesFilterIndex": -1,
+            "statusmap": {
+                "ConfigVersion": "v1"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
+                    "refId": "B",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
+                    "refId": "C",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "timeFrom": "4h",
+            "title": "Condition",
+            "tooltip": {
+                "extraInfo": "",
+                "freezeOnClick": false,
+                "items": [],
+                "show": true,
+                "showExtraInfo": false,
+                "showItems": true
+            },
+            "type": "flant-statusmap-panel",
+            "useMax": true,
+            "usingPagination": false,
+            "xAxis": {
+                "show": false
+            },
+            "yAxis": {
+                "maxWidth": -1,
+                "minWidth": -1,
+                "show": false
+            },
+            "yAxisSort": "metrics",
+            "yLabel": {
+                "delimiter": "",
+                "labelTemplate": "",
+                "usingSplitLabel": false
+            }
+        },
+        {
+            "cards": {
+                "cardHSpacing": 2,
+                "cardMinWidth": 5,
+                "cardVSpacing": 2
+            },
+            "color": {
+                "cardColor": "#b4ff00",
+                "colorScale": "sqrt",
+                "colorScheme": "interpolateRdYlGn",
+                "defaultColor": "#757575",
+                "exponent": 0.5,
+                "mode": "discrete",
+                "thresholds": [
+                    {
+                        "$$hashKey": "object:377",
+                        "color": "#73BF69",
+                        "tooltip": "Not Active",
+                        "value": "884"
+                    },
+                    {
+                        "$$hashKey": "object:378",
+                        "color": "#CA95E5",
+                        "tooltip": "Unavailable",
+                        "value": "16777213"
+                    },
+                    {
+                        "$$hashKey": "object:379",
+                        "color": "#8F3BB8",
+                        "tooltip": "No data",
+                        "value": "0"
+                    }
+                ]
+            },
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 12,
+                "y": 28
+            },
+            "hideBranding": false,
+            "hideTimeOverride": true,
+            "highlightCards": true,
+            "id": 56,
+            "legend": {
+                "show": true
+            },
+            "maxDataPoints": 2000,
+            "nullPointMode": "as empty",
+            "pageSize": 15,
+            "pluginVersion": "7.3.6",
+            "seriesFilterIndex": -1,
+            "statusmap": {
+                "ConfigVersion": "v1"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
+                    "refId": "B",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
+                    "refId": "C",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "timeFrom": "4h",
+            "title": "Derating",
+            "tooltip": {
+                "extraInfo": "",
+                "freezeOnClick": false,
+                "items": [],
+                "show": true,
+                "showExtraInfo": false,
+                "showItems": true
+            },
+            "type": "flant-statusmap-panel",
+            "useMax": true,
+            "usingPagination": false,
+            "xAxis": {
+                "show": false
+            },
+            "yAxis": {
+                "maxWidth": -1,
+                "minWidth": -1,
+                "show": false
+            },
+            "yAxisSort": "metrics",
+            "yLabel": {
+                "delimiter": "",
+                "labelTemplate": "",
+                "usingSplitLabel": false
+            }
+        }
+    ],
+    "refresh": "",
+    "schemaVersion": 36,
+    "style": "dark",
+    "tags": [
+        "multisma2"
+    ],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": false,
+                    "text": "parkerlane",
+                    "value": "parkerlane"
+                },
+                "description": "InfluxDB2 source of multisma2 data",
+                "hide": 0,
+                "includeAll": false,
+                "label": "Data Source",
+                "multi": false,
+                "name": "datasource",
+                "options": [],
+                "query": "influxdb",
+                "queryValue": "",
+                "refresh": 1,
+                "regex": "parkerlane|dundee",
+                "skipUrlSync": false,
+                "type": "datasource"
+            },
+            {
+                "description": "Area of solar panels in square meters",
+                "hide": 2,
+                "label": "Panel Area",
+                "name": "panel_area",
+                "query": "144",
+                "skipUrlSync": false,
+                "type": "constant"
+            },
+            {
+                "description": "Panel efficiency is the fraction of solar radiation converted to power",
+                "hide": 2,
+                "label": "Panel Efficiency",
+                "name": "panel_efficiency",
+                "query": "0.1725",
+                "skipUrlSync": false,
+                "type": "constant"
+            }
         ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 6,
-        "y": 20
-      },
-      "hideTimeOverride": true,
-      "id": 76,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "pluginVersion": "8.1.5",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, \"Production\": r._value }))\n",
-          "refId": "Last 30",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -61d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> movingAverage(n: 30)\n  |> map(fn: (r) => ({ _time: r._time, \"Moving Average\": r._value }))\n",
-          "refId": "Moving Average",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": "31d",
-      "timeShift": "12h",
-      "title": "30 Day Production",
-      "transformations": [],
-      "type": "timeseries"
     },
-    {
-      "cards": {
-        "cardHSpacing": 2,
-        "cardMinWidth": 5,
-        "cardRound": null,
-        "cardVSpacing": 2
-      },
-      "color": {
-        "cardColor": "#b4ff00",
-        "colorScale": "sqrt",
-        "colorScheme": "interpolateRdYlGn",
-        "defaultColor": "#757575",
-        "exponent": 0.5,
-        "mode": "discrete",
-        "thresholds": [
-          {
-            "$$hashKey": "object:329",
-            "color": "#73BF69",
-            "tooltip": "Ok",
-            "value": "307"
-          },
-          {
-            "$$hashKey": "object:330",
-            "color": "#FFB357",
-            "tooltip": "Warning",
-            "value": "455"
-          },
-          {
-            "$$hashKey": "object:331",
-            "color": "#CA95E5",
-            "tooltip": "Unavailable",
-            "value": "16777213"
-          },
-          {
-            "$$hashKey": "object:332",
-            "color": "#8F3BB8",
-            "tooltip": "No data",
-            "value": "0"
-          }
-        ]
-      },
-      "datasource": "${datasource}",
-      "description": "",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 20
-      },
-      "hideTimeOverride": true,
-      "highlightCards": true,
-      "id": 54,
-      "interval": null,
-      "legend": {
-        "show": true
-      },
-      "maxDataPoints": 2000,
-      "nullPointMode": "as empty",
-      "pageSize": 15,
-      "pluginVersion": "7.3.6",
-      "seriesFilterIndex": -1,
-      "statusmap": {
-        "ConfigVersion": "v1"
-      },
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"condition\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": "4h",
-      "timeShift": null,
-      "title": "Condition",
-      "tooltip": {
-        "extraInfo": "",
-        "freezeOnClick": false,
-        "items": [],
-        "show": true,
-        "showExtraInfo": false,
-        "showItems": true
-      },
-      "type": "flant-statusmap-panel",
-      "useMax": true,
-      "usingPagination": false,
-      "xAxis": {
-        "show": false
-      },
-      "yAxis": {
-        "maxWidth": -1,
-        "minWidth": -1,
-        "show": false
-      },
-      "yAxisSort": "metrics",
-      "yLabel": {
-        "delimiter": "",
-        "labelTemplate": "",
-        "usingSplitLabel": false
-      }
+    "time": {
+        "from": "now-2d",
+        "to": "now"
     },
-    {
-      "cards": {
-        "cardHSpacing": 2,
-        "cardMinWidth": 5,
-        "cardRound": null,
-        "cardVSpacing": 2
-      },
-      "color": {
-        "cardColor": "#b4ff00",
-        "colorScale": "sqrt",
-        "colorScheme": "interpolateRdYlGn",
-        "defaultColor": "#757575",
-        "exponent": 0.5,
-        "mode": "discrete",
-        "thresholds": [
-          {
-            "$$hashKey": "object:377",
-            "color": "#73BF69",
-            "tooltip": "Not Active",
-            "value": "884"
-          },
-          {
-            "$$hashKey": "object:378",
-            "color": "#CA95E5",
-            "tooltip": "Unavailable",
-            "value": "16777213"
-          },
-          {
-            "$$hashKey": "object:379",
-            "color": "#8F3BB8",
-            "tooltip": "No data",
-            "value": "0"
-          }
+    "timepicker": {
+        "hidden": false,
+        "refresh_intervals": [
+            "10s",
+            "30s",
+            "60s"
         ]
-      },
-      "datasource": "${datasource}",
-      "description": "",
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "hideTimeOverride": true,
-      "highlightCards": true,
-      "id": 56,
-      "interval": null,
-      "legend": {
-        "show": true
-      },
-      "maxDataPoints": 2000,
-      "nullPointMode": "as empty",
-      "pageSize": 15,
-      "pluginVersion": "7.3.6",
-      "seriesFilterIndex": -1,
-      "statusmap": {
-        "ConfigVersion": "v1"
-      },
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"derating\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "timeFrom": "4h",
-      "timeShift": null,
-      "title": "Derating",
-      "tooltip": {
-        "extraInfo": "",
-        "freezeOnClick": false,
-        "items": [],
-        "show": true,
-        "showExtraInfo": false,
-        "showItems": true
-      },
-      "type": "flant-statusmap-panel",
-      "useMax": true,
-      "usingPagination": false,
-      "xAxis": {
-        "show": false
-      },
-      "yAxis": {
-        "maxWidth": -1,
-        "minWidth": -1,
-        "show": false
-      },
-      "yAxisSort": "metrics",
-      "yLabel": {
-        "delimiter": "",
-        "labelTemplate": "",
-        "usingSplitLabel": false
-      }
-    }
-  ],
-  "refresh": "",
-  "schemaVersion": 32,
-  "style": "dark",
-  "tags": [
-    "multisma2"
-  ],
-  "templating": {
-    "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "parkerlane",
-          "value": "parkerlane"
-        },
-        "description": "InfluxDB2 source of multisma2 data",
-        "error": null,
-        "hide": 0,
-        "includeAll": false,
-        "label": "Data Source",
-        "multi": false,
-        "name": "datasource",
-        "options": [],
-        "query": "influxdb",
-        "queryValue": "",
-        "refresh": 1,
-        "regex": "parkerlane|dundee",
-        "skipUrlSync": false,
-        "type": "datasource"
-      },
-      {
-        "description": "Area of solar panels in square meters",
-        "error": null,
-        "hide": 2,
-        "label": "Panel Area",
-        "name": "panel_area",
-        "query": "144",
-        "skipUrlSync": false,
-        "type": "constant"
-      },
-      {
-        "description": "Panel efficiency is the fraction of solar radiation converted to power",
-        "error": null,
-        "hide": 2,
-        "label": "Panel Efficiency",
-        "name": "panel_efficiency",
-        "query": "0.1725",
-        "skipUrlSync": false,
-        "type": "constant"
-      }
-    ]
-  },
-  "time": {
-    "from": "now-2d",
-    "to": "now"
-  },
-  "timepicker": {
-    "hidden": false,
-    "refresh_intervals": [
-      "10s",
-      "30s",
-      "60s"
-    ]
-  },
-  "timezone": "",
-  "title": "Solar Production",
-  "uid": "zoZVB5Nnz",
-  "version": 32
+    },
+    "timezone": "",
+    "title": "Solar Production",
+    "uid": "zoZVB5Nnz",
+    "version": 42,
+    "weekStart": ""
 }
