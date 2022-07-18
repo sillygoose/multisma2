@@ -26,7 +26,7 @@
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "id": 10,
-    "iteration": 1658112803652,
+    "iteration": 1658152717453,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -673,7 +673,7 @@
                             }
                         ]
                     },
-                    "unit": "kwatth"
+                    "unit": "kWh"
                 },
                 "overrides": []
             },
@@ -2987,6 +2987,6 @@
     "timezone": "",
     "title": "Solar Production",
     "uid": "zoZVB5Nnz",
-    "version": 43,
+    "version": 44,
     "weekStart": ""
 }
