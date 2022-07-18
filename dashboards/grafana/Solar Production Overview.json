@@ -26,7 +26,7 @@
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "id": 10,
-    "iteration": 1658030959409,
+    "iteration": 1658112803652,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -835,12 +835,13 @@
         },
         {
             "datasource": {
+                "type": "influxdb",
                 "uid": "${datasource}"
             },
             "description": "",
             "fieldConfig": {
                 "defaults": {
-                    "decimals": 2,
+                    "decimals": 0,
                     "mappings": [],
                     "thresholds": {
                         "mode": "absolute",
@@ -851,7 +852,7 @@
                             }
                         ]
                     },
-                    "unit": "MWh"
+                    "unit": "kWh"
                 },
                 "overrides": []
             },
@@ -871,7 +872,7 @@
                     "calcs": [
                         "lastNotNull"
                     ],
-                    "fields": "/^_mwh$/",
+                    "fields": "/^_kwh$/",
                     "values": false
                 },
                 "text": {},
@@ -899,7 +900,7 @@
                     ],
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -370d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"year\")\n  |> map(fn: (r) => ({ _time: r._time, _mwh: (float(v: r._value) * 0.001) }))\n",
+                    "query": "import \"experimental\"\nimport \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"America/New_York\")\n\nthisYear = now()\n\nthisYearStart = time(v: string(v: date.truncate(t: thisYear, unit: 1y)))\nthisYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: thisYear, unit: 1d))))\n\nfrom(bucket: \"multisma2\")\n  |> range(start: thisYearStart, stop: thisYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.000) }))\n  |> sum(column: \"_kwh\")\n",
                     "refId": "A",
                     "resultFormat": "time_series",
                     "select": [
@@ -1099,8 +1100,8 @@
             },
             "gridPos": {
                 "h": 3,
-                "w": 4,
-                "x": 13,
+                "w": 3,
+                "x": 15,
                 "y": 11
             },
             "id": 80,
@@ -1172,7 +1173,7 @@
             "description": "",
             "fieldConfig": {
                 "defaults": {
-                    "decimals": 3,
+                    "decimals": 0,
                     "mappings": [],
                     "thresholds": {
                         "mode": "absolute",
@@ -1187,13 +1188,13 @@
                             }
                         ]
                     },
-                    "unit": "MWh"
+                    "unit": "kWh"
                 },
                 "overrides": []
             },
             "gridPos": {
                 "h": 3,
-                "w": 4,
+                "w": 3,
                 "x": 18,
                 "y": 11
             },
@@ -1207,7 +1208,7 @@
                     "calcs": [
                         "lastNotNull"
                     ],
-                    "fields": "/^_delta_mwh$/",
+                    "fields": "/^_delta_kwh$/",
                     "values": false
                 },
                 "text": {},
@@ -1235,7 +1236,7 @@
                     ],
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "import \"experimental\"\nimport \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"America/New_York\")\n\nlastYear = experimental.subDuration(d: 1y, from: now())\nthisYear = now()\n\nlastYearMonthStart = time(v: string(v: date.truncate(t: lastYear, unit: 1y)))\nlastYearMonthStop = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\n\nlastYearTodayStart = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\nlastYearTodayStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: lastYear, unit: 1d))))\n\nthisYearStart = time(v: string(v: date.truncate(t: thisYear, unit: 1y)))\nthisYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: thisYear, unit: 1d))))\n\nthisYearOutput = from(bucket: \"multisma2\")\n  |> range(start: thisYearStart, stop: thisYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"thisYearOutput\")\n\nlastYearMonthlyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearMonthStart, stop: lastYearMonthStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearMonthlyOutput\")\n\nlastYearDailyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearTodayStart, stop: lastYearTodayStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearDailyOutput\")\n\nunion(tables: [thisYearOutput, lastYearMonthlyOutput, lastYearDailyOutput])\n  |> sum(column: \"_kwh\")\n  |> map(fn: (r) => ({ _delta_mwh: r._kwh * 0.001 }))\n  |> yield(name: \"difference\")\n",
+                    "query": "import \"experimental\"\nimport \"date\"\nimport \"timezone\"\n\noption location = timezone.location(name: \"America/New_York\")\n\nlastYear = experimental.subDuration(d: 1y, from: now())\nthisYear = now()\n\nlastYearMonthStart = time(v: string(v: date.truncate(t: lastYear, unit: 1y)))\nlastYearMonthStop = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\n\nlastYearTodayStart = time(v: string(v: date.truncate(t: lastYear, unit: 1mo)))\nlastYearTodayStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: lastYear, unit: 1d))))\n\nthisYearStart = time(v: string(v: date.truncate(t: thisYear, unit: 1y)))\nthisYearStop = experimental.addDuration(d: 1d, to: time(v: string(v: date.truncate(t: thisYear, unit: 1d))))\n\nthisYearOutput = from(bucket: \"multisma2\")\n  |> range(start: thisYearStart, stop: thisYearStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * 1.0) }))\n  |> yield(name: \"thisYearOutput\")\n\nlastYearMonthlyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearMonthStart, stop: lastYearMonthStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearMonthlyOutput\")\n\nlastYearDailyOutput = from(bucket: \"multisma2\")\n  |> range(start: lastYearTodayStart, stop: lastYearTodayStop)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, _kwh: (float(v: r._value) * -1.0) }))\n  |> yield(name: \"lastYearDailyOutput\")\n\nunion(tables: [thisYearOutput, lastYearMonthlyOutput, lastYearDailyOutput])\n  |> sum(column: \"_kwh\")\n  |> map(fn: (r) => ({ _delta_kwh: r._kwh * 1.000 }))\n  |> yield(name: \"difference\")\n",
                     "refId": "A",
                     "resultFormat": "time_series",
                     "select": [
@@ -2986,6 +2987,6 @@
     "timezone": "",
     "title": "Solar Production",
     "uid": "zoZVB5Nnz",
-    "version": 42,
+    "version": 43,
     "weekStart": ""
 }
