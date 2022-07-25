@@ -26,7 +26,7 @@
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "id": 10,
-    "iteration": 1658152717453,
+    "iteration": 1658763458129,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -2057,7 +2057,7 @@
                     "hide": false,
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "\nfrom(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n//  |> limit(n:12, offset: 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Previous Month\": r._value }))\n",
+                    "query": "\nfrom(bucket: \"multisma2\")\n  |> range(start: -13mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> limit(n:12, offset: 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Previous Month\": r._value }))\n",
                     "refId": "Previous",
                     "resultFormat": "time_series",
                     "select": [
@@ -2081,7 +2081,7 @@
                         "type": "influxdb",
                         "uid": "PK8DPv8Gz"
                     },
-                    "hide": true,
+                    "hide": false,
                     "query": "  from(bucket: \"multisma2\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, \"Current Month\": r._value }))\n",
                     "refId": "Current"
                 }
@@ -2094,6 +2094,7 @@
         },
         {
             "datasource": {
+                "type": "influxdb",
                 "uid": "${datasource}"
             },
             "description": "",
@@ -2183,6 +2184,21 @@
                                 "value": 0
                             }
                         ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Today"
+                        },
+                        "properties": [
+                            {
+                                "id": "color",
+                                "value": {
+                                    "fixedColor": "orange",
+                                    "mode": "fixed"
+                                }
+                            }
+                        ]
                     }
                 ]
             },
@@ -2228,7 +2244,7 @@
                     "hide": false,
                     "orderByTime": "ASC",
                     "policy": "default",
-                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, \"Production\": r._value }))\n",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> limit(n:30, offset: 0)\n  |> map(fn: (r) => ({ _time: r._time, \"Production\": r._value }))\n",
                     "refId": "Last 30",
                     "resultFormat": "time_series",
                     "select": [
@@ -2246,6 +2262,15 @@
                         ]
                     ],
                     "tags": []
+                },
+                {
+                    "datasource": {
+                        "type": "influxdb",
+                        "uid": "${datasource}"
+                    },
+                    "hide": false,
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -1d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"today\")\n  |> map(fn: (r) => ({ _time: r._time, \"Today\": r._value }))\n",
+                    "refId": "Today"
                 },
                 {
                     "datasource": {
@@ -2288,7 +2313,7 @@
                 }
             ],
             "timeFrom": "31d",
-            "timeShift": "12h",
+            "timeShift": "0h",
             "title": "30 Day Production",
             "transformations": [],
             "type": "timeseries"
@@ -2973,7 +2998,7 @@
         ]
     },
     "time": {
-        "from": "now-2d",
+        "from": "now-24h",
         "to": "now"
     },
     "timepicker": {
@@ -2987,6 +3012,6 @@
     "timezone": "",
     "title": "Solar Production",
     "uid": "zoZVB5Nnz",
-    "version": 44,
+    "version": 46,
     "weekStart": ""
 }
