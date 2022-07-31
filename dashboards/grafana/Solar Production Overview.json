@@ -26,7 +26,7 @@
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
     "id": 10,
-    "iteration": 1658763458129,
+    "iteration": 1659289298031,
     "links": [],
     "liveNow": false,
     "panels": [
@@ -1893,7 +1893,7 @@
             },
             "description": "",
             "gridPos": {
-                "h": 2,
+                "h": 1,
                 "w": 12,
                 "x": 12,
                 "y": 18
@@ -1942,6 +1942,218 @@
                 }
             ],
             "type": "mxswat-separator-panel"
+        },
+        {
+            "cards": {
+                "cardHSpacing": 2,
+                "cardMinWidth": 5,
+                "cardVSpacing": 2
+            },
+            "color": {
+                "cardColor": "#b4ff00",
+                "colorScale": "sqrt",
+                "colorScheme": "interpolateRdYlGn",
+                "defaultColor": "#757575",
+                "exponent": 0.5,
+                "mode": "discrete",
+                "thresholds": [
+                    {
+                        "$$hashKey": "object:282",
+                        "color": "#FFB357",
+                        "tooltip": "Start",
+                        "value": "1467"
+                    },
+                    {
+                        "$$hashKey": "object:283",
+                        "color": "#73BF69",
+                        "tooltip": "MPP",
+                        "value": "295"
+                    },
+                    {
+                        "$$hashKey": "object:284",
+                        "color": "#CA95E5",
+                        "tooltip": "Unavailable",
+                        "value": "16777213"
+                    },
+                    {
+                        "$$hashKey": "object:285",
+                        "color": "#8F3BB8",
+                        "tooltip": "No data",
+                        "value": "0"
+                    }
+                ]
+            },
+            "datasource": {
+                "uid": "${datasource}"
+            },
+            "description": "",
+            "gridPos": {
+                "h": 4,
+                "w": 12,
+                "x": 12,
+                "y": 19
+            },
+            "hideBranding": false,
+            "hideTimeOverride": true,
+            "highlightCards": true,
+            "id": 52,
+            "legend": {
+                "show": true
+            },
+            "maxDataPoints": 2000,
+            "nullPointMode": "as empty",
+            "pageSize": 15,
+            "pluginVersion": "7.3.6",
+            "seriesFilterIndex": -1,
+            "statusmap": {
+                "ConfigVersion": "v1"
+            },
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
+                    "refId": "A",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
+                    "refId": "B",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                },
+                {
+                    "datasource": {
+                        "uid": "${datasource}"
+                    },
+                    "groupBy": [
+                        {
+                            "params": [
+                                "$__interval"
+                            ],
+                            "type": "time"
+                        },
+                        {
+                            "params": [
+                                "null"
+                            ],
+                            "type": "fill"
+                        }
+                    ],
+                    "orderByTime": "ASC",
+                    "policy": "default",
+                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
+                    "refId": "C",
+                    "resultFormat": "time_series",
+                    "select": [
+                        [
+                            {
+                                "params": [
+                                    "value"
+                                ],
+                                "type": "field"
+                            },
+                            {
+                                "params": [],
+                                "type": "mean"
+                            }
+                        ]
+                    ],
+                    "tags": []
+                }
+            ],
+            "timeFrom": "4h",
+            "title": "Operating Status",
+            "tooltip": {
+                "extraInfo": "",
+                "freezeOnClick": false,
+                "items": [],
+                "show": true,
+                "showExtraInfo": false,
+                "showItems": true
+            },
+            "type": "flant-statusmap-panel",
+            "useMax": true,
+            "usingPagination": false,
+            "xAxis": {
+                "show": false
+            },
+            "yAxis": {
+                "maxWidth": -1,
+                "minWidth": -1,
+                "show": false
+            },
+            "yAxisSort": "metrics",
+            "yLabel": {
+                "delimiter": "",
+                "labelTemplate": "",
+                "usingSplitLabel": false
+            }
         },
         {
             "datasource": {
@@ -2082,7 +2294,7 @@
                         "uid": "PK8DPv8Gz"
                     },
                     "hide": false,
-                    "query": "  from(bucket: \"multisma2\")\n  |> range(start: -1mo)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, \"Current Month\": r._value }))\n",
+                    "query": "  from(bucket: \"multisma2\")\n  |> range(start: -31d)\n  |> filter(fn: (r) => r._measurement == \"production\" and r._inverter == \"site\" and r._field == \"month\")\n  |> last()\n  |> map(fn: (r) => ({ _time: r._time, \"Current Month\": r._value }))\n",
                     "refId": "Current"
                 }
             ],
@@ -2333,218 +2545,6 @@
                 "mode": "discrete",
                 "thresholds": [
                     {
-                        "$$hashKey": "object:282",
-                        "color": "#FFB357",
-                        "tooltip": "Start",
-                        "value": "1467"
-                    },
-                    {
-                        "$$hashKey": "object:283",
-                        "color": "#73BF69",
-                        "tooltip": "MPP",
-                        "value": "295"
-                    },
-                    {
-                        "$$hashKey": "object:284",
-                        "color": "#CA95E5",
-                        "tooltip": "Unavailable",
-                        "value": "16777213"
-                    },
-                    {
-                        "$$hashKey": "object:285",
-                        "color": "#8F3BB8",
-                        "tooltip": "No data",
-                        "value": "0"
-                    }
-                ]
-            },
-            "datasource": {
-                "uid": "${datasource}"
-            },
-            "description": "",
-            "gridPos": {
-                "h": 4,
-                "w": 12,
-                "x": 12,
-                "y": 20
-            },
-            "hideBranding": false,
-            "hideTimeOverride": true,
-            "highlightCards": true,
-            "id": 52,
-            "legend": {
-                "show": true
-            },
-            "maxDataPoints": 2000,
-            "nullPointMode": "as empty",
-            "pageSize": 15,
-            "pluginVersion": "7.3.6",
-            "seriesFilterIndex": -1,
-            "statusmap": {
-                "ConfigVersion": "v1"
-            },
-            "targets": [
-                {
-                    "datasource": {
-                        "uid": "${datasource}"
-                    },
-                    "groupBy": [
-                        {
-                            "params": [
-                                "$__interval"
-                            ],
-                            "type": "time"
-                        },
-                        {
-                            "params": [
-                                "null"
-                            ],
-                            "type": "fill"
-                        }
-                    ],
-                    "orderByTime": "ASC",
-                    "policy": "default",
-                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb71\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb71\", _value: r._value }))",
-                    "refId": "A",
-                    "resultFormat": "time_series",
-                    "select": [
-                        [
-                            {
-                                "params": [
-                                    "value"
-                                ],
-                                "type": "field"
-                            },
-                            {
-                                "params": [],
-                                "type": "mean"
-                            }
-                        ]
-                    ],
-                    "tags": []
-                },
-                {
-                    "datasource": {
-                        "uid": "${datasource}"
-                    },
-                    "groupBy": [
-                        {
-                            "params": [
-                                "$__interval"
-                            ],
-                            "type": "time"
-                        },
-                        {
-                            "params": [
-                                "null"
-                            ],
-                            "type": "fill"
-                        }
-                    ],
-                    "orderByTime": "ASC",
-                    "policy": "default",
-                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb72\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb72\", _value: r._value }))",
-                    "refId": "B",
-                    "resultFormat": "time_series",
-                    "select": [
-                        [
-                            {
-                                "params": [
-                                    "value"
-                                ],
-                                "type": "field"
-                            },
-                            {
-                                "params": [],
-                                "type": "mean"
-                            }
-                        ]
-                    ],
-                    "tags": []
-                },
-                {
-                    "datasource": {
-                        "uid": "${datasource}"
-                    },
-                    "groupBy": [
-                        {
-                            "params": [
-                                "$__interval"
-                            ],
-                            "type": "time"
-                        },
-                        {
-                            "params": [
-                                "null"
-                            ],
-                            "type": "fill"
-                        }
-                    ],
-                    "orderByTime": "ASC",
-                    "policy": "default",
-                    "query": "from(bucket: \"multisma2\")\n  |> range(start: -4h)\n  |> filter(fn: (r) => r._measurement == \"status\" and r._field == \"operating_status\" and r._inverter == \"sb51\")\n  |> sample(n:1, pos: 0)\n  |> map(fn: (r) => ({ _time: r._time, _field: \"sb51\", _value: r._value }))",
-                    "refId": "C",
-                    "resultFormat": "time_series",
-                    "select": [
-                        [
-                            {
-                                "params": [
-                                    "value"
-                                ],
-                                "type": "field"
-                            },
-                            {
-                                "params": [],
-                                "type": "mean"
-                            }
-                        ]
-                    ],
-                    "tags": []
-                }
-            ],
-            "timeFrom": "4h",
-            "title": "Operating Status",
-            "tooltip": {
-                "extraInfo": "",
-                "freezeOnClick": false,
-                "items": [],
-                "show": true,
-                "showExtraInfo": false,
-                "showItems": true
-            },
-            "type": "flant-statusmap-panel",
-            "useMax": true,
-            "usingPagination": false,
-            "xAxis": {
-                "show": false
-            },
-            "yAxis": {
-                "maxWidth": -1,
-                "minWidth": -1,
-                "show": false
-            },
-            "yAxisSort": "metrics",
-            "yLabel": {
-                "delimiter": "",
-                "labelTemplate": "",
-                "usingSplitLabel": false
-            }
-        },
-        {
-            "cards": {
-                "cardHSpacing": 2,
-                "cardMinWidth": 5,
-                "cardVSpacing": 2
-            },
-            "color": {
-                "cardColor": "#b4ff00",
-                "colorScale": "sqrt",
-                "colorScheme": "interpolateRdYlGn",
-                "defaultColor": "#757575",
-                "exponent": 0.5,
-                "mode": "discrete",
-                "thresholds": [
-                    {
                         "$$hashKey": "object:329",
                         "color": "#73BF69",
                         "tooltip": "Ok",
@@ -2578,7 +2578,7 @@
                 "h": 4,
                 "w": 12,
                 "x": 12,
-                "y": 24
+                "y": 23
             },
             "hideBranding": false,
             "hideTimeOverride": true,
@@ -2784,7 +2784,7 @@
                 "h": 4,
                 "w": 12,
                 "x": 12,
-                "y": 28
+                "y": 27
             },
             "hideBranding": false,
             "hideTimeOverride": true,
@@ -2998,7 +2998,7 @@
         ]
     },
     "time": {
-        "from": "now-24h",
+        "from": "now-2d",
         "to": "now"
     },
     "timepicker": {
@@ -3012,6 +3012,6 @@
     "timezone": "",
     "title": "Solar Production",
     "uid": "zoZVB5Nnz",
-    "version": 46,
+    "version": 48,
     "weekStart": ""
 }
