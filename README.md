@@ -40,6 +40,10 @@ Now features a wider range of outputs, basically anything you see in your browse
 
 ## What's new
 
+#### 1.2.x
+
+- Various minor bug fixes
+
 #### 1.1.6
 
 - Warning messages issued if either MQTT or InfluxDB are disabled in the YAML configuration file
@@ -127,8 +131,8 @@ where `your-tag` is a string of your choosing (the `--no-cache` option will forc
 As an example, suppose you download the current **multisma2** build of 1.1.0. Then to create and run the Docker container you would use
 
 ```
-    sudo docker build --no-cache -t multisma2:1.1.1 .
-    sudo docker image tag multisma2:1.1.1 multisma2:latest
+    sudo docker build --no-cache -t multisma2:1.2.2 .
+    sudo docker image tag multisma2:1.2.2 multisma2:latest
     sudo docker-compose up -d
 ```
 

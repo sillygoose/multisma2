@@ -1,5 +1,5 @@
-# Ubuntu Hirsute gets Python 3.10.4
-FROM ubuntu:jammy
+# Ubuntu 22.04 (Jammy) gets Python 3.10.4
+FROM ubuntu:22.04
 
 # tzdata setup
 ENV TZ America/New_York
