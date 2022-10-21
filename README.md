@@ -104,7 +104,7 @@ I wanted a real-time dashboard in Home Assistant that displays both the site tot
     pip3 install -e .
 ```
 
-2.  Rename the `example.secrets.yaml` file to `secrets.yaml`, if you plan on using secrets. The `secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as **multisma2** will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
+2.  Rename the `example.secrets.yaml` file to `multisma2_secrets.yaml`, if you plan on using secrets. The `multisma2_secrets.yaml` file is tagged in the `.gitignore` file and will not be included in the repository but if you wish you can put `secrets.yaml` in any parent directory as **multisma2** will start in the current directory and look in each parent directory up to your home directory for it (or just the current directory if you are not running in a user profile).
 
     Edit `multisma2.yaml` and `secrets.yaml` to match your site, you will need the IP addresses for each inverter and the login credentials. If you are using MQTT then you need the IP address of your MQTT broker and the login credentials, if interfacing to InfluxDB you need the host addressm site name, bucket, and login credentials.
 
