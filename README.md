@@ -1,4 +1,5 @@
 # **multisma2**
+I have since moved on using HOome Assistant for solar energy monitioring.  Since developing **multisma** HA has added support for multiple innverters and is fully intigrated with the home energy use, making it a superior solution for my home energy montioring.
 
 ## Table of Contents
 
